@@ -11,7 +11,7 @@ function setupMS(params) {
   process.title = params.msName;
   global.config = {};
 
-  global.logger = require('../../../_global/logging/logger.js')();
+  global.logger = require('../logging/logger.js')();
   require('../../../_global/handleErrors/ActErr.js');
 
   /* Env Set */
