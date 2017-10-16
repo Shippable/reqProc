@@ -12,7 +12,7 @@ function setupMS(params) {
   global.config = {};
 
   global.logger = require('../logging/logger.js')();
-  require('../../../_global/handleErrors/ActErr.js');
+  require('../handleErrors/ActErr.js');
 
   /* Env Set */
   global.config.amqpExchange = 'shippableEx';
