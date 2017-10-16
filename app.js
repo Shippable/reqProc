@@ -1,6 +1,6 @@
 'use strict';
 var checkHealth = require('./_common/micro/checkHealth.js');
-var GenExecMS = require('./_common/micro/MicroService.js');
+var ReqProcMS = require('./_common/micro/MicroService.js');
 var setupMS = require('./_common/micro/setupMS.js');
 var microWorker = require('./microWorker.js');
 
@@ -10,7 +10,7 @@ var msParams = {
 };
 
 var params = {
-  msName: 'genExec'
+  msName: 'reqProc'
 };
 
 var consoleErrors = [];
@@ -41,6 +41,6 @@ if (consoleErrors.length > 0) {
 }
 
 logger.info(util.format('system config checks for %s succeeded', who));
-var service = new GenExecMS(msParams);
+var service = new ReqProcMS(msParams);
 // This is where micro service starts
 service.init();
