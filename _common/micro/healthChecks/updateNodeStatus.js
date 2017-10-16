@@ -3,7 +3,7 @@ var self = updateNodeStatus;
 module.exports = self;
 
 var ShippableAdapter = require('../../shippable/Adapter.js');
-var statusCodes = require('../../../../_global/statusCodes.js');
+var statusCodes = require('../../statusCodes.js');
 
 function updateNodeStatus(params, callback) {
   if (!config.nodeId) {
