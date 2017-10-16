@@ -3,7 +3,7 @@
 var self = microWorker;
 module.exports = self;
 
-var Adapter = require('../_global/shippable/Adapter.js');
+var Adapter = require('./_common/shippable/Adapter.js');
 var exec = require('child_process').exec;
 
 var pathPlaceholder = '{{TYPE}}';

@@ -2,7 +2,7 @@
 var self = checkShippableApi;
 module.exports = self;
 
-var Adapter = require('../../../../_global/shippable/Adapter.js');
+var Adapter = require('../../shippable/Adapter.js');
 
 function checkShippableApi(params, callback) {
   var bag = {

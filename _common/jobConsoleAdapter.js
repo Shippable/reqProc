@@ -4,7 +4,7 @@ var self = Adapter;
 module.exports = self;
 
 var uuid = require('node-uuid');
-var ShippableAdapter = require('../../_global/shippable/Adapter.js');
+var ShippableAdapter = require('./shippable/Adapter.js');
 
 function Adapter(apiToken, jobId, consoleBatchSize, consoleBufferTimeInMS) {
   this.who = util.format('%s|micro|_common|jobConsoleAdapter|jobId:%s',
