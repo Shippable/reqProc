@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-cd /home/shippable/micro/nod/$COMPONENT
+cd /home/shippable/reqProc
 mkdir -p logs
 
 if [ "$RUN_MODE" == "dev" ]; then
