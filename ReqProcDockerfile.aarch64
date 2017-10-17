@@ -1,7 +1,5 @@
 FROM drydockaarch64/microbase:{{%TAG%}}
 
-FROM drydock/microbase:master
-
 ADD . /home/shippable/reqProc
 
 RUN cd /home/shippable/reqProc && npm install
