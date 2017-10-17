@@ -2,7 +2,7 @@
 var self = updateNodeStatus;
 module.exports = self;
 
-var ShippableAdapter = require('../../../../_global/shippable/Adapter.js');
+var ShippableAdapter = require('../../shippable/Adapter.js');
 var statusCodes = require('../../../../_global/statusCodes.js');
 
 function updateNodeStatus(params, callback) {

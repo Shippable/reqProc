@@ -3,7 +3,7 @@ var self = postNodeStats;
 module.exports = self;
 
 var exec = require('child_process').exec;
-var ShippableAdapter = require('../../../../_global/shippable/Adapter.js');
+var ShippableAdapter = require('../../shippable/Adapter.js');
 var STATS_PERIOD = 2 * 60 * 1000; // 2 minutes
 var os = require('os');
 var diskUsage = require('diskusage');

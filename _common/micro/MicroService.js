@@ -4,7 +4,7 @@ var self = MicroService;
 module.exports = self;
 
 var amqp = require('amqp');
-var ShippableAdapter = require('../../../_global/shippable/Adapter.js');
+var ShippableAdapter = require('../shippable/Adapter.js');
 
 function MicroService(params) {
   logger.info('Starting', msName);
