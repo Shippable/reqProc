@@ -9,7 +9,7 @@ var exec = require('child_process').exec;
 var pathPlaceholder = '{{TYPE}}';
 var workflowPath = './workflows/' + pathPlaceholder + '.js';
 var JobConsoleAdapter = require('./_common/jobConsoleAdapter.js');
-var BuildJobConsoleAdapter = require('../_global/buildJobConsoleAdapter.js');
+var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
 
 function microWorker(message, callback) {
   var bag = {
