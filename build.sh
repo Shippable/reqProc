@@ -3,10 +3,11 @@
 export DRYDOCK_ORG="$1"
 export ARCHITECTURE="$2"
 export OS="$3"
-
-# reqExec image
-export IMAGE_NAME="reqexec"
 export TAG="master"
+
+# reqProc
+export REQPROC_REPO_PATH="./IN/reqProc_repo/gitRepo"
+export IMAGE_NAME="reqproc"
 
 # ECR location
 export ECR_ORG="374168611083.dkr.ecr.us-east-1.amazonaws.com"
@@ -52,10 +53,12 @@ push_images() {
 }
 
 main() {
-  check_input
-  set_build_context
-  build_and_tag_image
-  push_images
+  pushd $REQPROC_REPO_PATH
+    check_input
+    set_build_context
+    build_and_tag_image
+    push_images
+  popd
 }
 
 main

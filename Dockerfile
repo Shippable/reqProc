@@ -11,7 +11,8 @@ RUN mkdir -p $EXEC_TEMPLATES_PATH && \
     rm /tmp/execTemplates.tar.gz
 
 ENV REQ_EXEC_PATH /home/shippable/reqExec
-RUN wget https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-{{%ARCHITECTURE%}}-{{%OS%}}.tar.gz -O /tmp/reqExec.tar.gz && \
+RUN mkdir -p $REQ_EXEC_PATH && \
+    wget https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-{{%ARCHITECTURE%}}-{{%OS%}}.tar.gz -O /tmp/reqExec.tar.gz && \
     tar -xzvf /tmp/reqExec.tar.gz -C $REQ_EXEC_PATH && \
     rm /tmp/reqExec.tar.gz
 
