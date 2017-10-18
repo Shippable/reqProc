@@ -47,7 +47,8 @@ build_and_tag_image() {
 
 push_images() {
   docker push "$HUB_IMAGE"
-  docker push "$ECR_IMAGE"
+  # TODO: Uncomment this whenever the ECR repository is created.
+  # docker push "$ECR_IMAGE"
 }
 
 main() {
