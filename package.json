@@ -6,6 +6,9 @@
     "type": "git",
     "url": "git@github.com:Shippable/micro.git"
   },
+  "scripts": {
+    "lint": "jshint --exclude ./node_modules ."
+  },
   "dependencies": {
     "amqp": "0.2.6",
     "async": "2.0.0",
@@ -52,5 +55,8 @@
       "msName",
       "_"
     ]
+  },
+  "devDependencies": {
+    "jshint": "^2.9.5"
   }
 }
