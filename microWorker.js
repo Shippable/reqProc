@@ -6,9 +6,6 @@ module.exports = self;
 var Adapter = require('./_common/shippable/Adapter.js');
 var exec = require('child_process').exec;
 
-var pathPlaceholder = '{{TYPE}}';
-var workflowPath = './workflows/' + pathPlaceholder + '.js';
-var JobConsoleAdapter = require('./_common/jobConsoleAdapter.js');
 var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
 
 function microWorker(message, callback) {
@@ -20,8 +17,8 @@ function microWorker(message, callback) {
 
   async.series([
       _checkInputParams.bind(null, bag),
-      _instantiateConsoleAdapter.bind(null, bag),
-      _applyWorkflowStrategy.bind(null, bag)
+      _instantiateBuildJobConsoleAdapter.bind(null, bag),
+      _updateBuildJobStatus.bind(null, bag)
     ],
     function (err) {
       if (err)
@@ -45,8 +42,14 @@ function _checkInputParams(bag, next) {
     return next(true);
   }
 
-  if (!bag.rawMessage.builderApiToken) {
+  if (_.isEmpty(bag.rawMessage.builderApiToken)) {
     logger.warn(util.format('%s, No builderApiToken present' +
+      ' in incoming message', who));
+    return next(true);
+  }
+
+  if (_.isEmpty(bag.rawMessage.buildJobId)) {
+    logger.warn(util.format('%s, No buildJobId present' +
       ' in incoming message', who));
     return next(true);
   }
@@ -55,67 +58,49 @@ function _checkInputParams(bag, next) {
   return next();
 }
 
-function _instantiateConsoleAdapter(bag, next) {
-  var who = bag.who + '|' + _instantiateConsoleAdapter.name;
+function _instantiateBuildJobConsoleAdapter(bag, next) {
+  var who = bag.who + '|' + _instantiateBuildJobConsoleAdapter.name;
   logger.verbose(who, 'Inside');
 
-  if (bag.rawMessage.jobId) {
-    bag.workflow = 'ci';
-    bag.consoleAdapter = new JobConsoleAdapter(bag.rawMessage.builderApiToken,
-      bag.rawMessage.jobId, bag.rawMessage.consoleBatchSize,
-      bag.rawMessage.consoleBufferTimeIntervalInMS);
-  } else if (bag.rawMessage.buildJobId) {
-    bag.workflow = 'pipelines';
-    var batchSize = bag.rawMessage.consoleBatchSize ||
-      (global.systemSettings && global.systemSettings.jobConsoleBatchSize);
-    var timeInterval = bag.rawMessage.consoleBufferTimeIntervalInMS ||
-      (global.systemSettings &&
-      global.systemSettings.jobConsoleBufferTimeIntervalInMS);
+  var batchSize = bag.rawMessage.consoleBatchSize ||
+    (global.systemSettings && global.systemSettings.jobConsoleBatchSize);
+  var timeInterval = bag.rawMessage.consoleBufferTimeIntervalInMS ||
+    (global.systemSettings &&
+    global.systemSettings.jobConsoleBufferTimeIntervalInMS);
 
-    bag.consoleAdapter = new BuildJobConsoleAdapter(
-      bag.rawMessage.builderApiToken, bag.rawMessage.buildJobId,
-      batchSize, timeInterval);
-  } else {
-    logger.warn(util.format('%s, No job/buildJob ID ' +
-      'in incoming message', who));
-    return next(true);
-  }
+  bag.consoleAdapter = new BuildJobConsoleAdapter(
+    bag.rawMessage.builderApiToken, bag.rawMessage.buildJobId,
+    batchSize, timeInterval);
 
   return next();
 }
 
-function _applyWorkflowStrategy(bag, next) {
-  var who = bag.who + '|' + _applyWorkflowStrategy.name;
+function _updateBuildJobStatus(bag, next) {
+  var who = bag.who + '|' + _updateBuildJobStatus.name;
   logger.verbose(who, 'Inside');
 
-  // if it's CI, but has a resourceId in the payload, it must be runCI
-  if (bag.workflow === 'ci')
-    if (bag.rawMessage.payload && bag.rawMessage.payload.resourceId)
-      bag.workflow = 'pipelines';
+  bag.consoleAdapter.openGrp('Updating Status');
+  bag.consoleAdapter.openCmd('Updating build job status');
+  var update = {};
 
-  var strategyPath = workflowPath.replace(pathPlaceholder, bag.workflow);
-  var workflowStrategy;
-  try {
-    workflowStrategy = require(strategyPath);
-  } catch (e) {
-    logger.warn(bag.who, util.inspect(e));
-  }
+  var successStatusCode = _.findWhere(global.systemCodes,
+    { group: 'status', name: 'success'}).code;
 
-  if (!workflowStrategy) {
-    logger.warn(util.format(
-      'Strategy not found workflow: %s', bag.workflow));
-    return next(true);
-  }
-  workflowStrategy(bag,
+  update.statusCode = successStatusCode;
+
+  bag.builderApiAdapter.putBuildJobById(bag.rawMessage.buildJobId, update,
     function (err) {
       if (err) {
-        logger.warn(who,
-          util.format('Failed to apply strategy for workflow: %s',
-           bag.workflow)
-        );
-
-        return next(err);
+        var msg = util.format('%s, failed to :putBuildJobById for ' +
+          'buildJobId: %s with err: %s', who, bag.rawMessage.buildJobId, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.isGrpSuccess = false;
+      } else {
+        bag.consoleAdapter.publishMsg('Successfully updated buildJob status');
+        bag.consoleAdapter.closeCmd(true);
       }
+      bag.consoleAdapter.closeGrp(bag.isGrpSuccess);
       return next();
     }
   );
