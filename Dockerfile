@@ -10,10 +10,10 @@ RUN mkdir -p $EXEC_TEMPLATES_PATH && \
     tar -xzvf /tmp/execTemplates.tar.gz -C $EXEC_TEMPLATES_PATH --strip-components=1 && \
     rm /tmp/execTemplates.tar.gz
 
-ENV REQ_EXEC_PATH /home/shippable/reqExec
-RUN mkdir -p $REQ_EXEC_PATH && \
+ENV REQEXEC_PATH /home/shippable/reqExec
+RUN mkdir -p $REQEXEC_PATH && \
     wget https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-{{%ARCHITECTURE%}}-{{%OS%}}.tar.gz -O /tmp/reqExec.tar.gz && \
-    tar -xzvf /tmp/reqExec.tar.gz -C $REQ_EXEC_PATH && \
+    tar -xzvf /tmp/reqExec.tar.gz -C $REQEXEC_PATH && \
     rm /tmp/reqExec.tar.gz
 
 ENTRYPOINT ["/home/shippable/reqProc/boot.sh"]
