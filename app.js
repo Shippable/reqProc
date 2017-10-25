@@ -3,6 +3,7 @@ var checkHealth = require('./_common/micro/checkHealth.js');
 var ReqProcMS = require('./_common/micro/MicroService.js');
 var setupMS = require('./_common/micro/setupMS.js');
 var microWorker = require('./microWorker.js');
+var fs = require('fs');
 
 var msParams = {
   checkHealth: checkHealth,
@@ -49,6 +50,30 @@ if (!global.config.reqKickDir)
 if (!global.config.buildDir)
   consoleErrors.push(util.format('%s is missing: buildDir', who));
 
+if (!_dirExistsSync(global.config.baseDir))
+  consoleErrors.push(util.format('%s is missing directory: %s', who,
+    global.config.baseDir));
+
+if (!_dirExistsSync(global.config.reqProcDir))
+  consoleErrors.push(util.format('%s is missing directory: %s', who,
+    global.config.reqProcDir));
+
+if (!_dirExistsSync(global.config.reqExecDir))
+  consoleErrors.push(util.format('%s is missing directory: %s', who,
+    global.config.reqExecDir));
+
+if (!_dirExistsSync(global.config.reqExecSrcDir))
+  consoleErrors.push(util.format('%s is missing directory: %s', who,
+    global.config.reqExecSrcDir));
+
+if (!_dirExistsSync(global.config.reqKickDir))
+  consoleErrors.push(util.format('%s is missing directory: %s', who,
+    global.config.reqKickDir));
+
+if (!_dirExistsSync(global.config.buildDir))
+  consoleErrors.push(util.format('%s is missing directory: %s', who,
+    global.config.buildDir));
+
 if (consoleErrors.length > 0) {
   _.each(consoleErrors,
     function (err) {
@@ -62,3 +87,12 @@ logger.info(util.format('system config checks for %s succeeded', who));
 var service = new ReqProcMS(msParams);
 // This is where micro service starts
 service.init();
+
+function _dirExistsSync(path) {
+  try {
+    var stat = fs.statSync(path);
+    return stat.isDirectory();
+  } catch (e) {
+    return false;
+  }
+}
