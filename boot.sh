@@ -3,8 +3,7 @@
 cd /home/shippable/reqProc
 mkdir -p logs
 
-REQEXEC_DEST_DIR="$REQEXEC_DIR/src"
-cp -r $REQEXEC_SRC_DIR $REQEXEC_DEST_DIR
+cp -r $REQEXEC_PATH $REQEXEC_SRC_DIR
 
 if [ "$RUN_MODE" == "dev" ]; then
   echo forever is watching file changes
