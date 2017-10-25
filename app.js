@@ -31,6 +31,24 @@ if (!global.config.inputQueue)
 if (!global.config.apiUrl)
   consoleErrors.push(util.format('%s is missing: apiUrl', who));
 
+if (!global.config.baseDir)
+  consoleErrors.push(util.format('%s is missing: baseDir', who));
+
+if (!global.config.reqProcDir)
+  consoleErrors.push(util.format('%s is missing: reqProcDir', who));
+
+if (!global.config.reqExecDir)
+  consoleErrors.push(util.format('%s is missing: reqExecDir', who));
+
+if (!global.config.reqExecSrcDir)
+  consoleErrors.push(util.format('%s is missing: reqExecSrcDir', who));
+
+if (!global.config.reqKickDir)
+  consoleErrors.push(util.format('%s is missing: reqKickDir', who));
+
+if (!global.config.buildDir)
+  consoleErrors.push(util.format('%s is missing: buildDir', who));
+
 if (consoleErrors.length > 0) {
   _.each(consoleErrors,
     function (err) {
