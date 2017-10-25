@@ -24,6 +24,12 @@ function setupMS(params) {
   global.config.subscriptionId = process.env.SUBSCRIPTION_ID;
   global.config.apiToken = process.env.SHIPPABLE_API_TOKEN;
   global.config.execImage = process.env.EXEC_IMAGE;
+  global.config.baseDir = process.env.BASE_DIR;
+  global.config.reqProcDir = process.env.REQPROC_DIR;
+  global.config.reqExecDir = process.env.REQEXEC_DIR;
+  global.config.reqExecSrcDir = process.env.REQEXEC_SRC_DIR;
+  global.config.reqKickDir = process.env.REQKICK_DIR;
+  global.config.buildDir = process.env.BUILD_DIR;
   /* Node Type Codes */
   global.nodeTypeCodes = {
     dynamic: 7000,
