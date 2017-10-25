@@ -5,12 +5,23 @@ module.exports = self;
 
 var Adapter = require('./_common/shippable/Adapter.js');
 var exec = require('child_process').exec;
+var fs = require('fs-extra');
 
 var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
 
 function microWorker(message, callback) {
   var bag = {
-    rawMessage: message
+    rawMessage: message,
+    reqProcDir: global.config.reqProcDir,
+    reqKickDir: global.config.reqKickDir,
+    reqExecDir: global.config.reqExecDir,
+    buildDir: global.config.buildDir,
+    reqKickScriptsDir: util.format('%s/scripts', global.config.reqKickDir),
+    buildInDir: util.format('%s/IN', global.config.buildDir),
+    buildOutDir: util.format('%s/OUT', global.config.buildDir),
+    buildStateDir: util.format('%s/state', global.config.buildDir),
+    buildStatusDir: util.format('%s/status', global.config.buildDir),
+    buildSharedDir: util.format('%s/shared', global.config.buildDir)
   };
   bag.who = util.format('%s|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -18,7 +29,10 @@ function microWorker(message, callback) {
   async.series([
       _checkInputParams.bind(null, bag),
       _instantiateBuildJobConsoleAdapter.bind(null, bag),
-      _updateBuildJobStatus.bind(null, bag)
+      _updateBuildJobStatus.bind(null, bag),
+      _setupDirectories.bind(null, bag),
+      _setupFiles.bind(null, bag),
+      _cleanupBuildDirectory.bind(null, bag)
     ],
     function (err) {
       if (err)
@@ -73,6 +87,63 @@ function _instantiateBuildJobConsoleAdapter(bag, next) {
     batchSize, timeInterval);
 
   return next();
+}
+
+function _setupDirectories(bag, next) {
+  var dirsToBeCreated = [
+    bag.reqKickScriptsDir, bag.buildInDir, bag.buildOutDir,
+    bag.buildStateDir, bag.buildStatusDir, bag.buildSharedDir
+  ];
+
+  async.eachLimit(dirsToBeCreated, 10,
+    function (dir, nextDir) {
+      fs.ensureDir(dir,
+        function (err) {
+          return nextDir(err);
+        }
+      );
+    },
+    function (err) {
+      return next(err);
+    }
+  );
+}
+
+function _setupFiles(bag, next) {
+  var filesToBeCreated = [
+    util.format('%s/version', bag.reqProcDir),
+    util.format('%s/status', bag.reqProcDir),
+    util.format('%s/version', bag.reqKickDir),
+    util.format('%s/status', bag.reqKickDir),
+    util.format('%s/kill_reqExec.sh', bag.reqKickScriptsDir),
+    util.format('%s/cancel_reqExec.sh', bag.reqKickScriptsDir),
+    util.format('%s/timeout_reqExec.sh', bag.reqKickScriptsDir),
+    util.format('%s/version', bag.reqExecDir),
+    util.format('%s/job.pid', bag.buildStatusDir),
+    util.format('%s/job.status', bag.buildStatusDir),
+    util.format('%s/job.who', bag.buildStatusDir),
+    util.format('%s/job.steps.json', bag.buildStatusDir)
+  ];
+  async.eachLimit(filesToBeCreated, 10,
+    function (file, nextFile) {
+      fs.ensureFile(file,
+        function (err) {
+          return nextFile(err);
+        }
+      );
+    },
+    function (err) {
+      return next(err);
+    }
+  );
+}
+
+function _cleanupBuildDirectory(bag, next) {
+  fs.emptyDir(bag.buildDir,
+    function (err) {
+      return next(err);
+    }
+  );
 }
 
 function _updateBuildJobStatus(bag, next) {
