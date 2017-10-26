@@ -96,13 +96,13 @@ function _setupDirectories(bag, next) {
   var who = bag.who + '|' + _setupDirectories.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openGrp('Creating job directories');
+  bag.consoleAdapter.openCmd('Creating required directories');
+
   var dirsToBeCreated = [
     bag.reqKickScriptsDir, bag.buildInDir, bag.buildOutDir,
     bag.buildStateDir, bag.buildStatusDir, bag.buildSharedDir
   ];
-
-  bag.consoleAdapter.openGrp('Creating job directories');
-  bag.consoleAdapter.openCmd('Creating required directories');
 
   async.eachLimit(dirsToBeCreated, 10,
     function (dir, nextDir) {
@@ -156,6 +156,7 @@ function _setupFiles(bag, next) {
     util.format('%s/job.who', bag.buildStatusDir),
     util.format('%s/job.steps.json', bag.buildStatusDir)
   ];
+
   async.eachLimit(filesToBeCreated, 10,
     function (file, nextFile) {
       fs.ensureFile(file,
