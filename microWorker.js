@@ -21,7 +21,10 @@ function microWorker(message, callback) {
     buildOutDir: util.format('%s/OUT', global.config.buildDir),
     buildStateDir: util.format('%s/state', global.config.buildDir),
     buildStatusDir: util.format('%s/status', global.config.buildDir),
-    buildSharedDir: util.format('%s/shared', global.config.buildDir)
+    buildSharedDir: util.format('%s/shared', global.config.buildDir),
+    // TODO: Currently reqProc could only run pipeline jobs
+    // set this to true when both CI and pipeline jobs are supported
+    isCI: false
   };
   bag.who = util.format('%s|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -106,8 +109,8 @@ function _setupDirectories(bag, next) {
       fs.ensureDir(dir,
         function (err) {
           if (err) {
-            var msg = util.format('%s, Failed to directory: %s with err: %s',
-              who, dir, err);
+            var msg = util.format('%s, Failed to create directory: %s ' +
+              'with err: %s', who, dir, err);
             bag.consoleAdapter.publishMsg(msg);
             return nextDir(err);
           }
@@ -123,7 +126,8 @@ function _setupDirectories(bag, next) {
       if (err) {
         bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
-        return next(err);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
       }
 
       bag.consoleAdapter.closeCmd(true);
@@ -157,8 +161,8 @@ function _setupFiles(bag, next) {
       fs.ensureFile(file,
         function (err) {
           if (err) {
-            var msg = util.format('%s, Failed to file: %s with err: %s',
-              who, file, err);
+            var msg = util.format('%s, Failed to create file: %s ' +
+              'with err: %s', who, file, err);
             bag.consoleAdapter.publishMsg(msg);
             return nextFile(err);
           }
@@ -174,7 +178,8 @@ function _setupFiles(bag, next) {
       if (err) {
         bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
-        return next(err);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
       }
 
       bag.consoleAdapter.closeCmd(true);
@@ -201,7 +206,8 @@ function _cleanupBuildDirectory(bag, next) {
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
-        return next(err);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
       }
 
       bag.consoleAdapter.publishMsg('Successfully cleaned up');
@@ -220,10 +226,12 @@ function _updateBuildJobStatus(bag, next) {
   bag.consoleAdapter.openCmd('Updating build job status');
   var update = {};
 
-  var successStatusCode = _.findWhere(global.systemCodes,
-    { group: 'status', name: 'success'}).code;
+  // bag.jobStatusCode is set in previous functions
+  // only for states other than success
+  if (!bag.jobStatusCode)
+    bag.jobStatusCode = __getStatusCodeByName('success', bag.isCI);
 
-  update.statusCode = successStatusCode;
+  update.statusCode = bag.jobStatusCode;
 
   bag.builderApiAdapter.putBuildJobById(bag.rawMessage.buildJobId, update,
     function (err) {
@@ -241,6 +249,25 @@ function _updateBuildJobStatus(bag, next) {
       return next();
     }
   );
+}
+
+function __getStatusCodeByName(codeName, isCI) {
+  var group = 'status';
+  if (isCI) {
+    var pipelinesToCI = {
+      failure: 'FAILED',
+      processing: 'PROCESSING',
+      cancelled: 'CANCELED',
+      error: 'FAILED',
+      success: 'SUCCESS',
+      timeout: 'TIMEOUT'
+    };
+    group = 'statusCodes';
+    codeName = pipelinesToCI[codeName];
+  }
+
+  return _.findWhere(global.systemCodes,
+    { group: group, name: codeName}).code;
 }
 
 function __restartExecContainer(bag) {
