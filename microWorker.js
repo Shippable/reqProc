@@ -23,7 +23,7 @@ function microWorker(message, callback) {
     buildStatusDir: util.format('%s/status', global.config.buildDir),
     buildSharedDir: util.format('%s/shared', global.config.buildDir),
     // TODO: Currently reqProc could only run pipeline jobs
-    // set this to true when both CI and pipeline jobs are supported
+    // set this to true for CI jobs when reqProc supports it in future
     isCI: false
   };
   bag.who = util.format('%s|%s', msName, self.name);
