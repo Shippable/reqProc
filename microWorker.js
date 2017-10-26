@@ -29,10 +29,10 @@ function microWorker(message, callback) {
   async.series([
       _checkInputParams.bind(null, bag),
       _instantiateBuildJobConsoleAdapter.bind(null, bag),
-      _updateBuildJobStatus.bind(null, bag),
       _setupDirectories.bind(null, bag),
       _setupFiles.bind(null, bag),
-      _cleanupBuildDirectory.bind(null, bag)
+      _cleanupBuildDirectory.bind(null, bag),
+      _updateBuildJobStatus.bind(null, bag),
     ],
     function (err) {
       if (err)
@@ -90,26 +90,54 @@ function _instantiateBuildJobConsoleAdapter(bag, next) {
 }
 
 function _setupDirectories(bag, next) {
+  var who = bag.who + '|' + _setupDirectories.name;
+  logger.verbose(who, 'Inside');
+
   var dirsToBeCreated = [
     bag.reqKickScriptsDir, bag.buildInDir, bag.buildOutDir,
     bag.buildStateDir, bag.buildStatusDir, bag.buildSharedDir
   ];
 
+  bag.consoleAdapter.openGrp('Creating job directories');
+  bag.consoleAdapter.openCmd('Creating required directories');
+
   async.eachLimit(dirsToBeCreated, 10,
     function (dir, nextDir) {
       fs.ensureDir(dir,
         function (err) {
-          return nextDir(err);
+          if (err) {
+            var msg = util.format('%s, Failed to directory: %s with err: %s',
+              who, dir, err);
+            bag.consoleAdapter.publishMsg(msg);
+            return nextDir(err);
+          }
+
+          bag.consoleAdapter.publishMsg(
+            util.format('Created directory: %s', dir)
+          );
+          return nextDir();
         }
       );
     },
     function (err) {
-      return next(err);
+      if (err) {
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        return next(err);
+      }
+
+      bag.consoleAdapter.closeCmd(true);
+      return next();
     }
   );
 }
 
 function _setupFiles(bag, next) {
+  var who = bag.who + '|' + _setupFiles.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Creating required files');
+
   var filesToBeCreated = [
     util.format('%s/version', bag.reqProcDir),
     util.format('%s/status', bag.reqProcDir),
@@ -128,20 +156,58 @@ function _setupFiles(bag, next) {
     function (file, nextFile) {
       fs.ensureFile(file,
         function (err) {
-          return nextFile(err);
+          if (err) {
+            var msg = util.format('%s, Failed to file: %s with err: %s',
+              who, file, err);
+            bag.consoleAdapter.publishMsg(msg);
+            return nextFile(err);
+          }
+
+          bag.consoleAdapter.publishMsg(
+            util.format('Created file: %s', file)
+          );
+          return nextFile();
         }
       );
     },
     function (err) {
-      return next(err);
+      if (err) {
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        return next(err);
+      }
+
+      bag.consoleAdapter.closeCmd(true);
+      bag.consoleAdapter.closeGrp(true);
+      return next();
     }
   );
 }
 
 function _cleanupBuildDirectory(bag, next) {
+  var who = bag.who + '|' + _cleanupBuildDirectory.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openGrp('Job cleanup');
+  bag.consoleAdapter.openCmd(
+    util.format('Cleaning %s directory', bag.buildDir)
+  );
+
   fs.emptyDir(bag.buildDir,
     function (err) {
-      return next(err);
+      if (err) {
+        var msg = util.format('%s, Failed to cleanup: %s with err: %s',
+          who, bag.buildDir, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        return next(err);
+      }
+
+      bag.consoleAdapter.publishMsg('Successfully cleaned up');
+      bag.consoleAdapter.closeCmd(true);
+      bag.consoleAdapter.closeGrp(true);
+      return next();
     }
   );
 }
@@ -166,12 +232,12 @@ function _updateBuildJobStatus(bag, next) {
           'buildJobId: %s with err: %s', who, bag.rawMessage.buildJobId, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.isGrpSuccess = false;
+        bag.consoleAdapter.closeGrp(false);
       } else {
         bag.consoleAdapter.publishMsg('Successfully updated buildJob status');
         bag.consoleAdapter.closeCmd(true);
+        bag.consoleAdapter.closeGrp(true);
       }
-      bag.consoleAdapter.closeGrp(bag.isGrpSuccess);
       return next();
     }
   );
