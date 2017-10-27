@@ -189,7 +189,7 @@ function __restartExecContainer(bag, next) {
   var who = bag.who + '|' + __restartExecContainer.name;
   logger.debug(who, 'Inside');
 
-  exec('docker restart -t=0 shippable-exec-$NODE_ID',
+  exec(util.format('docker restart -t=0 %s', config.reqProcContainerName),
     function (err) {
       if (err)
         logger.error(
@@ -207,7 +207,7 @@ function __stopExecContainer(bag, next) {
   var who = bag.who + '|' + __stopExecContainer.name;
   logger.debug(who, 'Inside');
 
-  exec('docker stop -t=0 shippable-exec-$NODE_ID',
+  exec(util.format('docker stop -t=0 %s', config.reqProcContainerName),
     function (err) {
       if (err)
         logger.error(

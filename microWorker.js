@@ -308,7 +308,7 @@ function __restartContainer(bag) {
   var who = bag.who + '|' + __restartContainer.name;
   logger.verbose(who, 'Inside');
 
-  exec('docker restart -t=0 shippable-exec-$NODE_ID',
+  exec(util.format('docker restart -t=0 %s', config.reqProcContainerName),
     function (err) {
       if (err)
         logger.error(util.format('Failed to stop container with ' +
