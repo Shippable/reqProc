@@ -50,6 +50,9 @@ if (!global.config.reqKickDir)
 if (!global.config.buildDir)
   consoleErrors.push(util.format('%s is missing: buildDir', who));
 
+if (!global.config.reqProcContainerName)
+  consoleErrors.push(util.format('%s is missing: reqProcContainerName', who));
+
 if (!_dirExistsSync(global.config.baseDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
     global.config.baseDir));

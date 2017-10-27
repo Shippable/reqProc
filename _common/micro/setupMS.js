@@ -30,6 +30,7 @@ function setupMS(params) {
   global.config.reqExecSrcDir = process.env.REQEXEC_SRC_DIR;
   global.config.reqKickDir = process.env.REQKICK_DIR;
   global.config.buildDir = process.env.BUILD_DIR;
+  global.config.reqProcContainerName = process.env.REQPROC_CONTAINER_NAME;
   /* Node Type Codes */
   global.nodeTypeCodes = {
     dynamic: 7000,
