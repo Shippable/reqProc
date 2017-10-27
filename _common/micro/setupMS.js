@@ -27,7 +27,7 @@ function setupMS(params) {
   global.config.baseDir = process.env.BASE_DIR;
   global.config.reqProcDir = process.env.REQPROC_DIR;
   global.config.reqExecDir = process.env.REQEXEC_DIR;
-  global.config.reqExecSrcDir = process.env.REQEXEC_SRC_DIR;
+  global.config.reqExecBinDir = process.env.REQEXEC_BIN_DIR;
   global.config.reqKickDir = process.env.REQKICK_DIR;
   global.config.buildDir = process.env.BUILD_DIR;
   global.config.reqProcContainerName = process.env.REQPROC_CONTAINER_NAME;

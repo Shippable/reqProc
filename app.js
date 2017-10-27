@@ -41,8 +41,8 @@ if (!global.config.reqProcDir)
 if (!global.config.reqExecDir)
   consoleErrors.push(util.format('%s is missing: reqExecDir', who));
 
-if (!global.config.reqExecSrcDir)
-  consoleErrors.push(util.format('%s is missing: reqExecSrcDir', who));
+if (!global.config.reqExecBinDir)
+  consoleErrors.push(util.format('%s is missing: reqExecBinDir', who));
 
 if (!global.config.reqKickDir)
   consoleErrors.push(util.format('%s is missing: reqKickDir', who));
@@ -65,9 +65,9 @@ if (!_dirExistsSync(global.config.reqExecDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
     global.config.reqExecDir));
 
-if (!_dirExistsSync(global.config.reqExecSrcDir))
+if (!_dirExistsSync(global.config.reqExecBinDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
-    global.config.reqExecSrcDir));
+    global.config.reqExecBinDir));
 
 if (!_dirExistsSync(global.config.reqKickDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
