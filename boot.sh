@@ -10,14 +10,14 @@ if [ -z $REQEXEC_PATH ]; then
   exit 1
 fi
 
-# REQEXEC_SRC_DIR is the destination path for copying packaged reqExec content
-# REQEXEC_SRC_DIR is set during node initialization process
-if [ -z $REQEXEC_SRC_DIR ]; then
-  echo "REQEXEC_SRC_DIR env is missing"
+# REQEXEC_BIN_DIR is the destination path for copying packaged reqExec content
+# REQEXEC_BIN_DIR is set during node initialization process
+if [ -z $REQEXEC_BIN_DIR ]; then
+  echo "REQEXEC_BIN_DIR env is missing"
   exit 1
 fi
 
-cp -r $REQEXEC_PATH $REQEXEC_SRC_DIR
+cp -r "$REQEXEC_PATH"/. "$REQEXEC_BIN_DIR"
 
 if [ "$RUN_MODE" == "dev" ]; then
   echo forever is watching file changes
