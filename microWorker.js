@@ -37,8 +37,8 @@ function microWorker(message, callback) {
       _setExecutorAsReqKick.bind(null, bag),
       _pollExecutorForReqProc.bind(null, bag),
       _readJobStatus.bind(null, bag),
-      _updateBuildJobStatus.bind(null, bag),
       _cleanupBuildDirectory.bind(null, bag),
+      _updateBuildJobStatus.bind(null, bag)
     ],
     function (err) {
       if (err)
@@ -267,6 +267,35 @@ function _readJobStatus(bag, next) {
   );
 }
 
+function _cleanupBuildDirectory(bag, next) {
+  var who = bag.who + '|' + _cleanupBuildDirectory.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openGrp('Job cleanup');
+  bag.consoleAdapter.openCmd(
+    util.format('Cleaning %s directory', bag.buildDir)
+  );
+
+  fs.emptyDir(bag.buildDir,
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to cleanup: %s with err: %s',
+          who, bag.buildDir, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
+      }
+
+      bag.consoleAdapter.publishMsg('Successfully cleaned up');
+      bag.consoleAdapter.closeCmd(true);
+      bag.consoleAdapter.closeGrp(true);
+      return next();
+    }
+  );
+}
+
 function _updateBuildJobStatus(bag, next) {
   var who = bag.who + '|' + _updateBuildJobStatus.name;
   logger.verbose(who, 'Inside');
@@ -295,35 +324,6 @@ function _updateBuildJobStatus(bag, next) {
         bag.consoleAdapter.closeCmd(true);
         bag.consoleAdapter.closeGrp(true);
       }
-      return next();
-    }
-  );
-}
-
-function _cleanupBuildDirectory(bag, next) {
-  var who = bag.who + '|' + _cleanupBuildDirectory.name;
-  logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openGrp('Job cleanup');
-  bag.consoleAdapter.openCmd(
-    util.format('Cleaning %s directory', bag.buildDir)
-  );
-
-  fs.emptyDir(bag.buildDir,
-    function (err) {
-      if (err) {
-        var msg = util.format('%s, Failed to cleanup: %s with err: %s',
-          who, bag.buildDir, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
-        return next();
-      }
-
-      bag.consoleAdapter.publishMsg('Successfully cleaned up');
-      bag.consoleAdapter.closeCmd(true);
-      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
