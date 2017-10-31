@@ -99,7 +99,7 @@ function _setupDirectories(bag, next) {
   var who = bag.who + '|' + _setupDirectories.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Creating job directories');
+  bag.consoleAdapter.openGrp('Initializing job');
   bag.consoleAdapter.openCmd('Creating required directories');
 
   var dirsToBeCreated = [
@@ -187,7 +187,6 @@ function _setupFiles(bag, next) {
       }
 
       bag.consoleAdapter.closeCmd(true);
-      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
@@ -197,14 +196,26 @@ function _setExecutorAsReqKick(bag, next) {
   var who = bag.who + '|' + _setExecutorAsReqKick.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openCmd('Setting executor as reqKick');
+
   var whoPath = util.format('%s/job.who', bag.buildStatusDir);
   fs.writeFile(whoPath, 'reqKick\n',
     function (err) {
       if (err) {
+        var msg = util.format('%s, Failed to write file: %s ' +
+          'with err: %s', who, whoPath, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         return next();
       }
 
+      bag.consoleAdapter.publishMsg(
+        util.format('Updated %s', whoPath)
+      );
+      bag.consoleAdapter.closeCmd(true);
+      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
