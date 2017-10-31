@@ -34,6 +34,9 @@ function microWorker(message, callback) {
       _instantiateBuildJobConsoleAdapter.bind(null, bag),
       _setupDirectories.bind(null, bag),
       _setupFiles.bind(null, bag),
+      _setExecutorAsReqProc.bind(null, bag),
+      _generateSteps.bind(null, bag),
+      _writeJobSteps.bind(null, bag),
       _setExecutorAsReqKick.bind(null, bag),
       _pollExecutorForReqProc.bind(null, bag),
       _readJobStatus.bind(null, bag),
@@ -188,6 +191,100 @@ function _setupFiles(bag, next) {
         return next();
       }
 
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
+function _setExecutorAsReqProc(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _setExecutorAsReqProc.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Setting executor as reqProc');
+
+  var whoPath = util.format('%s/job.who', bag.buildStatusDir);
+  fs.writeFile(whoPath, 'reqProc\n',
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to write file: %s ' +
+          'with err: %s', who, whoPath, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
+      }
+
+      bag.consoleAdapter.publishMsg(
+        util.format('Updated %s', whoPath)
+      );
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
+function _generateSteps(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _generateSteps.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Generating job steps');
+
+  // TODO: job steps are being read from example file temporarily
+  // This section will be replaced by actual generation of job steps in future
+
+  var exampleSteps = util.format('%s/_common/example/steps.json', __dirname);
+  fs.readFile(exampleSteps, 'utf8',
+    function (err, steps) {
+      if (err) {
+        var msg = util.format('%s, Failed to read file: %s ' +
+          'with err: %s', who, exampleSteps, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
+      }
+
+      bag.jobSteps = steps;
+      bag.consoleAdapter.publishMsg(
+        util.format('Successfully read %s', exampleSteps)
+      );
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
+function _writeJobSteps(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _writeJobSteps.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Writing job steps');
+
+  var stepsPath = util.format('%s/job.steps.json', bag.buildStatusDir);
+  fs.writeFile(stepsPath, bag.jobSteps,
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to write file: %s ' +
+          'with err: %s', who, stepsPath, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
+      }
+
+      bag.consoleAdapter.publishMsg(
+        util.format('Updated %s', stepsPath)
+      );
       bag.consoleAdapter.closeCmd(true);
       return next();
     }
