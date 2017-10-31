@@ -34,8 +34,11 @@ function microWorker(message, callback) {
       _instantiateBuildJobConsoleAdapter.bind(null, bag),
       _setupDirectories.bind(null, bag),
       _setupFiles.bind(null, bag),
-      _cleanupBuildDirectory.bind(null, bag),
+      _setExecutorAsReqKick.bind(null, bag),
+      _pollExecutorForReqProc.bind(null, bag),
+      _readJobStatus.bind(null, bag),
       _updateBuildJobStatus.bind(null, bag),
+      _cleanupBuildDirectory.bind(null, bag),
     ],
     function (err) {
       if (err)
@@ -190,20 +193,64 @@ function _setupFiles(bag, next) {
   );
 }
 
-function _cleanupBuildDirectory(bag, next) {
-  var who = bag.who + '|' + _cleanupBuildDirectory.name;
+function _setExecutorAsReqKick(bag, next) {
+  var who = bag.who + '|' + _setExecutorAsReqKick.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Job cleanup');
-  bag.consoleAdapter.openCmd(
-    util.format('Cleaning %s directory', bag.buildDir)
-  );
-
-  fs.emptyDir(bag.buildDir,
+  var whoPath = util.format('%s/job.who', bag.buildStatusDir);
+  fs.writeFile(whoPath, 'reqKick\n',
     function (err) {
       if (err) {
-        var msg = util.format('%s, Failed to cleanup: %s with err: %s',
-          who, bag.buildDir, err);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
+      }
+
+      return next();
+    }
+  );
+}
+
+function _pollExecutorForReqProc(bag, next) {
+  var who = bag.who + '|' + _pollExecutorForReqProc.name;
+  logger.verbose(who, 'Inside');
+
+  function checkForReqProc(bag, callback) {
+    var whoPath = util.format('%s/job.who', bag.buildStatusDir);
+    var isReqProc = false;
+
+    try {
+      var executor = fs.readFileSync(whoPath, {encoding: 'utf8'});
+      isReqProc = executor.trim() === 'reqProc';
+    } catch (err) {
+      isReqProc = false;
+    }
+
+    if (isReqProc)
+      return callback();
+
+    setTimeout(function () {
+      checkForReqProc(bag, callback);
+    }, 5000);
+  }
+
+  checkForReqProc(bag, next);
+}
+
+function _readJobStatus(bag, next) {
+  var who = bag.who + '|' + _readJobStatus.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openGrp('Reading Status');
+  bag.consoleAdapter.openCmd('Reading job status');
+
+  var statusPath = util.format('%s/job.status', bag.buildStatusDir);
+
+  fs.readFile(statusPath, 'utf8',
+    function (err, statusCode) {
+      if (err) {
+        var msg = util.format('%s, failed to read file: %s for ' +
+          'buildJobId: %s with err: %s', who, statusPath,
+          bag.rawMessage.buildJobId, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
@@ -211,7 +258,8 @@ function _cleanupBuildDirectory(bag, next) {
         return next();
       }
 
-      bag.consoleAdapter.publishMsg('Successfully cleaned up');
+      bag.jobStatusCode = parseInt(statusCode);
+      bag.consoleAdapter.publishMsg('Successfully read job status');
       bag.consoleAdapter.closeCmd(true);
       bag.consoleAdapter.closeGrp(true);
       return next();
@@ -247,6 +295,35 @@ function _updateBuildJobStatus(bag, next) {
         bag.consoleAdapter.closeCmd(true);
         bag.consoleAdapter.closeGrp(true);
       }
+      return next();
+    }
+  );
+}
+
+function _cleanupBuildDirectory(bag, next) {
+  var who = bag.who + '|' + _cleanupBuildDirectory.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openGrp('Job cleanup');
+  bag.consoleAdapter.openCmd(
+    util.format('Cleaning %s directory', bag.buildDir)
+  );
+
+  fs.emptyDir(bag.buildDir,
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to cleanup: %s with err: %s',
+          who, bag.buildDir, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
+      }
+
+      bag.consoleAdapter.publishMsg('Successfully cleaned up');
+      bag.consoleAdapter.closeCmd(true);
+      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
