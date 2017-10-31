@@ -237,7 +237,7 @@ function _generateSteps(bag, next) {
 
   // TODO: job steps are being read from example file temporarily
   // This section will be replaced by actual generation of job steps in future
-  //
+
   var exampleSteps = util.format('%s/%s', __dirname,
     '_common/example/steps.json');
   fs.readFile(exampleSteps, 'utf8',
