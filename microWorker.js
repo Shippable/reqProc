@@ -140,6 +140,8 @@ function _setupDirectories(bag, next) {
 }
 
 function _setupFiles(bag, next) {
+  if (bag.jobStatusCode) return next();
+
   var who = bag.who + '|' + _setupFiles.name;
   logger.verbose(who, 'Inside');
 
@@ -193,6 +195,8 @@ function _setupFiles(bag, next) {
 }
 
 function _setExecutorAsReqKick(bag, next) {
+  if (bag.jobStatusCode) return next();
+
   var who = bag.who + '|' + _setExecutorAsReqKick.name;
   logger.verbose(who, 'Inside');
 
@@ -222,6 +226,8 @@ function _setExecutorAsReqKick(bag, next) {
 }
 
 function _pollExecutorForReqProc(bag, next) {
+  if (bag.jobStatusCode) return next();
+
   var who = bag.who + '|' + _pollExecutorForReqProc.name;
   logger.verbose(who, 'Inside');
 
@@ -248,6 +254,8 @@ function _pollExecutorForReqProc(bag, next) {
 }
 
 function _readJobStatus(bag, next) {
+  if (bag.jobStatusCode) return next();
+
   var who = bag.who + '|' + _readJobStatus.name;
   logger.verbose(who, 'Inside');
 
