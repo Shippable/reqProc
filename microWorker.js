@@ -445,6 +445,8 @@ function _updateBuildJobStatus(bag, next) {
   );
 }
 
+//TODO: remove this, change all references to use the function in
+//`common/getStatusCodeByName
 function __getStatusCodeByName(codeName, isCI) {
   var group = 'status';
   if (isCI) {
