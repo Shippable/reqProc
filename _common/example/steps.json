@@ -4,11 +4,11 @@
       "steps":[
         {
           "group":"boot",
-          "script":"docker run -d --name <buildJobId>.pre_task busybox sh -c 'sleep 10; ls'"
+          "script":"docker run -d --rm --name task_0 -e REQEXEC_TASK_INDEX=0 busybox sh -c 'sleep 10; ls'"
         },
         {
           "group":"wait_exec",
-          "script":"docker wait <buildJobId>.pre_task"
+          "script":"docker wait task_0"
         }
       ],
       "name":"Setup"
@@ -27,15 +27,15 @@
     "reqKick":{
       "steps":[
         {
-          "group":"task",
-          "script":"some user defined script steps"
+          "group":"boot",
+          "script":"docker run -d --rm --name task_1 -e REQEXEC_TASK_INDEX=1 busybox sh -c 'sleep 10; ls'"
         },
         {
           "group":"wait_exec",
-          "script":"docker wait <buildJobId>.pre_task"
+          "script":"docker wait task_1"
         }
       ],
-      "name":"Task 2"
+      "name":"Task 1"
     },
     "reqExec":{
       "steps":[
@@ -44,7 +44,7 @@
           "script":"some user defined script steps"
         }
       ],
-      "name":"Task 2"
+      "name":"Task 1"
     }
   }
 ]
