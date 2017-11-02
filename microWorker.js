@@ -11,6 +11,9 @@ var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
 var setupDirs = require('./job/setupDirs.js');
 var generateSteps = require('./job/generateSteps.js');
 var handoffAndPoll = require('./job/handoffAndPoll.js');
+var readJobStatus = require('./job/readJobStatus.js');
+var cleanup = require('./job/cleanup.js');
+var updateStatus = require('./job/updateStatus.js');
 
 function microWorker(message, callback) {
   var bag = {
@@ -195,26 +198,16 @@ function _readJobStatus(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openGrp('Reading Status');
-  bag.consoleAdapter.openCmd('Reading job status');
 
-  var statusPath = util.format('%s/job.status', bag.buildStatusDir);
-
-  fs.readFile(statusPath, 'utf8',
+  readJobStatus(bag,
     function (err, statusCode) {
       if (err) {
-        var msg = util.format('%s, failed to read file: %s for ' +
-          'buildJobId: %s with err: %s', who, statusPath,
-          bag.rawMessage.buildJobId, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         return next();
       }
 
-      bag.jobStatusCode = parseInt(statusCode);
-      bag.consoleAdapter.publishMsg('Successfully read job status');
-      bag.consoleAdapter.closeCmd(true);
+      bag.jobStatusCode = statusCode;
       bag.consoleAdapter.closeGrp(true);
       return next();
     }
@@ -226,24 +219,15 @@ function _cleanupBuildDirectory(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openGrp('Job cleanup');
-  bag.consoleAdapter.openCmd(
-    util.format('Cleaning %s directory', bag.buildDir)
-  );
 
-  fs.emptyDir(bag.buildDir,
+  cleanup(bag,
     function (err) {
       if (err) {
-        var msg = util.format('%s, Failed to cleanup: %s with err: %s',
-          who, bag.buildDir, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         return next();
       }
 
-      bag.consoleAdapter.publishMsg('Successfully cleaned up');
-      bag.consoleAdapter.closeCmd(true);
       bag.consoleAdapter.closeGrp(true);
       return next();
     }
@@ -255,29 +239,13 @@ function _updateBuildJobStatus(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openGrp('Updating Status');
-  bag.consoleAdapter.openCmd('Updating build job status');
-  var update = {};
 
-  // bag.jobStatusCode is set in previous functions
-  // only for states other than success
-  if (!bag.jobStatusCode)
-    bag.jobStatusCode = __getStatusCodeByName('success', bag.isCI);
-
-  update.statusCode = bag.jobStatusCode;
-
-  bag.builderApiAdapter.putBuildJobById(bag.rawMessage.buildJobId, update,
+  updateStatus(bag,
     function (err) {
-      if (err) {
-        var msg = util.format('%s, failed to :putBuildJobById for ' +
-          'buildJobId: %s with err: %s', who, bag.rawMessage.buildJobId, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
+      if (err)
         bag.consoleAdapter.closeGrp(false);
-      } else {
-        bag.consoleAdapter.publishMsg('Successfully updated buildJob status');
-        bag.consoleAdapter.closeCmd(true);
+      else
         bag.consoleAdapter.closeGrp(true);
-      }
       return next();
     }
   );
