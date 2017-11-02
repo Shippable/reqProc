@@ -1,20 +1,50 @@
-{
-  "pre_task": {
-    "reqKick": {
-      "1": {
-        "group": "boot",
-        "script": "ls"
-      },
-      "2": {
-        "group": "wait_exec",
-        "script": "docker run drydock/u16pytall:master"
-      }
+[
+  {
+    "reqKick":{
+      "steps":[
+        {
+          "group":"boot",
+          "script":"docker run -d --name <buildJobId>.pre_task busybox sh -c 'sleep 10; ls'"
+        },
+        {
+          "group":"wait_exec",
+          "script":"docker wait <buildJobId>.pre_task"
+        }
+      ],
+      "name":"Setup"
     },
-    "reqExec": {
-      "1": {
-        "group": "pre_task",
-        "script": "TBD"
-      }
+    "reqExec":{
+      "steps":[
+        {
+          "group":"task",
+          "script":"some user defined script steps"
+        }
+      ],
+      "name":"Setup"
+    }
+  },
+  {
+    "reqKick":{
+      "steps":[
+        {
+          "group":"task",
+          "script":"some user defined script steps"
+        },
+        {
+          "group":"wait_exec",
+          "script":"docker wait <buildJobId>.pre_task"
+        }
+      ],
+      "name":"Task 2"
+    },
+    "reqExec":{
+      "steps":[
+        {
+          "group":"task",
+          "script":"some user defined script steps"
+        }
+      ],
+      "name":"Task 2"
     }
   }
-}
+]
