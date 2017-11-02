@@ -39,6 +39,7 @@ function microWorker(message, callback) {
       _setExecutorAsReqProc.bind(null, bag),
       _generateSteps.bind(null, bag),
       _writeJobSteps.bind(null, bag),
+      _setJobEnvs.bind(null, bag),
       _setExecutorAsReqKick.bind(null, bag),
       _pollExecutorForReqProc.bind(null, bag),
       _readJobStatus.bind(null, bag),
@@ -208,6 +209,42 @@ function _writeJobSteps(bag, next) {
         util.format('Updated %s', stepsPath)
       );
       bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
+function _setJobEnvs(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _setJobEnvs.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Setting job envs');
+
+  //TODO: use templates to set these values
+  var jobEnvs = util.format('SHIPPABLE_API_URL=%s\nBUILDER_API_TOKEN=%s' +
+    '\nBUILD_JOB_ID=%s', global.config.apiUrl, bag.rawMessage.builderApiToken,
+    bag.rawMessage.buildJobId);
+
+  var envPath = util.format('%s/job.env', bag.buildStatusDir);
+  fs.writeFile(envPath, jobEnvs,
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to write file: %s ' +
+          'with err: %s', who, envPath, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        return next();
+      }
+
+      bag.consoleAdapter.publishMsg(
+        util.format('Updated %s', envPath)
+      );
+      bag.consoleAdapter.closeCmd(true);
+      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
