@@ -10,6 +10,7 @@ var fs = require('fs-extra');
 var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
 var setupDirs = require('./job/setupDirs.js');
 var generateSteps = require('./job/generateSteps.js');
+var handoffAndPoll = require('./job/handoffAndPoll.js');
 
 function microWorker(message, callback) {
   var bag = {
@@ -39,8 +40,7 @@ function microWorker(message, callback) {
       _setupDirectories.bind(null, bag),
       _setExecutorAsReqProc.bind(null, bag),
       _generateSteps.bind(null, bag),
-      _setExecutorAsReqKick.bind(null, bag),
-      _pollExecutorForReqProc.bind(null, bag),
+      _handOffAndPoll.bind(null, bag),
       _readJobStatus.bind(null, bag),
       _cleanupBuildDirectory.bind(null, bag),
       _updateBuildJobStatus.bind(null, bag)
@@ -170,63 +170,22 @@ function _generateSteps(bag, next) {
   );
 }
 
-function _setExecutorAsReqKick(bag, next) {
+function _handOffAndPoll(bag, next) {
   if (bag.jobStatusCode) return next();
 
-  var who = bag.who + '|' + _setExecutorAsReqKick.name;
+  var who = bag.who + '|' + _handOffAndPoll.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Setting executor as reqKick');
-
-  var whoPath = util.format('%s/job.who', bag.buildStatusDir);
-  fs.writeFile(whoPath, 'reqKick\n',
+  handoffAndPoll(bag,
     function (err) {
       if (err) {
-        var msg = util.format('%s, Failed to write file: %s ' +
-          'with err: %s', who, whoPath, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         return next();
       }
-
-      bag.consoleAdapter.publishMsg(
-        util.format('Updated %s', whoPath)
-      );
-      bag.consoleAdapter.closeCmd(true);
-      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
-}
-
-function _pollExecutorForReqProc(bag, next) {
-  if (bag.jobStatusCode) return next();
-
-  var who = bag.who + '|' + _pollExecutorForReqProc.name;
-  logger.verbose(who, 'Inside');
-
-  function checkForReqProc(bag, callback) {
-    var whoPath = util.format('%s/job.who', bag.buildStatusDir);
-    var isReqProc = false;
-
-    try {
-      var executor = fs.readFileSync(whoPath, {encoding: 'utf8'});
-      isReqProc = executor.trim() === 'reqProc';
-    } catch (err) {
-      isReqProc = false;
-    }
-
-    if (isReqProc)
-      return callback();
-
-    setTimeout(function () {
-      checkForReqProc(bag, callback);
-    }, 5000);
-  }
-
-  checkForReqProc(bag, next);
 }
 
 function _readJobStatus(bag, next) {

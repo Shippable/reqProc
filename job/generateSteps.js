@@ -23,9 +23,9 @@ function generateSteps(externalBag, callback) {
     ],
     function (err) {
       if (err)
-        logger.error(bag.who, util.format('Failed to process message'));
+        logger.error(bag.who, util.format('Failed to generate steps'));
       else
-        logger.info(bag.who, util.format('Successfully processed message'));
+        logger.info(bag.who, util.format('Successfully generated steps'));
 
       return callback(err);
     }
@@ -58,8 +58,6 @@ function _checkInputParams(bag, next) {
 }
 
 function _generateSteps(bag, next) {
-  if (bag.jobStatusCode) return next();
-
   var who = bag.who + '|' + _generateSteps.name;
   logger.verbose(who, 'Inside');
 
@@ -90,8 +88,6 @@ function _generateSteps(bag, next) {
 }
 
 function _writeJobSteps(bag, next) {
-  if (bag.jobStatusCode) return next();
-
   var who = bag.who + '|' + _writeJobSteps.name;
   logger.verbose(who, 'Inside');
 
@@ -118,8 +114,6 @@ function _writeJobSteps(bag, next) {
 }
 
 function _setJobEnvs(bag, next) {
-  if (bag.jobStatusCode) return next();
-
   var who = bag.who + '|' + _setJobEnvs.name;
   logger.verbose(who, 'Inside');
 
