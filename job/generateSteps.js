@@ -5,33 +5,21 @@ module.exports = self;
 
 var fs = require('fs-extra');
 
-var Adapter = require('../_common/shippable/Adapter.js');
-var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
-
-var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
-
 function generateSteps(externalBag, callback) {
   var bag = {
-    reqProcDir: externalBag.reqProcDir,
-    reqKickDir: externalBag.reqKickDir,
-    reqExecDir: externalBag.reqExecDir,
-    buildDir: externalBag.buildDir,
-    reqKickScriptsDir: externalBag.reqKickScriptsDir,
-    buildInDir: externalBag.buildInDir,
-    buildOutDir: externalBag.buildOutDir,
-    buildStateDir: externalBag.buildStatusDir,
     buildStatusDir: externalBag.buildStatusDir,
-    buildSharedDir: externalBag.buildStatusDir,
-    isCI: externalBag.isCI
+    builderApiToken: externalBag.builderApiToken,
+    buildJobId: externalBag.buildJobId,
+    consoleAdapter: externalBag.consoleAdapter
   };
-  bag.who = util.format('%s|%s', msName, self.name);
+  bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
 
   async.series([
       _checkInputParams.bind(null, bag),
-      _initializeConsoleAdapter.bind(null, bag),
       _generateSteps.bind(null, bag),
-      _writeJobSteps.bind(null, bag)
+      _writeJobSteps.bind(null, bag),
+      _setJobEnvs.bind(null, bag)
     ],
     function (err) {
       if (err)
@@ -39,7 +27,7 @@ function generateSteps(externalBag, callback) {
       else
         logger.info(bag.who, util.format('Successfully processed message'));
 
-      return callback();
+      return callback(err);
     }
   );
 
@@ -49,40 +37,22 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  if (_.isEmpty(bag.rawMessage)) {
-    logger.warn(util.format('%s, Message is empty.', who));
-    return next(true);
-  }
-
-  if (_.isEmpty(bag.rawMessage.builderApiToken)) {
+  if (_.isEmpty(bag.builderApiToken)) {
     logger.warn(util.format('%s, No builderApiToken present' +
       ' in incoming message', who));
     return next(true);
   }
 
-  if (_.isEmpty(bag.rawMessage.buildJobId)) {
+  if (_.isEmpty(bag.buildJobId)) {
     logger.warn(util.format('%s, No buildJobId present' +
       ' in incoming message', who));
     return next(true);
   }
 
-  bag.builderApiAdapter = new Adapter(bag.rawMessage.builderApiToken);
-  return next();
-}
-
-function _initializeConsoleAdapter(bag, next) {
-  var who = bag.who + '|' + _initializeConsoleAdapter.name;
-  logger.verbose(who, 'Inside');
-
-  var batchSize = bag.consoleBatchSize ||
-    (global.systemSettings && global.systemSettings.jobConsoleBatchSize);
-  var timeInterval = bag.consoleBufferTimeIntervalInMS ||
-    (global.systemSettings &&
-    global.systemSettings.jobConsoleBufferTimeIntervalInMS);
-
-  bag.consoleAdapter = new BuildJobConsoleAdapter(
-    bag.builderApiToken, bag.buildJobId,
-    batchSize, timeInterval);
+  if (_.isEmpty(bag.buildStatusDir)) {
+    logger.warn(util.format('%s, Build status dir is empty.', who));
+    return next(true);
+  }
 
   return next();
 }
@@ -98,7 +68,7 @@ function _generateSteps(bag, next) {
   // TODO: job steps are being read from example file temporarily
   // This section will be replaced by actual generation of job steps in future
 
-  var exampleSteps = util.format('%s/_common/example/steps.json', __dirname);
+  var exampleSteps = util.format('%s/../_common/example/steps.json', __dirname);
   fs.readFile(exampleSteps, 'utf8',
     function (err, steps) {
       if (err) {
@@ -106,9 +76,7 @@ function _generateSteps(bag, next) {
           'with err: %s', who, exampleSteps, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = getStatusCodeByName('error', bag.isCI);
-        return next();
+        return next(err);
       }
 
       bag.jobSteps = steps;
@@ -137,13 +105,44 @@ function _writeJobSteps(bag, next) {
           'with err: %s', who, stepsPath, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = getStatusCodeByName('error', bag.isCI);
-        return next();
+        return next(err);
       }
 
       bag.consoleAdapter.publishMsg(
         util.format('Updated %s', stepsPath)
+      );
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
+function _setJobEnvs(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _setJobEnvs.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Setting job envs');
+
+  //TODO: use templates to set these values
+  var jobEnvs = util.format('SHIPPABLE_API_URL=%s\nBUILDER_API_TOKEN=%s' +
+    '\nBUILD_JOB_ID=%s', global.config.apiUrl, bag.builderApiToken,
+    bag.buildJobId);
+
+  var envPath = util.format('%s/job.env', bag.buildStatusDir);
+  fs.writeFile(envPath, jobEnvs,
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to write file: %s ' +
+          'with err: %s', who, envPath, err);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        return next(err);
+      }
+
+      bag.consoleAdapter.publishMsg(
+        util.format('Updated %s', envPath)
       );
       bag.consoleAdapter.closeCmd(true);
       return next();

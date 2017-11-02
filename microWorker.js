@@ -9,6 +9,7 @@ var fs = require('fs-extra');
 
 var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
 var setupDirs = require('./job/setupDirs.js');
+var generateSteps = require('./job/generateSteps.js');
 
 function microWorker(message, callback) {
   var bag = {
@@ -38,8 +39,6 @@ function microWorker(message, callback) {
       _setupDirectories.bind(null, bag),
       _setExecutorAsReqProc.bind(null, bag),
       _generateSteps.bind(null, bag),
-      _writeJobSteps.bind(null, bag),
-      _setJobEnvs.bind(null, bag),
       _setExecutorAsReqKick.bind(null, bag),
       _pollExecutorForReqProc.bind(null, bag),
       _readJobStatus.bind(null, bag),
@@ -73,12 +72,14 @@ function _checkInputParams(bag, next) {
       ' in incoming message', who));
     return next(true);
   }
+  bag.builderApiToken = bag.rawMessage.builderApiToken;
 
   if (_.isEmpty(bag.rawMessage.buildJobId)) {
     logger.warn(util.format('%s, No buildJobId present' +
       ' in incoming message', who));
     return next(true);
   }
+  bag.buildJobId = bag.rawMessage.buildJobId;
 
   bag.builderApiAdapter = new Adapter(bag.rawMessage.builderApiToken);
   return next();
@@ -156,95 +157,14 @@ function _generateSteps(bag, next) {
   var who = bag.who + '|' + _generateSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Generating job steps');
-
-  // TODO: job steps are being read from example file temporarily
-  // This section will be replaced by actual generation of job steps in future
-
-  var exampleSteps = util.format('%s/_common/example/steps.json', __dirname);
-  fs.readFile(exampleSteps, 'utf8',
-    function (err, steps) {
-      if (err) {
-        var msg = util.format('%s, Failed to read file: %s ' +
-          'with err: %s', who, exampleSteps, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
-        return next();
-      }
-
-      bag.jobSteps = steps;
-      bag.consoleAdapter.publishMsg(
-        util.format('Successfully read %s', exampleSteps)
-      );
-      bag.consoleAdapter.closeCmd(true);
-      return next();
-    }
-  );
-}
-
-function _writeJobSteps(bag, next) {
-  if (bag.jobStatusCode) return next();
-
-  var who = bag.who + '|' + _writeJobSteps.name;
-  logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openCmd('Writing job steps');
-
-  var stepsPath = util.format('%s/job.steps.json', bag.buildStatusDir);
-  fs.writeFile(stepsPath, bag.jobSteps,
+  generateSteps(bag,
     function (err) {
       if (err) {
-        var msg = util.format('%s, Failed to write file: %s ' +
-          'with err: %s', who, stepsPath, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         return next();
       }
 
-      bag.consoleAdapter.publishMsg(
-        util.format('Updated %s', stepsPath)
-      );
-      bag.consoleAdapter.closeCmd(true);
-      return next();
-    }
-  );
-}
-
-function _setJobEnvs(bag, next) {
-  if (bag.jobStatusCode) return next();
-
-  var who = bag.who + '|' + _setJobEnvs.name;
-  logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openCmd('Setting job envs');
-
-  //TODO: use templates to set these values
-  var jobEnvs = util.format('SHIPPABLE_API_URL=%s\nBUILDER_API_TOKEN=%s' +
-    '\nBUILD_JOB_ID=%s', global.config.apiUrl, bag.rawMessage.builderApiToken,
-    bag.rawMessage.buildJobId);
-
-  var envPath = util.format('%s/job.env', bag.buildStatusDir);
-  fs.writeFile(envPath, jobEnvs,
-    function (err) {
-      if (err) {
-        var msg = util.format('%s, Failed to write file: %s ' +
-          'with err: %s', who, envPath, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
-        return next();
-      }
-
-      bag.consoleAdapter.publishMsg(
-        util.format('Updated %s', envPath)
-      );
-      bag.consoleAdapter.closeCmd(true);
-      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
