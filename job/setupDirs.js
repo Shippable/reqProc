@@ -1,1 +1,147 @@
-//TODO
+'use strict';
+
+var self = setupDirs;
+module.exports = self;
+
+var fs = require('fs-extra');
+
+function setupDirs(externalBag, callback) {
+  var bag = {
+    reqProcDir: externalBag.reqProcDir,
+    reqKickDir: externalBag.reqKickDir,
+    reqExecDir: externalBag.reqExecDir,
+    reqKickScriptsDir: externalBag.reqKickScriptsDir,
+    buildInDir: externalBag.buildInDir,
+    buildOutDir: externalBag.buildOutDir,
+    buildStateDir: externalBag.buildStateDir,
+    buildStatusDir: externalBag.buildStatusDir,
+    buildSharedDir: externalBag.buildSharedDir,
+    buildScriptsDir: externalBag.buildScriptsDir,
+    buildSecretsDir: externalBag.buildSecretsDir,
+    consoleAdapter: externalBag.consoleAdapter
+  };
+  bag.who = util.format('%s|job|%s', msName, self.name);
+  logger.info(bag.who, 'Inside');
+
+  async.series([
+      _checkInputParams.bind(null, bag),
+      _setupDirectories.bind(null, bag),
+      _setupFiles.bind(null, bag)
+    ],
+    function (err) {
+      if (err)
+        logger.error(bag.who, util.format('Failed to process message'));
+      else
+        logger.info(bag.who, util.format('Successfully processed message'));
+
+      return callback(err);
+    }
+  );
+}
+
+function _checkInputParams(bag, next) {
+  var who = bag.who + '|' + _checkInputParams.name;
+  logger.verbose(who, 'Inside');
+
+  if (_.isEmpty(bag.consoleAdapter)) {
+    logger.error(util.format('%s, Missing consoleAdapter.', who));
+    return next(true);
+  }
+
+  return next();
+}
+
+
+function _setupDirectories(bag, next) {
+  var who = bag.who + '|' + _setupDirectories.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Creating required directories');
+
+  var dirsToBeCreated = [
+    bag.reqKickScriptsDir, bag.buildInDir, bag.buildOutDir, bag.buildStateDir,
+    bag.buildStatusDir, bag.buildSharedDir, bag.buildScriptsDir,
+    bag.buildSecretsDir
+  ];
+
+  async.eachLimit(dirsToBeCreated, 10,
+    function (dir, nextDir) {
+      fs.ensureDir(dir,
+        function (err) {
+          if (err) {
+            var msg = util.format('%s, Failed to create directory: %s ' +
+              'with err: %s', who, dir, err);
+            bag.consoleAdapter.publishMsg(msg);
+            return nextDir(err);
+          }
+
+          bag.consoleAdapter.publishMsg(
+            util.format('Created directory: %s', dir)
+          );
+          return nextDir();
+        }
+      );
+    },
+    function (err) {
+      if (err) {
+        bag.consoleAdapter.closeCmd(false);
+        return next(err);
+      }
+
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
+function _setupFiles(bag, next) {
+  var who = bag.who + '|' + _setupFiles.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Creating required files');
+
+  var filesToBeCreated = [
+    util.format('%s/job.env', bag.buildStatusDir),
+    util.format('%s/job.pid', bag.buildStatusDir),
+    util.format('%s/job.status', bag.buildStatusDir),
+    util.format('%s/job.who', bag.buildStatusDir),
+    util.format('%s/job.steps.json', bag.buildStatusDir),
+    util.format('%s/version', bag.reqProcDir),
+    util.format('%s/status', bag.reqProcDir),
+    util.format('%s/version', bag.reqKickDir),
+    util.format('%s/status', bag.reqKickDir),
+    util.format('%s/kill_reqExec.sh', bag.reqKickScriptsDir),
+    util.format('%s/cancel_reqExec.sh', bag.reqKickScriptsDir),
+    util.format('%s/timeout_reqExec.sh', bag.reqKickScriptsDir),
+    util.format('%s/version', bag.reqExecDir)
+  ];
+
+  async.eachLimit(filesToBeCreated, 10,
+    function (file, nextFile) {
+      fs.ensureFile(file,
+        function (err) {
+          if (err) {
+            var msg = util.format('%s, Failed to create file: %s ' +
+              'with err: %s', who, file, err);
+            bag.consoleAdapter.publishMsg(msg);
+            return nextFile(err);
+          }
+
+          bag.consoleAdapter.publishMsg(
+            util.format('Created file: %s', file)
+          );
+          return nextFile();
+        }
+      );
+    },
+    function (err) {
+      if (err) {
+        bag.consoleAdapter.closeCmd(false);
+        return next(err);
+      }
+
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
