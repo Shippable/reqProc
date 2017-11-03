@@ -41,6 +41,7 @@ function microWorker(message, callback) {
       _checkInputParams.bind(null, bag),
       _instantiateBuildJobConsoleAdapter.bind(null, bag),
       _setupDirectories.bind(null, bag),
+      _saveMessage.bind(null, bag),
       _setExecutorAsReqProc.bind(null, bag),
       _generateSteps.bind(null, bag),
       _handOffAndPoll.bind(null, bag),
@@ -117,6 +118,34 @@ function _setupDirectories(bag, next) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         return next();
+      }
+
+      return next();
+    }
+  );
+}
+
+function _saveMessage(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _saveMessage.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Writing message to file');
+  fs.writeFile(bag.buildStatusDir, JSON.stringify(rawMessage.payload),
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to save message, %s',
+          who, err);
+
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+      } else {
+        bag.consoleAdapter.publishMsg(
+          'Successfully saved message at: ' + bag.buildStatusDir);
+        bag.consoleAdapter.closeCmd(true);
       }
 
       return next();
