@@ -132,7 +132,7 @@ function _saveMessage(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Writing message to file');
-  fs.writeFile(bag.buildStatusDir, JSON.stringify(rawMessage.payload),
+  fs.writeFile(bag.buildStatusDir, JSON.stringify(bag.rawMessage.payload),
     function (err) {
       if (err) {
         var msg = util.format('%s, Failed to save message, %s',
