@@ -18,7 +18,8 @@ function outStep(externalBag, callback) {
     stepMessageFilename: externalBag.stepMessageFilename
   };
 
-  bag.who = util.format('%s|_common|%s', msName, self.name);
+  bag.who = util.format('%s|job|handlers|resources|state|%s',
+    msName, self.name);
   logger.verbose(bag.who, 'Inside');
 
   async.series([
@@ -188,7 +189,8 @@ function _postFiles(bag, next) {
 
   bag.consoleAdapter.openCmd('Posting message for current resource');
 
-  bag.builderApiAdapter.postFilesByResourceId(bag.dependency.resourceId, bag.stateJSON,
+  bag.builderApiAdapter.postFilesByResourceId(bag.dependency.resourceId,
+    bag.stateJSON,
     function (err, res) {
       if (err) {
         if (res && res.message)

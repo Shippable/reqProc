@@ -13,7 +13,7 @@ function executeScript(externalBag, callback) {
     consoleAdapter: externalBag.consoleAdapter
   };
 
-  bag.who = msName + '|_common|' + self.name;
+  bag.who = util.format('%s|job|handlers|%s', msName, self.name);
   logger.verbose(bag.who, 'Starting');
 
   async.series([

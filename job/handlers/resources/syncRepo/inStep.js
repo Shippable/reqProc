@@ -19,7 +19,8 @@ function inStep(params, callback) {
     consoleAdapter: params.consoleAdapter
   };
 
-  bag.who = util.format('%s|_common|resources|syncRepo|%s', msName, self.name);
+  bag.who = util.format('%s|job|handlers|resources|syncRepo|%s',
+    msName, self.name);
   logger.verbose(bag.who, 'Starting');
 
   bag.scriptPath =

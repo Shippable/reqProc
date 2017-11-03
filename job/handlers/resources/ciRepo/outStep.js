@@ -12,7 +12,8 @@ function outStep(params, callback) {
     newVersion: {}
   };
 
-  bag.who = util.format('%s|resources|ciRepo|%s', msName, self.name);
+  bag.who = util.format('%s|job|handlers|resources|ciRepo|%s', msName,
+    self.name);
   logger.verbose(bag.who, 'Starting');
 
   async.series([

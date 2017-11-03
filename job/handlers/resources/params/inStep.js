@@ -4,8 +4,6 @@ module.exports = self;
 
 var fs = require('fs-extra');
 var path = require('path');
-var executeDependencyScript =
-  require('../../_common/executeDependencyScript.js');
 
 function inStep(params, callback) {
   var bag = {
@@ -16,7 +14,8 @@ function inStep(params, callback) {
     consoleAdapter: params.consoleAdapter
   };
 
-  bag.who = msName + '|_common|resources|params|' + self.name;
+  bag.who = util.format('%s|job|handlers|resources|params|%s',
+    msName, self.name);
   logger.verbose(bag.who, 'Starting');
 
   bag.paramsPath =

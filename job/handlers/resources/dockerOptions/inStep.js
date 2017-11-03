@@ -8,7 +8,8 @@ function inStep(params, callback) {
     consoleAdapter: params.consoleAdapter
   };
 
-  bag.who = msName + '|_common|resources|dockerOptions|' + self.name;
+  bag.who = util.format('%s|job|handlers|resources|dockerOptions|%s', msName,
+    self.name);
   logger.verbose(bag.who, 'Starting');
 
   async.series([

@@ -16,7 +16,8 @@ function inStep(params, callback) {
     outputFileJSON: []
   };
 
-  bag.who = msName + '|_common|resources|params|' + self.name;
+  bag.who = util.format('%s|job|handlers|resources|state|%s',
+    msName, self.name);
   logger.verbose(bag.who, 'Starting');
 
   bag.paramsPath =
@@ -42,14 +43,13 @@ function _checkInputParams(bag, next) {
   bag.consoleAdapter.openCmd('Validating dependencies');
   var consoleErrors = [];
   bag.firstState = false;
-  console.log(bag.dependency);
   if (!bag.dependency.version.propertyBag.shaData){
     logger.debug('state resource is empty');
     bag.firstState = true;
   }
 
   bag.sha = bag.dependency.version.propertyBag.shaData;
-  bag.resourceId= bag.dependency.resourceId
+  bag.resourceId= bag.dependency.resourceId;
 
   if (consoleErrors.length > 0) {
     _.each(consoleErrors,
@@ -64,7 +64,7 @@ function _checkInputParams(bag, next) {
   }
 
   bag.consoleAdapter.publishMsg('Successfully validated dependencies');
-  bag.consoleAdapter;
+  bag.consoleAdapter.closeCmd(true);
 
   return next();
 }
