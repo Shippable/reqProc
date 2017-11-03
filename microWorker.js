@@ -8,7 +8,11 @@ var exec = require('child_process').exec;
 var fs = require('fs-extra');
 
 var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
+var initJob = require('./job/initJob.js');
 var setupDirs = require('./job/setupDirs.js');
+var getPreviousState = require('./job/getPreviousState.js');
+var getSecrets = require('./job/getSecrets.js');
+var setupDependencies = require('./job/setupDependencies.js');
 var generateSteps = require('./job/generateSteps.js');
 var handoffAndPoll = require('./job/handoffAndPoll.js');
 var readJobStatus = require('./job/readJobStatus.js');
@@ -21,7 +25,7 @@ function microWorker(message, callback) {
     reqProcDir: global.config.reqProcDir,
     reqKickDir: global.config.reqKickDir,
     reqExecDir: global.config.reqExecDir,
-    buildDir: global.config.buildDir,
+    buildRootDir: global.config.buildDir,
     reqKickScriptsDir: util.format('%s/scripts', global.config.reqKickDir),
     buildInDir: util.format('%s/IN', global.config.buildDir),
     buildOutDir: util.format('%s/OUT', global.config.buildDir),
@@ -30,18 +34,31 @@ function microWorker(message, callback) {
     buildSharedDir: util.format('%s/shared', global.config.buildDir),
     buildScriptsDir: util.format('%s/scripts', global.config.buildDir),
     buildSecretsDir: util.format('%s/secrets', global.config.buildDir),
+    buildPreviousStateDir: util.format('%s/previousState',
+      global.config.buildDir),
+    messageFilePath: util.format('%s/message.json', global.config.buildDir),
+    stepMessageFilename: 'version.json',
     // TODO: Currently reqProc could only run pipeline jobs
     // set this to true for CI jobs when reqProc supports it in future
     isCI: false
   };
+
+  bag.subPrivateKeyPath = util.format('%s/00_sub', bag.buildSecretsDir);
+  bag.outputVersionFilePath = util.format('%s/outputVersion.json',
+    bag.buildStateDir);
+
   bag.who = util.format('%s|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
 
   async.series([
       _checkInputParams.bind(null, bag),
       _instantiateBuildJobConsoleAdapter.bind(null, bag),
+      _initJob.bind(null, bag),
       _setupDirectories.bind(null, bag),
       _setExecutorAsReqProc.bind(null, bag),
+      _getPreviousState.bind(null, bag),
+      _getSecrets.bind(null, bag),
+      _setupDependencies.bind(null, bag),
       _generateSteps.bind(null, bag),
       _handOffAndPoll.bind(null, bag),
       _readJobStatus.bind(null, bag),
@@ -76,6 +93,7 @@ function _checkInputParams(bag, next) {
     return next(true);
   }
   bag.builderApiToken = bag.rawMessage.builderApiToken;
+  bag.builderApiAdapter = new Adapter(bag.rawMessage.builderApiToken);
 
   if (_.isEmpty(bag.rawMessage.buildJobId)) {
     logger.warn(util.format('%s, No buildJobId present' +
@@ -84,7 +102,6 @@ function _checkInputParams(bag, next) {
   }
   bag.buildJobId = bag.rawMessage.buildJobId;
 
-  bag.builderApiAdapter = new Adapter(bag.rawMessage.builderApiToken);
   return next();
 }
 
@@ -105,20 +122,39 @@ function _instantiateBuildJobConsoleAdapter(bag, next) {
   return next();
 }
 
+function _initJob(bag, next) {
+  var who = bag.who + '|' + _initJob.name;
+  logger.verbose(who, 'Inside');
+
+  bag.isInitializingJobGrpSuccess = true;
+  bag.consoleAdapter.openGrp('Initializing job');
+
+  initJob(bag,
+    function (err, resultBag) {
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.isInitializingJobGrpSuccess = false;
+      } else {
+        bag = _.extend(bag, resultBag);
+      }
+
+      return next();
+    }
+  );
+}
+
 function _setupDirectories(bag, next) {
   var who = bag.who + '|' + _setupDirectories.name;
   logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openGrp('Initializing job');
 
   setupDirs(bag,
     function (err) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
-        return next();
+        bag.isInitializingJobGrpSuccess = false;
       }
-
       return next();
     }
   );
@@ -149,6 +185,66 @@ function _setExecutorAsReqProc(bag, next) {
         util.format('Updated %s', whoPath)
       );
       bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
+function _getPreviousState(bag, next) {
+  if (bag.isJobCancelled) return next();
+
+  var who = bag.who + '|' + _getPreviousState.name;
+  logger.verbose(who, 'Inside');
+
+  getPreviousState(bag,
+    function (err) {
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.isInitializingJobGrpSuccess = false;
+      }
+      return next();
+    }
+  );
+}
+
+function _getSecrets(bag, next) {
+  if (bag.isJobCancelled) return next();
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _getSecrets.name;
+  logger.verbose(who, 'Inside');
+
+  getSecrets(bag,
+    function (err, resultBag) {
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.isInitializingJobGrpSuccess = false;
+      } else {
+        bag = _.extend(bag, resultBag);
+      }
+      return next();
+    }
+  );
+}
+
+function _setupDependencies(bag, next) {
+  if (bag.isJobCancelled) return next();
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _setupDependencies.name;
+  logger.verbose(who, 'Inside');
+
+  setupDependencies(bag,
+    function (err, resultBag) {
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.isInitializingJobGrpSuccess = false;
+      } else {
+        bag = _.extend(bag, resultBag);
+      }
       return next();
     }
   );

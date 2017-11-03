@@ -18,6 +18,7 @@ function setupDirs(externalBag, callback) {
     buildSharedDir: externalBag.buildSharedDir,
     buildScriptsDir: externalBag.buildScriptsDir,
     buildSecretsDir: externalBag.buildSecretsDir,
+    buildPreviousStateDir: externalBag.buildPreviousStateDir,
     consoleAdapter: externalBag.consoleAdapter
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -30,9 +31,9 @@ function setupDirs(externalBag, callback) {
     ],
     function (err) {
       if (err)
-        logger.error(bag.who, util.format('Failed to process message'));
+        logger.error(bag.who, util.format('Failed to setup dirs'));
       else
-        logger.info(bag.who, util.format('Successfully processed message'));
+        logger.info(bag.who, util.format('Successfully setup dirs'));
 
       return callback(err);
     }
@@ -61,7 +62,7 @@ function _setupDirectories(bag, next) {
   var dirsToBeCreated = [
     bag.reqKickScriptsDir, bag.buildInDir, bag.buildOutDir, bag.buildStateDir,
     bag.buildStatusDir, bag.buildSharedDir, bag.buildScriptsDir,
-    bag.buildSecretsDir
+    bag.buildSecretsDir, bag.buildPreviousStateDir
   ];
 
   async.eachLimit(dirsToBeCreated, 10,
