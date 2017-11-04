@@ -8,6 +8,7 @@ var fs = require('fs-extra');
 function generateSteps(externalBag, callback) {
   var bag = {
     buildStatusDir: externalBag.buildStatusDir,
+    buildScriptsDir: externalBag.buildScriptsDir,
     builderApiToken: externalBag.builderApiToken,
     buildJobId: externalBag.buildJobId,
     consoleAdapter: externalBag.consoleAdapter
@@ -67,6 +68,9 @@ function _generateSteps(bag, next) {
   // This section will be replaced by actual generation of job steps in future
 
   var exampleSteps = util.format('%s/../_common/example/steps.json', __dirname);
+  var exampleScriptsDir =
+    util.format('%s/../_common/example/scripts', __dirname);
+  fs.copySync(exampleScriptsDir, bag.buildScriptsDir);
   fs.readFile(exampleSteps, 'utf8',
     function (err, steps) {
       if (err) {
