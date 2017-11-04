@@ -1,9 +1,9 @@
 'use strict';
 
-var self = normalizeSteps;
+var self = normalizeStepsV1;
 module.exports = self;
 
-function normalizeSteps(steps) {
+function normalizeStepsV1(steps) {
   _.each(steps,
     function (step) {
       if (!step.TASK)
@@ -20,7 +20,6 @@ function normalizeSteps(steps) {
               newTask.script.push(oldTask.script);
           }
         );
-
         step.TASK = newTask;
       }
     }
