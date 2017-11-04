@@ -9,8 +9,8 @@ function normalizeStepsV2(steps, defaultRuntime) {
   var defaultIsContainer = true;
   // TODO: This needs to be OS/Arch specific.
   var defaultContainerOpts = {
-    'imageName': 'drydock/u14pytall',
-    'imageTag': 'master',
+    'imageName': 'drydock/microbase',
+    'imageTag': 'latest',
     'pull': true,
     'options': '',
     'envs': {}
@@ -51,7 +51,7 @@ function normalizeStepsV2(steps, defaultRuntime) {
       if (_.isUndefined(task.name))
         task.name = 'Task ' + taskIndex;
 
-      task.execOrder = taskIndex;
+      task.taskIndex = taskIndex;
       taskIndex += 1;
     }
   );
