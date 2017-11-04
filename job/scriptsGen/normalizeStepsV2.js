@@ -7,6 +7,7 @@ function normalizeStepsV2(steps, defaultRuntime) {
   var clonedSteps = _.clone(steps);
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
   var defaultIsContainer = true;
+  // TODO: This needs to be OS/Arch specific.
   var defaultContainerOpts = {
     'imageName': 'drydock/u14pytall',
     'imageTag': 'master',
