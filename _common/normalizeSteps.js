@@ -3,8 +3,8 @@
 var self = normalizeSteps;
 module.exports = self;
 
-function normalizeSteps(payload) {
-  _.each(payload.propertyBag.yml.steps,
+function normalizeSteps(steps) {
+  _.each(steps,
     function (step) {
       if (!step.TASK)
         return;
@@ -26,5 +26,5 @@ function normalizeSteps(payload) {
     }
   );
 
-  return payload;
+  return steps;
 }
