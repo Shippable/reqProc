@@ -5,19 +5,28 @@ module.exports = self;
 
 var fs = require('fs-extra');
 
+var generateScript = require('./scriptsGen/generateScript.js');
+var normalizeStepsV1 = require('./scriptsGen/normalizeStepsV1.js');
+var normalizeStepsV2 = require('./scriptsGen/normalizeStepsV2.js');
+
 function generateSteps(externalBag, callback) {
   var bag = {
+    inPayload: _.clone(externalBag.inPayload),
     buildStatusDir: externalBag.buildStatusDir,
     buildScriptsDir: externalBag.buildScriptsDir,
     builderApiToken: externalBag.builderApiToken,
     buildJobId: externalBag.buildJobId,
-    consoleAdapter: externalBag.consoleAdapter
+    consoleAdapter: externalBag.consoleAdapter,
+    jobSteps: {
+      reqKick: []
+    }
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
 
   async.series([
       _checkInputParams.bind(null, bag),
+      _normalizeSteps.bind(null, bag),
       _generateSteps.bind(null, bag),
       _writeJobSteps.bind(null, bag),
       _setJobEnvs.bind(null, bag)
@@ -58,35 +67,56 @@ function _checkInputParams(bag, next) {
   return next();
 }
 
+function _normalizeSteps(bag, next) {
+  var who = bag.who + '|' + _normalizeSteps.name;
+  logger.verbose(who, 'Inside');
+
+  bag.steps = normalizeStepsV1(bag.inPayload.propertyBag.yml.steps);
+  bag.steps = normalizeStepsV2(bag.steps);
+
+  bag.tasks = _.filter(bag.steps,
+    function (step) {
+      return !!step.TASK;
+    }
+  );
+  return next();
+}
+
 function _generateSteps(bag, next) {
   var who = bag.who + '|' + _generateSteps.name;
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Generating job steps');
 
-  // TODO: job steps are being read from example file temporarily
-  // This section will be replaced by actual generation of job steps in future
-
-  var exampleSteps = util.format('%s/../_common/example/steps.json', __dirname);
-  var exampleScriptsDir =
-    util.format('%s/../_common/example/scripts', __dirname);
-  fs.copySync(exampleScriptsDir, bag.buildScriptsDir);
-  fs.readFile(exampleSteps, 'utf8',
-    function (err, steps) {
-      if (err) {
-        var msg = util.format('%s, Failed to read file: %s ' +
-          'with err: %s', who, exampleSteps, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-        return next(err);
-      }
-
-      bag.jobSteps = steps;
-      bag.consoleAdapter.publishMsg(
-        util.format('Successfully read %s', exampleSteps)
+  async.forEachOfSeries(bag.tasks,
+    function (task, index, nextTask) {
+      var taskObj = {
+        script: task.TASK.script,
+        name: task.TASK.name,
+        container: task.TASK.container,
+        taskIndex: index,
+        buildScriptsDir: bag.buildScriptsDir
+      };
+      generateScript(taskObj,
+        function (err, resultBag) {
+          if (err) {
+            logger.error(util.format('%s, Failed to generate script for task '+
+              ': %s with err: %s', who, index, err));
+            return nextTask(err);
+          }
+          bag.jobSteps.reqKick.push(resultBag.scriptFileName);
+          return nextTask();
+        }
       );
-      bag.consoleAdapter.closeCmd(true);
-      return next();
+    },
+    function (err) {
+      if (err) {
+        bag.consoleAdapter.closeCmd(false);
+      } else {
+        bag.consoleAdapter.publishMsg('Successfully generated job steps');
+        bag.consoleAdapter.closeCmd(true);
+      }
+      return next(err);
     }
   );
 }
@@ -98,7 +128,7 @@ function _writeJobSteps(bag, next) {
   bag.consoleAdapter.openCmd('Writing job steps');
 
   var stepsPath = util.format('%s/job.steps.json', bag.buildStatusDir);
-  fs.writeFile(stepsPath, bag.jobSteps,
+  fs.writeFile(stepsPath, JSON.stringify(bag.jobSteps),
     function (err) {
       if (err) {
         var msg = util.format('%s, Failed to write file: %s ' +
