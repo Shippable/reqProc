@@ -13,12 +13,7 @@ function setupDependencies(externalBag, callback) {
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
     jobStatusCode: externalBag.jobStatusCode,
-    operation: {
-      IN: 'IN',
-      OUT: 'OUT',
-      TASK: 'TASK',
-      NOTIFY: 'NOTIFY'
-    },
+    operation: externalBag.operation,
     messageFilePath: externalBag.messageFilePath,
     buildRootDir: externalBag.buildRootDir,
     buildStateDir: externalBag.buildStateDir,

@@ -13,6 +13,7 @@ var setupDirs = require('./job/setupDirs.js');
 var getPreviousState = require('./job/getPreviousState.js');
 var getSecrets = require('./job/getSecrets.js');
 var setupDependencies = require('./job/setupDependencies.js');
+var processINs = require('./job/processINs.js');
 var generateSteps = require('./job/generateSteps.js');
 var handoffAndPoll = require('./job/handoffAndPoll.js');
 var readJobStatus = require('./job/readJobStatus.js');
@@ -38,6 +39,12 @@ function microWorker(message, callback) {
       global.config.buildDir),
     messageFilePath: util.format('%s/message.json', global.config.buildDir),
     stepMessageFilename: 'version.json',
+    operation: {
+      IN: 'IN',
+      OUT: 'OUT',
+      TASK: 'TASK',
+      NOTIFY: 'NOTIFY'
+    },
     // TODO: Currently reqProc could only run pipeline jobs
     // set this to true for CI jobs when reqProc supports it in future
     isCI: false
@@ -59,6 +66,7 @@ function microWorker(message, callback) {
       _getPreviousState.bind(null, bag),
       _getSecrets.bind(null, bag),
       _setupDependencies.bind(null, bag),
+      _processINs.bind(null, bag),
       _generateSteps.bind(null, bag),
       _handOffAndPoll.bind(null, bag),
       _readJobStatus.bind(null, bag),
@@ -245,6 +253,21 @@ function _setupDependencies(bag, next) {
       } else {
         bag = _.extend(bag, resultBag);
       }
+      return next();
+    }
+  );
+}
+
+function _processINs(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _processINs.name;
+  logger.verbose(who, 'Inside');
+
+  processINs(bag,
+    function (err) {
+      if (err)
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
       return next();
     }
   );
