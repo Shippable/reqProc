@@ -19,7 +19,9 @@ function generateSteps(externalBag, callback) {
     consoleAdapter: externalBag.consoleAdapter,
     jobSteps: {
       reqKick: []
-    }
+    },
+    buildRootDir: externalBag.buildRootDir,
+    reqExecDir: externalBag.reqExecDir
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -72,7 +74,8 @@ function _normalizeSteps(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.steps = normalizeStepsV1(bag.inPayload.propertyBag.yml.steps);
-  bag.steps = normalizeStepsV2(bag.steps);
+  bag.steps = normalizeStepsV2(bag.steps,
+    bag.inPayload.propertyBag.yml.runtime);
 
   bag.tasks = _.filter(bag.steps,
     function (step) {
@@ -90,13 +93,12 @@ function _generateSteps(bag, next) {
 
   async.forEachOfSeries(bag.tasks,
     function (task, index, nextTask) {
-      var taskObj = {
-        script: task.TASK.script,
-        name: task.TASK.name,
-        container: task.TASK.container,
-        taskIndex: index,
-        buildScriptsDir: bag.buildScriptsDir
-      };
+      var taskObj = _.extend(task.TASK, {
+        buildScriptsDir: bag.buildScriptsDir,
+        buildRootDir: bag.buildRootDir,
+        reqExecDir: bag.reqExecDir,
+        buildJobId: bag.buildJobId
+      });
       generateScript(taskObj,
         function (err, resultBag) {
           if (err) {
