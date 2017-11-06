@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-cd /home/shippable/reqProc
+cd $REQPROC_PATH
 mkdir -p logs
 
 # REQEXEC_PATH is path to reqExec files packaged inside the reqProc docker image
