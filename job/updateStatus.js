@@ -29,7 +29,6 @@ function updateStatus(externalBag, callback) {
       return callback(err);
     }
   );
-
 }
 
 function _checkInputParams(bag, next) {
