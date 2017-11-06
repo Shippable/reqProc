@@ -1,8 +1,8 @@
 FROM {{%DRYDOCK_ORG%}}/microbase:{{%TAG%}}
 
-ADD . /home/shippable/reqProc
-
-RUN cd /home/shippable/reqProc && npm install
+ENV REQPROC_PATH /home/shippable/reqProc
+ADD . $REQPROC_PATH
+RUN cd $REQPROC_PATH && npm install
 
 ENV EXEC_TEMPLATES_PATH /home/shippable/execTemplates
 RUN mkdir -p $EXEC_TEMPLATES_PATH && \
