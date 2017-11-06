@@ -319,14 +319,14 @@ function _readJobStatus(bag, next) {
   bag.consoleAdapter.openGrp('Reading Status');
 
   readJobStatus(bag,
-    function (err, statusCode) {
+    function (err, resultBag) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         return next();
       }
 
-      bag.jobStatusCode = statusCode;
+      bag.jobStatusCode = resultBag.jobStatusCode;
       bag.consoleAdapter.closeGrp(true);
       return next();
     }

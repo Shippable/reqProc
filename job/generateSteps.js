@@ -21,7 +21,8 @@ function generateSteps(externalBag, callback) {
       reqKick: []
     },
     buildRootDir: externalBag.buildRootDir,
-    reqExecDir: externalBag.reqExecDir
+    reqExecDir: externalBag.reqExecDir,
+    commonEnvs: externalBag.commonEnvs
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -97,7 +98,9 @@ function _generateSteps(bag, next) {
         buildScriptsDir: bag.buildScriptsDir,
         buildRootDir: bag.buildRootDir,
         reqExecDir: bag.reqExecDir,
-        buildJobId: bag.buildJobId
+        buildStatusDir: bag.buildStatusDir,
+        buildJobId: bag.buildJobId,
+        commonEnvs: bag.commonEnvs
       });
       generateScript(taskObj,
         function (err, resultBag) {
