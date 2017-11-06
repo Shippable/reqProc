@@ -19,12 +19,16 @@ function readJobStatus(externalBag, callback) {
       _readJobStatus.bind(null, bag)
     ],
     function (err) {
-      if (err)
-        logger.error(bag.who, util.format('Failed to update buildJob status'));
-      else
-        logger.info(bag.who, 'Successfully updated buildJob status');
-
-      return callback(err);
+      var result;
+      if (err) {
+        logger.error(bag.who, util.format('Failed to read buildJob status'));
+      } else {
+        logger.info(bag.who, 'Successfully read buildJob status');
+        result = {
+          jobStatusCode: bag.jobStatusCode
+        };
+      }
+      return callback(err, result);
     }
   );
 

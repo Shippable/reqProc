@@ -22,7 +22,8 @@ function setupDependencies(externalBag, callback) {
     buildId: externalBag.buildId,
     buildNumber: externalBag.buildNumber,
     secrets: externalBag.secrets,
-    stepMessageFilename: externalBag.stepMessageFilename
+    stepMessageFilename: externalBag.stepMessageFilename,
+    buildSharedDir: externalBag.buildSharedDir
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -99,7 +100,9 @@ function _setUpDependencies(bag, next) {
     util.format('JOB_TRIGGERED_BY_NAME=%s',
       bag.inPayload.triggeredByName),
     util.format('JOB_TRIGGERED_BY_ID=%s',
-      bag.inPayload.triggeredById)
+      bag.inPayload.triggeredById),
+    util.format('SHARED_DIR=%s', bag.buildSharedDir),
+    util.format('BUILD_DIR=%s', bag.buildRootDir)
   ];
   bag.paramEnvs = [];
 
