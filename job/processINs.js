@@ -14,7 +14,7 @@ function processINs(externalBag, callback) {
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
     buildInDir: externalBag.buildInDir,
-    buildOutDir: externalBag.buildOutDirm,
+    buildOutDir: externalBag.buildOutDir,
     stepMessageFilename: externalBag.stepMessageFilename
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
