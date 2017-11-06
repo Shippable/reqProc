@@ -158,13 +158,16 @@ function _setJobEnvs(bag, next) {
 
   bag.consoleAdapter.openCmd('Setting job envs');
 
-  //TODO: use templates to set these values
-  var jobEnvs = util.format('SHIPPABLE_API_URL=%s\nBUILDER_API_TOKEN=%s' +
-    '\nBUILD_JOB_ID=%s', global.config.apiUrl, bag.builderApiToken,
-    bag.buildJobId);
+  // TODO: use templates to set these values
+  var jobEnvs = [];
+  jobEnvs.push(util.format('SHIPPABLE_API_URL=%s', global.config.apiUrl));
+  jobEnvs.push(util.format('BUILDER_API_TOKEN=%s', bag.builderApiToken));
+  jobEnvs.push(util.format('BUILD_JOB_ID=%s', bag.buildJobId));
+  jobEnvs.push(util.format('RUN_MODE=%s', global.config.runMode));
+  jobEnvs.push(util.format('BUILD_DIR=%s', bag.buildRootDir));
 
   var envPath = util.format('%s/job.env', bag.buildStatusDir);
-  fs.writeFile(envPath, jobEnvs,
+  fs.writeFile(envPath, jobEnvs.join('\n'),
     function (err) {
       if (err) {
         var msg = util.format('%s, Failed to write file: %s ' +
