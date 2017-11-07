@@ -31,7 +31,6 @@ function readJobStatus(externalBag, callback) {
       return callback(err, result);
     }
   );
-
 }
 
 function _checkInputParams(bag, next) {
