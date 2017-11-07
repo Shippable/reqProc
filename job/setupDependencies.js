@@ -264,7 +264,7 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
   );
 
   if (dependency.version) {
-    if (dependency.type === 'params' && bag.isServiceNode === false) {
+    if (dependency.type === 'params') {
       _.each(dependency.version.propertyBag.params,
         function (value, key) {
           if (_.isObject(value)) {
