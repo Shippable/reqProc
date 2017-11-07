@@ -14,6 +14,11 @@ var processINs = require('../job/processINs.js');
 var generateSteps = require('../job/generateSteps.js');
 var handoffAndPoll = require('../job/handoffAndPoll.js');
 var readJobStatus = require('../job/readJobStatus.js');
+var processOUTs = require('../job/processOUTs.js');
+var createTrace = require('../job/createTrace.js');
+var persistPreviousState = require('../job/persistPreviousState.js');
+var saveStepState = require('../job/saveStepState.js');
+var postVersion = require('../job/postVersion');
 var cleanup = require('../job/cleanup.js');
 var updateStatus = require('../job/updateStatus.js');
 
@@ -68,6 +73,11 @@ function runSh(externalBag, callback) {
       _generateSteps.bind(null, bag),
       _handOffAndPoll.bind(null, bag),
       _readJobStatus.bind(null, bag),
+      _processOUTs.bind(null, bag),
+      _createTrace.bind(null, bag),
+      _persistPreviousState.bind(null, bag),
+      _saveStepState.bind(null, bag),
+      _postVersion.bind(null, bag),
       _cleanupBuildDirectory.bind(null, bag),
       _updateBuildJobStatus.bind(null, bag)
     ],
@@ -199,6 +209,7 @@ function _setupDependencies(bag, next) {
         bag.isInitializingJobGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
+        bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
@@ -275,6 +286,93 @@ function _readJobStatus(bag, next) {
 
       bag.jobStatusCode = resultBag.jobStatusCode;
       bag.consoleAdapter.closeGrp(true);
+      return next();
+    }
+  );
+}
+
+
+function _processOUTs(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _processOUTs.name;
+  logger.verbose(who, 'Inside');
+
+  processOUTs(bag,
+    function (err) {
+      if (err)
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+      return next();
+    }
+  );
+}
+
+function _createTrace(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _createTrace.name;
+  logger.verbose(who, 'Inside');
+
+  createTrace(bag,
+    function (err, resultBag) {
+      if (err)
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+      else
+        bag = _.extend(bag, resultBag);
+      return next();
+    }
+  );
+}
+
+function _persistPreviousState(bag, next) {
+  var who = bag.who + '|' + _persistPreviousState.name;
+  logger.verbose(who, 'Inside');
+
+  persistPreviousState(bag,
+    function (err, resultBag) {
+      if (!err)
+        bag = _.extend(bag, resultBag);
+      return next();
+    }
+  );
+}
+
+function _saveStepState(bag, next) {
+  if (bag.isJobCancelled) return next();
+
+  var who = bag.who + '|' + _saveStepState.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openGrp('Saving Job Files');
+
+  saveStepState(bag,
+    function (err, resultBag) {
+      if (err) {
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.consoleAdapter.closeGrp(false);
+      } else {
+        bag = _.extend(bag, resultBag);
+        bag.consoleAdapter.closeGrp(true);
+      }
+      return next();
+    }
+  );
+}
+
+function _postVersion(bag, next) {
+  if (bag.isJobCancelled) return next();
+
+  var who = bag.who + '|' + _postVersion.name;
+  logger.verbose(who, 'Inside');
+
+  postVersion(bag,
+    function (err, resultBag) {
+      if (err) {
+        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.consoleAdapter.closeGrp(false);
+      } else {
+        bag = _.extend(bag, resultBag);
+      }
       return next();
     }
   );
