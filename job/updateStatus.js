@@ -11,14 +11,15 @@ function updateStatus(externalBag, callback) {
     consoleAdapter: externalBag.consoleAdapter,
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
-    jobStatusCode: externalBag.jobStatusCode
+    jobStatusCode: externalBag.jobStatusCode,
+    version: externalBag.version
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
 
   async.series([
       _checkInputParams.bind(null, bag),
-      _updateBuildJobStatus.bind(null, bag)
+      _updateBuildJobStatusAndVersion.bind(null, bag)
     ],
     function (err) {
       if (err)
@@ -38,19 +39,16 @@ function _checkInputParams(bag, next) {
   return next();
 }
 
-function _updateBuildJobStatus(bag, next) {
-  var who = bag.who + '|' + _updateBuildJobStatus.name;
+function _updateBuildJobStatusAndVersion(bag, next) {
+  var who = bag.who + '|' + _updateBuildJobStatusAndVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Updating build job status');
+  bag.consoleAdapter.openCmd('Updating build job status & version');
   var update = {};
 
-  // bag.jobStatusCode is set in previous functions
-  // only for states other than success
-  if (!bag.jobStatusCode)
-    bag.jobStatusCode = getStatusCodeByName('success', bag.isCI);
-
   update.statusCode = bag.jobStatusCode;
+  if (bag.version && bag.version.id)
+    update.versionId = bag.version.id;
 
   bag.builderApiAdapter.putBuildJobById(bag.buildJobId, update,
     function (err) {
@@ -60,7 +58,8 @@ function _updateBuildJobStatus(bag, next) {
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
       } else {
-        bag.consoleAdapter.publishMsg('Successfully updated buildJob status');
+        bag.consoleAdapter.publishMsg('Successfully updated buildJob status &' +
+        ' version');
         bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
