@@ -25,6 +25,7 @@ function setupDependencies(externalBag, callback) {
     stepMessageFilename: externalBag.stepMessageFilename,
     buildSharedDir: externalBag.buildSharedDir
   };
+
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
 
@@ -155,6 +156,8 @@ function _setUpDependencies(bag, next) {
 
         return nextStep(true);
       }
+
+      dependency.step = step;
 
       async.series([
           __createDataFile.bind(null, bag, dependency),
@@ -486,6 +489,9 @@ function __getDependencyIntegrations(bag, dependency, next) {
       bag.consoleAdapter.publishMsg('Successfully fetched integration');
       var accountIntegration = _.findWhere(bag.secrets.data.accountIntegrations,
        { id: subInt.accountIntegrationId });
+
+      dependency.subscriptionIntegration = subInt;
+      dependency.accountIntegration = accountIntegration;
 
       var stringData = {};
       var arrayData = {};

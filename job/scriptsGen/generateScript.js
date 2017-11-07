@@ -17,6 +17,10 @@ function generateScript(externalBag, callback) {
     scriptHeaderFileName: 'header.sh',
     containerTemplateFileName: 'container.sh',
     envTemplateFileName: 'envs.sh',
+    inDependencyInitTemplateFileNamePattern:
+      path.join('{{masterName}}', 'init.sh'),
+    inDependencyCleanupTemplateFileNamePattern:
+      path.join('{{masterName}}', 'cleanup.sh'),
     runtime: externalBag.runtime,
     buildScriptsDir: externalBag.buildScriptsDir,
     taskScript: '',
@@ -26,6 +30,7 @@ function generateScript(externalBag, callback) {
     reqExecDir: externalBag.reqExecDir,
     buildJobId: externalBag.buildJobId,
     envs: externalBag.commonEnvs,
+    inDependencies: externalBag.inDependencies,
     buildStatusDir: externalBag.buildStatusDir
   };
   bag.defaultDockerVolumeMounts = util.format('-v %s:%s -v %s:/reqExec',
@@ -40,7 +45,9 @@ function generateScript(externalBag, callback) {
       _checkInputParams.bind(null, bag),
       _getScriptHeader.bind(null, bag),
       _generateEnvScriptFromTemplate.bind(null, bag),
+      _generateInDependencyInitScriptsFromTemplate.bind(null, bag),
       _generateScriptFromTemplate.bind(null, bag),
+      _generateInDependencyCleanupScriptsFromTemplate.bind(null, bag),
       _createScriptFile.bind(null, bag),
       _generateDockerBootScriptFromTemplate.bind(null, bag),
       _createDockerScriptFile.bind(null, bag)
@@ -117,6 +124,47 @@ function _generateEnvScriptFromTemplate(bag, next) {
   );
 }
 
+function _generateInDependencyInitScriptsFromTemplate(bag, next) {
+  var who = bag.who + '|' + _generateInDependencyInitScriptsFromTemplate.name;
+  logger.verbose(who, 'Inside');
+
+  async.eachSeries(bag.inDependencies,
+    function (inDependency, nextDependency) {
+      // This might have to change later. We're only going to generate
+      // templates for IN dependencies with integrations for now.
+      if (!inDependency.subscriptionIntegration) return nextDependency();
+      if (!inDependency.accountIntegration) return nextDependency();
+
+      var templateBag = {
+        filePath: path.join(global.config.execTemplatesPath, 'resources',
+          inDependency.type,
+          bag.inDependencyInitTemplateFileNamePattern.replace('{{masterName}}',
+            inDependency.accountIntegration.masterName)
+          ),
+        object: {
+          dependency: inDependency
+        }
+      };
+
+      generateScriptFromTemplate(templateBag,
+        function (err, resultBag) {
+          if (err) {
+            logger.error(util.format('%s,' +
+              'Generate script from template failed ' +
+              'with err: %s', who, err));
+            return nextDependency(err);
+          }
+          bag.taskScript = bag.taskScript.concat(resultBag.script);
+          return nextDependency();
+        }
+      );
+    },
+    function (err) {
+      return next(err);
+    }
+  );
+}
+
 function _generateScriptFromTemplate(bag, next) {
   var who = bag.who + '|' + _generateScriptFromTemplate.name;
   logger.verbose(who, 'Inside');
@@ -141,6 +189,49 @@ function _generateScriptFromTemplate(bag, next) {
       }
       bag.taskScript = bag.taskScript.concat(resultBag.script);
       return next();
+    }
+  );
+}
+
+function _generateInDependencyCleanupScriptsFromTemplate(bag, next) {
+  var who = bag.who + '|' +
+    _generateInDependencyCleanupScriptsFromTemplate.name;
+  logger.verbose(who, 'Inside');
+
+  async.eachSeries(bag.inDependencies,
+    function (inDependency, nextDependency) {
+      // This might have to change later. We're only going to generate
+      // templates for IN dependencies with integrations for now.
+      if (!inDependency.subscriptionIntegration) return nextDependency();
+      if (!inDependency.accountIntegration) return nextDependency();
+
+      var templateBag = {
+        filePath: path.join(global.config.execTemplatesPath, 'resources',
+          inDependency.type,
+          bag.inDependencyCleanupTemplateFileNamePattern
+            .replace('{{masterName}}',
+            inDependency.accountIntegration.masterName)
+          ),
+        object: {
+          dependency: inDependency
+        }
+      };
+
+      generateScriptFromTemplate(templateBag,
+        function (err, resultBag) {
+          if (err) {
+            logger.error(util.format('%s,' +
+              'Generate script from template failed ' +
+              'with err: %s', who, err));
+            return nextDependency(err);
+          }
+          bag.taskScript = bag.taskScript.concat(resultBag.script);
+          return nextDependency();
+        }
+      );
+    },
+    function (err) {
+      return next(err);
     }
   );
 }
