@@ -83,6 +83,13 @@ function _normalizeSteps(bag, next) {
       return !!step.TASK;
     }
   );
+
+  bag.inDependencies = _.filter(bag.inPayload.dependencies,
+    function (dependency) {
+      return dependency.operation === 'IN';
+    }
+  );
+
   return next();
 }
 
@@ -100,7 +107,8 @@ function _generateSteps(bag, next) {
         reqExecDir: bag.reqExecDir,
         buildStatusDir: bag.buildStatusDir,
         buildJobId: bag.buildJobId,
-        commonEnvs: bag.commonEnvs
+        commonEnvs: bag.commonEnvs,
+        inDependencies: bag.inDependencies
       });
       generateScript(taskObj,
         function (err, resultBag) {

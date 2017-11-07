@@ -44,7 +44,12 @@ function _createScript(bag, next) {
   var who = bag.who + '|' + _createScript.name;
   logger.verbose(who, 'Inside');
 
-  bag.script = __applyTemplate(bag.filePath, bag.object);
+  try {
+    bag.script = __applyTemplate(bag.filePath, bag.object);
+  } catch (e) {
+    return next(e);
+  }
+
   return next();
 }
 
