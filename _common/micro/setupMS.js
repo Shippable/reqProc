@@ -42,6 +42,4 @@ function setupMS(params) {
 
   global.config.isSystemNode =
     config.nodeTypeCode === global.nodeTypeCodes.system;
-  global.config.isServiceNode =
-    config.nodeTypeCode === global.nodeTypeCodes.service;
 }

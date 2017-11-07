@@ -5,7 +5,6 @@ module.exports = self;
 var checkAMQP = require('./healthChecks/checkAMQP.js');
 var checkShippableApi = require('./healthChecks/checkShippableApi.js');
 var validateNode = require('./healthChecks/validateNode.js');
-var validateService = require('./healthChecks/validateService.js');
 var updateNodeStatus = require('./healthChecks/updateNodeStatus.js');
 var postNodeStats = require('./healthChecks/postNodeStats.js');
 
@@ -24,7 +23,6 @@ function checkHealth(callback) {
       checkShippableApi.bind(null, params),
       updateNodeStatus.bind(null, params),
       validateNode.bind(null, params),
-      validateService.bind(null, params),
       postNodeStats.bind(null, params)
     ],
     function (err) {
