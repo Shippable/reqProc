@@ -3,7 +3,6 @@
 var self = microWorker;
 module.exports = self;
 
-
 var Adapter = require('./_common/shippable/Adapter.js');
 var exec = require('child_process').exec;
 
@@ -21,9 +20,9 @@ function microWorker(message, callback) {
   logger.info(bag.who, 'Inside');
 
   async.series([
-    _checkInputParams.bind(null, bag),
-    _instantiateConsoleAdapter.bind(null, bag),
-    _applyWorkflowStrategy.bind(null, bag)
+      _checkInputParams.bind(null, bag),
+      _instantiateConsoleAdapter.bind(null, bag),
+      _applyWorkflowStrategy.bind(null, bag)
     ],
     function (err) {
       if (err)

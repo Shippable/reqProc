@@ -58,22 +58,23 @@ function runSh(externalBag, callback) {
   logger.info(bag.who, 'Inside');
 
   async.series([
-    _initJob.bind(null, bag),
-    _setupDirectories.bind(null, bag),
-    _setExecutorAsReqProc.bind(null, bag),
-    _getPreviousState.bind(null, bag),
-    _getSecrets.bind(null, bag),
-    _setupDependencies.bind(null, bag),
-    _processINs.bind(null, bag),
-    _generateSteps.bind(null, bag),
-    _handOffAndPoll.bind(null, bag),
-    _readJobStatus.bind(null, bag),
-    _cleanupBuildDirectory.bind(null, bag),
-    _updateBuildJobStatus.bind(null, bag)
-  ],
-  function (err) {
-    return callback(err);
-  });
+      _initJob.bind(null, bag),
+      _setupDirectories.bind(null, bag),
+      _setExecutorAsReqProc.bind(null, bag),
+      _getPreviousState.bind(null, bag),
+      _getSecrets.bind(null, bag),
+      _setupDependencies.bind(null, bag),
+      _processINs.bind(null, bag),
+      _generateSteps.bind(null, bag),
+      _handOffAndPoll.bind(null, bag),
+      _readJobStatus.bind(null, bag),
+      _cleanupBuildDirectory.bind(null, bag),
+      _updateBuildJobStatus.bind(null, bag)
+    ],
+    function (err) {
+      return callback(err);
+    }
+  );
 }
 
 function _initJob(bag, next) {
