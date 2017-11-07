@@ -284,7 +284,7 @@ function _readJobStatus(bag, next) {
         return next();
       }
 
-      bag = _.extend(bag, resultBag.jobStatusCode);
+      bag = _.extend(bag, resultBag);
       bag.consoleAdapter.closeGrp(true);
       return next();
     }
