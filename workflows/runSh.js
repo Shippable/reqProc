@@ -327,16 +327,10 @@ function _persistPreviousState(bag, next) {
   var who = bag.who + '|' + _persistPreviousState.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Persisting Previous State');
-
   persistPreviousState(bag,
     function (err, resultBag) {
-      if (err) {
-        bag.consoleAdapter.closeGrp(false);
-      } else {
+      if (!err)
         bag = _.extend(bag, resultBag);
-        bag.consoleAdapter.closeGrp(true);
-      }
       return next();
     }
   );

@@ -76,6 +76,7 @@ function _persistPreviousStateOnFailure(bag, next) {
   var who = bag.who + '|' + _persistPreviousStateOnFailure.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openGrp('Persisting Previous State');
   bag.consoleAdapter.openCmd('Copy previous state to current state');
 
   var srcDir = bag.buildPreviousStateDir ;
@@ -86,10 +87,12 @@ function _persistPreviousStateOnFailure(bag, next) {
         bag.consoleAdapter.publishMsg(
           'Failed to persist previous state of job');
         bag.consoleAdapter.closeCmd(false);
+        bag.consoleAdapter.closeGrp(false);
       } else {
         bag.consoleAdapter.publishMsg(
           'Successfully persisted previous state of job');
         bag.consoleAdapter.closeCmd(true);
+        bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
