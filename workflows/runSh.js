@@ -284,13 +284,12 @@ function _readJobStatus(bag, next) {
         return next();
       }
 
-      bag.jobStatusCode = resultBag.jobStatusCode;
+      bag = _.extend(bag, resultBag.jobStatusCode);
       bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
 }
-
 
 function _processOUTs(bag, next) {
   if (bag.jobStatusCode) return next();
