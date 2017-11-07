@@ -1,12 +1,12 @@
 'use strict';
 
-var self = createTrace;
+var self = postVersion;
 module.exports = self;
 
 var fs = require('fs-extra');
 var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 
-function createTrace(externalBag, callback) {
+function postVersion(externalBag, callback) {
   var bag = {
     rawMessage: _.clone(externalBag.rawMessage),
     inPayload: _.clone(externalBag.inPayload),
@@ -28,7 +28,6 @@ function createTrace(externalBag, callback) {
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
-
   async.series([
       _checkInputParams.bind(null, bag),
       _getOutputVersion.bind(null, bag),
