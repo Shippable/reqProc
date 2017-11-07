@@ -19,7 +19,8 @@ function setupDirs(externalBag, callback) {
     buildScriptsDir: externalBag.buildScriptsDir,
     buildSecretsDir: externalBag.buildSecretsDir,
     buildPreviousStateDir: externalBag.buildPreviousStateDir,
-    consoleAdapter: externalBag.consoleAdapter
+    consoleAdapter: externalBag.consoleAdapter,
+    inPayload: _.clone(externalBag.inPayload)
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -116,6 +117,14 @@ function _setupFiles(bag, next) {
     util.format('%s/timeout_reqExec.sh', bag.reqKickScriptsDir),
     util.format('%s/version', bag.reqExecDir)
   ];
+
+  var fileList = _.map(bag.inPayload.dependencies,
+    function (dependency) {
+      return bag.buildStateDir + '/' + dependency.name + '.env';
+    }
+  );
+  fileList.push(bag.buildStateDir + '/' + bag.inPayload.name + '.env');
+  filesToBeCreated = _.uniq(filesToBeCreated.concat(fileList));
 
   async.eachLimit(filesToBeCreated, 10,
     function (file, nextFile) {
