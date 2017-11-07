@@ -209,6 +209,7 @@ function _setupDependencies(bag, next) {
         bag.isInitializingJobGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
+        bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
