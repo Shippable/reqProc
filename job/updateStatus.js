@@ -56,7 +56,7 @@ function _updateBuildJobStatus(bag, next) {
     function (err) {
       if (err) {
         var msg = util.format('%s, failed to :putBuildJobById for ' +
-          'buildJobId: %s with err: %s', who, bag.rawMessage.buildJobId, err);
+          'buildJobId: %s with err: %s', who, bag.buildJobId, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
       } else {
