@@ -3,8 +3,6 @@
 var self = updateStatus;
 module.exports = self;
 
-var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
-
 function updateStatus(externalBag, callback) {
   var bag = {
     buildJobStatus: externalBag.buildJobStatus,
