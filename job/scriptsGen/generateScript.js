@@ -15,7 +15,7 @@ function generateScript(externalBag, callback) {
     name: externalBag.name,
     taskTemplateFileName: 'task.sh',
     scriptHeaderFileName: 'header.sh',
-    containerTemplateFileName: 'container.sh',
+    bootTemplateFileName: 'boot.sh',
     envTemplateFileName: 'envs.sh',
     inDependencyInitTemplateFileNamePattern:
       path.join('{{masterName}}', 'init.sh'),
@@ -274,7 +274,7 @@ function _generateDockerBootScriptFromTemplate(bag, next) {
 
   var templateBag = {
     filePath: path.join(global.config.execTemplatesPath, 'job',
-      bag.containerTemplateFileName),
+      bag.bootTemplateFileName),
     object: {
       options: dockerOptions,
       envs: bag.defaultDockerEnvs,
