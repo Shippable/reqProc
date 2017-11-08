@@ -104,7 +104,7 @@ function _setupFiles(bag, next) {
 
   var filesToBeCreated = [
     util.format('%s/job.env', bag.buildStatusDir),
-    util.format('%s/job.pid', bag.buildStatusDir),
+    util.format('%s/job.info', bag.buildStatusDir),
     util.format('%s/job.status', bag.buildStatusDir),
     util.format('%s/job.who', bag.buildStatusDir),
     util.format('%s/job.steps.json', bag.buildStatusDir),
