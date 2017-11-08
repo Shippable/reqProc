@@ -24,7 +24,7 @@ function generateScript(externalBag, callback) {
     runtime: externalBag.runtime,
     buildScriptsDir: externalBag.buildScriptsDir,
     taskScript: '',
-    dockerScript: '',
+    bootScript: '',
     scriptFilePermissions: '755',
     buildRootDir: externalBag.buildRootDir,
     reqExecDir: externalBag.reqExecDir,
@@ -48,9 +48,9 @@ function generateScript(externalBag, callback) {
       _generateInDependencyInitScriptsFromTemplate.bind(null, bag),
       _generateScriptFromTemplate.bind(null, bag),
       _generateInDependencyCleanupScriptsFromTemplate.bind(null, bag),
-      _createScriptFile.bind(null, bag),
-      _generateDockerBootScriptFromTemplate.bind(null, bag),
-      _createDockerScriptFile.bind(null, bag)
+      _createTaskScriptFile.bind(null, bag),
+      _generateBootScriptFromTemplate.bind(null, bag),
+      _createBootScript.bind(null, bag)
     ],
     function (err) {
       var result;
@@ -60,10 +60,13 @@ function generateScript(externalBag, callback) {
       } else {
         logger.info(bag.who, 'Successfully created script');
         result = {};
+
+        // TODO: Send back only the boot script once host's boot script
+        // can execute the task script.
         if (bag.runtime.container)
-          result.scriptFileName = bag.dockerScriptFileName;
+          result.scriptFileName = bag.bootScriptFileName;
         else
-          result.scriptFileName = bag.scriptFileName;
+          result.scriptFileName = bag.taskScriptFileName;
       }
       return callback(err, result);
     }
@@ -92,7 +95,7 @@ function _getScriptHeader(bag, next) {
         return next(err);
       }
       bag.taskScript = bag.taskScript.concat(header);
-      bag.dockerScript = bag.dockerScript.concat(header);
+      bag.bootScript = bag.bootScript.concat(header);
       return next();
     }
   );
@@ -118,7 +121,7 @@ function _generateEnvScriptFromTemplate(bag, next) {
         return next(err);
       }
       bag.taskScript = bag.taskScript.concat(resultBag.script);
-      bag.dockerScript = bag.dockerScript.concat(resultBag.script);
+      bag.bootScript = bag.bootScript.concat(resultBag.script);
       return next();
     }
   );
@@ -236,8 +239,8 @@ function _generateInDependencyCleanupScriptsFromTemplate(bag, next) {
   );
 }
 
-function _createScriptFile(bag, next) {
-  var who = bag.who + '|' + _createScriptFile.name;
+function _createTaskScriptFile(bag, next) {
+  var who = bag.who + '|' + _createTaskScriptFile.name;
   logger.verbose(who, 'Inside');
 
   var scriptFileName = util.format('task_%s.sh', bag.taskIndex);
@@ -250,39 +253,44 @@ function _createScriptFile(bag, next) {
           'with err: %s', who, scriptFilePath, err));
         return next(err);
       }
-      bag.scriptFileName = scriptFileName;
+      bag.taskScriptFileName = scriptFileName;
       return next();
     }
   );
 }
 
-function _generateDockerBootScriptFromTemplate(bag, next) {
-  if (!bag.runtime.container) return next();
-
-  var who = bag.who + '|' + _generateDockerBootScriptFromTemplate.name;
+function _generateBootScriptFromTemplate(bag, next) {
+  var who = bag.who + '|' + _generateBootScriptFromTemplate.name;
   logger.verbose(who, 'Inside');
 
-  var dockerContainerName = util.format('reqExec.%s.%s', bag.buildJobId,
-    bag.taskIndex);
-  var dockerExecCommand = util.format('bash -c \'/reqExec/bin/dist/main/main ' +
-    '%s/%s %s/job.env\'', bag.buildScriptsDir, bag.scriptFileName,
-    bag.buildStatusDir);
-  var dockerOptions = util.format('%s --name %s', bag.defaultDockerOptions,
-    dockerContainerName);
-  var dockerImage = util.format('%s:%s', bag.runtime.options.imageName,
-    bag.runtime.options.imageTag);
-
-  var templateBag = {
-    filePath: path.join(global.config.execTemplatesPath, 'job',
-      bag.bootTemplateFileName),
-    object: {
+  // TODO: Some of the assumptions of paths here should be removed.
+  var object = {};
+  if (bag.runtime.container) {
+    var dockerContainerName = util.format('reqExec.%s.%s', bag.buildJobId,
+      bag.taskIndex);
+    var dockerExecCommand =
+      util.format('bash -c \'/reqExec/bin/dist/main/main ' +
+      '%s/%s %s/job.env\'', bag.buildScriptsDir, bag.taskScriptFileName,
+      bag.buildStatusDir);
+    var dockerOptions = util.format('%s --name %s', bag.defaultDockerOptions,
+      dockerContainerName);
+    var dockerImage = util.format('%s:%s', bag.runtime.options.imageName,
+      bag.runtime.options.imageTag);
+    object = {
+      isContainer: bag.runtime.container,
       options: dockerOptions,
       envs: bag.defaultDockerEnvs,
       volumes: bag.defaultDockerVolumeMounts,
       image: dockerImage,
       containerName: dockerContainerName,
       command: dockerExecCommand
-    }
+    };
+  }
+
+  var templateBag = {
+    filePath: path.join(global.config.execTemplatesPath, 'job',
+      bag.bootTemplateFileName),
+    object: object
   };
 
   generateScriptFromTemplate(templateBag,
@@ -292,29 +300,27 @@ function _generateDockerBootScriptFromTemplate(bag, next) {
           'with err: %s', who, err));
         return next(err);
       }
-      bag.dockerScript = bag.dockerScript.concat(resultBag.script);
+      bag.bootScript = bag.bootScript.concat(resultBag.script);
       return next();
     }
   );
 }
 
-function _createDockerScriptFile(bag, next) {
-  if (!bag.runtime.container) return next();
-
-  var who = bag.who + '|' + _createDockerScriptFile.name;
+function _createBootScript(bag, next) {
+  var who = bag.who + '|' + _createBootScript.name;
   logger.verbose(who, 'Inside');
 
-  var scriptFileName = util.format('container_%s.sh', bag.taskIndex);
+  var scriptFileName = util.format('boot_%s.sh', bag.taskIndex);
   var scriptFilePath = path.join(bag.buildScriptsDir, scriptFileName);
 
-  __writeScriptFile(bag.dockerScript, scriptFilePath, bag.scriptFilePermissions,
+  __writeScriptFile(bag.bootScript, scriptFilePath, bag.scriptFilePermissions,
     function (err) {
       if (err) {
         logger.error(util.format('%s, Failed to write file: %s ' +
           'with err: %s', who, scriptFilePath, err));
         return next(err);
       }
-      bag.dockerScriptFileName = scriptFileName;
+      bag.bootScriptFileName = scriptFileName;
       return next();
     }
   );
