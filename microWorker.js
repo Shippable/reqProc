@@ -11,7 +11,7 @@ var workflowPath = './workflows/' + pathPlaceholder + '.js';
 var JobConsoleAdapter = require('./_common/jobConsoleAdapter.js');
 var BuildJobConsoleAdapter = require('./_common/buildJobConsoleAdapter.js');
 
-function microWorker(message, callback) {
+function microWorker(message) {
   var bag = {
       rawMessage: message
     };
@@ -30,9 +30,7 @@ function microWorker(message, callback) {
       else
         logger.info(bag.who, util.format('Successfully processed message'));
 
-      if (!config.isServiceNode)
-        __restartExecContainer(bag);
-      return callback();
+      __restartExecContainer(bag);
     }
   );
 }

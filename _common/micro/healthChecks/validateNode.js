@@ -83,6 +83,8 @@ function _validateSystemNodeStatusPeriodically(bag, next) {
 }
 
 function __validateClusterNode(innerBag) {
+  if (global.config.isProcessingRunShJob) return;
+
   var who = innerBag.who + '|' + __validateClusterNode.name;
   logger.debug(who, 'Inside');
 
@@ -124,6 +126,8 @@ function __validateClusterNode(innerBag) {
 }
 
 function __validateSystemNode(innerBag) {
+  if (global.config.isProcessingRunShJob) return;
+
   var who = innerBag.who + '|' + __validateSystemNode.name;
   logger.debug(who, 'Inside');
 
