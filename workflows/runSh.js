@@ -23,6 +23,10 @@ var cleanup = require('../job/cleanup.js');
 var updateStatus = require('../job/updateStatus.js');
 
 function runSh(externalBag, callback) {
+  // At this point we have started processing the runSh and we do not want
+  // the cluster node validation to affect the build.
+  global.config.isProcessingRunSh = true;
+
   var bag = {
     rawMessage: externalBag.rawMessage,
     builderApiToken: externalBag.builderApiToken,

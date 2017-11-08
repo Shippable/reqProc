@@ -19,7 +19,6 @@ function MicroService(params) {
   this.nodeId = config.nodeId;
   this.nodeTypeCode = config.nodeTypeCode;
   this.isSystemNode = config.isSystemNode;
-  this.isServiceNode = config.isServiceNode;
   if (config.apiToken)
     this.suAdapter = new ShippableAdapter(config.apiToken);
 }
@@ -285,7 +284,6 @@ MicroService.prototype.disconnectAndProcess =
       nodeId: this.nodeId,
       consumerTag: this.consumerTag,
       isSystemNode: this.isSystemNode,
-      isServiceNode: this.isServiceNode,
       publicAdapter: this.publicAdapter,
       suAdapter: this.suAdapter
     };
@@ -293,26 +291,15 @@ MicroService.prototype.disconnectAndProcess =
     async.series([
         _validateClusterNode.bind(null, bag),
         _validateSystemNode.bind(null, bag),
-        _validateActiveService.bind(null, bag),
         _unsubscribeFromQueue.bind(null, bag),
         _ackMessage.bind(null, bag),
         _rejectMessage.bind(null, bag)
       ],
       function () {
         if (bag.ackMessage) {
-          if (!bag.isServiceNode) {
-            this.AMQPConnection.closing = true;
-            this.AMQPConnection.disconnect();
-          }
-          this.microWorker(message,
-            function () {
-              if (bag.isServiceNode)
-                this.connectToQueue(function () {});
-            }.bind(this)
-          );
-        } else {
-          if (bag.isServiceNode)
-            this.connectToQueue(function () {});
+          this.AMQPConnection.closing = true;
+          this.AMQPConnection.disconnect();
+          this.microWorker(message);
         }
       }.bind(this)
     );
@@ -368,27 +355,8 @@ function _validateSystemNode(bag, next) {
   );
 }
 
-function _validateActiveService(bag, next) {
-  if (!bag.isServiceNode) return next();
-
-  var who = bag.who + '|' + _validateSystemNode.name;
-  logger.debug(who, 'Inside');
-  /*
-    TODO:
-    perform a GET using config.service.id. Check the result for the isActive
-    field.  If that field is false, someone has disabled this service via
-    admin panel and we should reject the message. Don't rely on
-    config.service for the flag, since it will only be updated every 2 minutes
-  */
-  var service = {isActive: true};
-
-  if (!service.isActive)
-    bag.ackMessage = false;
-  return next();
-}
-
 function _unsubscribeFromQueue(bag, next) {
-  if (!bag.ackMessage && !bag.isServiceNode) return next();
+  if (!bag.ackMessage) return next();
 
   var who = bag.who + '|' + _unsubscribeFromQueue.name;
   logger.debug(who, 'Inside');

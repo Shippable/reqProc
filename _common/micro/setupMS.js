@@ -42,4 +42,5 @@ function setupMS(params) {
 
   global.config.isSystemNode =
     config.nodeTypeCode === global.nodeTypeCodes.system;
+  global.config.isProcessingRunSh = false;
 }
