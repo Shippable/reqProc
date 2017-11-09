@@ -6,7 +6,6 @@ module.exports = self;
 var fs = require('fs-extra');
 var path = require('path');
 
-// var initJob = require('../runCI/initJob.js');
 var getStatusCodeByName = require('../runCI/getStatusCodeByName.js');
 var getPreviousState = require('../runCI/getPreviousState.js');
 var executeJobScript = require('../runCI/executeJobScript.js');
