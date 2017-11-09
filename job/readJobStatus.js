@@ -52,11 +52,11 @@ function _readJobStatus(bag, next) {
   bag.consoleAdapter.openCmd('Reading job status');
 
   var statusPath = util.format('%s/job.status', bag.buildStatusDir);
-
   fs.readFile(statusPath, 'utf8',
-    function (err, statusCode) {
+    function (err, status) {
+      var msg;
       if (err) {
-        var msg = util.format('%s, failed to read file: %s for ' +
+        msg = util.format('%s, failed to read file: %s for ' +
           'buildJobId: %s with err: %s', who, statusPath,
           bag.rawMessage.buildJobId, err);
         bag.consoleAdapter.publishMsg(msg);
@@ -64,12 +64,19 @@ function _readJobStatus(bag, next) {
         return next();
       }
 
-      var jobStatusCode = parseInt(statusCode);
-      var status = _.findWhere(global.systemCodes,
-        { code: jobStatusCode }).name;
+      var jobStatusSystemCode = _.findWhere(global.systemCodes,
+        { name: status.trim() });
+      if (_.isEmpty(jobStatusSystemCode)) {
+        msg = util.format('%s, failed to find status code for ' +
+          'status: %s', who, status.trim());
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+        return next();
+      }
+
       // Do not set status to success here, as OUT dependencies can fail.
-      if (status !== 'success')
-        bag.jobStatusCode = jobStatusCode;
+      if (status.trim() !== 'success')
+        bag.jobStatusCode = jobStatusSystemCode.code;
 
       bag.consoleAdapter.publishMsg('Successfully read job status');
       bag.consoleAdapter.closeCmd(true);
