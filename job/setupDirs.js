@@ -112,9 +112,6 @@ function _setupFiles(bag, next) {
     util.format('%s/status', bag.reqProcDir),
     util.format('%s/version', bag.reqKickDir),
     util.format('%s/status', bag.reqKickDir),
-    util.format('%s/kill_reqExec.sh', bag.reqKickScriptsDir),
-    util.format('%s/cancel_reqExec.sh', bag.reqKickScriptsDir),
-    util.format('%s/timeout_reqExec.sh', bag.reqKickScriptsDir),
     util.format('%s/version', bag.reqExecDir)
   ];
 

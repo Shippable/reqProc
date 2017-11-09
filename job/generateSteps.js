@@ -4,8 +4,8 @@ var self = generateSteps;
 module.exports = self;
 
 var fs = require('fs-extra');
-
 var generateScript = require('./scriptsGen/generateScript.js');
+var generateKillScript = require('./scriptsGen/generateKillScript.js');
 var normalizeStepsV1 = require('./scriptsGen/normalizeStepsV1.js');
 var normalizeStepsV2 = require('./scriptsGen/normalizeStepsV2.js');
 
@@ -32,6 +32,7 @@ function generateSteps(externalBag, callback) {
       _normalizeSteps.bind(null, bag),
       _generateSteps.bind(null, bag),
       _writeJobSteps.bind(null, bag),
+      _generateKillScript.bind(null, bag),
       _setJobEnvs.bind(null, bag)
     ],
     function (err) {
@@ -43,7 +44,6 @@ function generateSteps(externalBag, callback) {
       return callback(err);
     }
   );
-
 }
 
 function _checkInputParams(bag, next) {
@@ -156,6 +156,33 @@ function _writeJobSteps(bag, next) {
       );
       bag.consoleAdapter.closeCmd(true);
       return next();
+    }
+  );
+}
+
+function _generateKillScript(bag, next) {
+  var who = bag.who + '|' + _generateKillScript.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Generating kill script');
+  var killObj = {
+    buildScriptsDir: bag.buildScriptsDir,
+    buildStatusDir: bag.buildStatusDir
+  };
+  generateKillScript(killObj,
+    function (err) {
+      if (err) {
+        var msg = util.format(
+          '%s, Failed to generate kill script with err: %s',
+          who, err
+        );
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+      }
+
+      bag.consoleAdapter.publishMsg('Generated kill script');
+      bag.consoleAdapter.closeCmd(true);
+      return next(err);
     }
   );
 }
