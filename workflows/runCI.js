@@ -10,7 +10,6 @@ var getStatusCodeByName = require('../runCI/getStatusCodeByName.js');
 var getPreviousState = require('../runCI/getPreviousState.js');
 var executeJobScript = require('../runCI/executeJobScript.js');
 var saveState = require('../runCI/saveState.js');
-var executeScript = require('../runCI/executeScript.js');
 
 var pathPlaceholder = '{{TYPE}}';
 var inStepPath = '../resources/' + pathPlaceholder + '/inStep.js';
@@ -93,7 +92,6 @@ function runCI(externalBag, callback) {
       _postTaskVersion.bind(null, bag),
       _postOutResourceVersions.bind(null, bag),
       _updateJobStatus.bind(null, bag),
-      _cleanIntegrations.bind(null, bag),
       _cleanBuildDirectory.bind(null, bag)
     ],
     function (err) {
@@ -2551,33 +2549,6 @@ function _updateJobStatus(bag, next) {
         bag.consoleAdapter.closeCmd(true);
         bag.consoleAdapter.closeGrp(true);
       }
-      return next();
-    }
-  );
-}
-
-function _cleanIntegrations(bag, next) {
-  var who = bag.who + '|' + _cleanIntegrations.name;
-  logger.verbose(who, 'Inside');
-
-  var integrationCleanupPath =
-    path.resolve(__dirname, '../runCI/templates/integrationCleanup.sh');
-
-  var scriptBag = {
-    scriptPath: integrationCleanupPath,
-    args: [],
-    options: {},
-    consoleAdapter: bag.consoleAdapter
-  };
-
-  bag.consoleAdapter.openGrp('Integration Cleanup');
-
-  executeScript(scriptBag,
-    function (err) {
-      if (err)
-        bag.consoleAdapter.closeGrp(false);
-      else
-        bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
