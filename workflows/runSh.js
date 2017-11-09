@@ -7,6 +7,7 @@ var fs = require('fs-extra');
 
 var initJob = require('../job/initJob.js');
 var setupDirs = require('../job/setupDirs.js');
+var pollBuildJobStatus = require('../job/pollBuildJobStatus.js');
 var getPreviousState = require('../job/getPreviousState.js');
 var getSecrets = require('../job/getSecrets.js');
 var setupDependencies = require('../job/setupDependencies.js');
@@ -69,6 +70,7 @@ function runSh(externalBag, callback) {
   async.series([
       _initJob.bind(null, bag),
       _setupDirectories.bind(null, bag),
+      _pollBuildJobStatus.bind(null, bag),
       _setExecutorAsReqProc.bind(null, bag),
       _getPreviousState.bind(null, bag),
       _getSecrets.bind(null, bag),
@@ -124,6 +126,20 @@ function _setupDirectories(bag, next) {
         bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
         bag.isInitializingJobGrpSuccess = false;
       }
+      return next();
+    }
+  );
+}
+
+function _pollBuildJobStatus(bag, next) {
+  if (bag.isJobCancelled) return next();
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _pollBuildJobStatus.name;
+  logger.verbose(who, 'Inside');
+
+  pollBuildJobStatus(bag,
+    function () {
       return next();
     }
   );
@@ -418,7 +434,7 @@ function _updateBuildJobStatus(bag, next) {
   );
 }
 
-//TODO: remove this, change all references to use the function in
+// TODO: remove this, change all references to use the function in
 //`common/getStatusCodeByName
 function __getStatusCodeByName(codeName, isCI) {
   var group = 'status';

@@ -43,4 +43,6 @@ function setupMS(params) {
   global.config.isSystemNode =
     config.nodeTypeCode === global.nodeTypeCodes.system;
   global.config.isProcessingRunShJob = false;
+  // 15 seconds
+  global.config.runShJobStatusPollIntervalMS = 15 * 1000;
 }
