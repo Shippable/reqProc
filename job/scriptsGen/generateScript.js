@@ -283,7 +283,8 @@ function _generateBootScriptFromTemplate(bag, next) {
       volumes: bag.defaultDockerVolumeMounts,
       image: dockerImage,
       containerName: dockerContainerName,
-      command: dockerExecCommand
+      command: dockerExecCommand,
+      jobInfoPath: path.join(bag.buildStatusDir, 'job.info')
     };
   }
 
