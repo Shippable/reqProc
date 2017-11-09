@@ -12,8 +12,8 @@ var executeJobScript = require('../runCI/executeJobScript.js');
 var saveState = require('../runCI/saveState.js');
 
 var pathPlaceholder = '{{TYPE}}';
-var inStepPath = '../resources/' + pathPlaceholder + '/inStep.js';
-var outStepPath = '../resources/' + pathPlaceholder + '/outStep.js';
+var inStepPath = '../runCI/resources/' + pathPlaceholder + '/inStep.js';
+var outStepPath = '../runCI/resources/' + pathPlaceholder + '/outStep.js';
 
 function runCI(externalBag, callback) {
   var bag = {
@@ -1780,6 +1780,9 @@ function __handleDependency(bag, dependency, next) {
       outStepPath.replace(pathPlaceholder, dependency.type);
     rootDir = bag.outRootDir;
   }
+  // TODO: remove this log
+  bag.consoleAdapter.publishMsg('mylog dependencyHandlerPath' +
+    dependencyHandlerPath);
   try {
     dependencyHandler = require(dependencyHandlerPath);
   } catch (e) {
