@@ -1780,9 +1780,7 @@ function __handleDependency(bag, dependency, next) {
       outStepPath.replace(pathPlaceholder, dependency.type);
     rootDir = bag.outRootDir;
   }
-  // TODO: remove this log
-  bag.consoleAdapter.publishMsg('mylog dependencyHandlerPath' +
-    dependencyHandlerPath);
+
   try {
     dependencyHandler = require(dependencyHandlerPath);
   } catch (e) {
