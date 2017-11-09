@@ -10,7 +10,8 @@ function pollBuildJobStatus(externalBag, callback) {
   var bag = {
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
-    buildStatusDir: externalBag.buildStatusDir
+    buildStatusDir: externalBag.buildStatusDir,
+    isCI: externalBag.isCI
   };
 
   async.series([
