@@ -33,9 +33,6 @@ function generateScript(externalBag, callback) {
     inDependencies: externalBag.inDependencies,
     buildStatusDir: externalBag.buildStatusDir
   };
-  bag.defaultDockerVolumeMounts = util.format('-v %s:%s -v %s:/reqExec',
-    bag.buildRootDir, bag.buildRootDir, bag.reqExecDir);
-  bag.defaultDockerOptions = '--rm';
   bag.defaultDockerEnvs = '';
 
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -270,14 +267,13 @@ function _generateBootScriptFromTemplate(bag, next) {
     util.format('bash -c \'/reqExec/bin/dist/main/main ' +
     '%s/%s %s/job.env\'', bag.buildScriptsDir, bag.taskScriptFileName,
     bag.buildStatusDir);
-  var dockerOptions = util.format('%s --name %s', bag.defaultDockerOptions,
+  var dockerOptions = util.format('%s --name %s', bag.runtime.options.options,
     dockerContainerName);
   var dockerImage = util.format('%s:%s', bag.runtime.options.imageName,
     bag.runtime.options.imageTag);
   var object = {
     options: dockerOptions,
     envs: bag.defaultDockerEnvs,
-    volumes: bag.defaultDockerVolumeMounts,
     image: dockerImage,
     containerName: dockerContainerName,
     command: dockerExecCommand
