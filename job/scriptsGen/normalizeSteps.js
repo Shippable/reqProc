@@ -47,7 +47,8 @@ function _normalizeNewFormatSteps(steps, defaultRuntime) {
     'pull': true,
     'options': {
       env: {},
-      options: ''
+      options: util.format('%s %s', global.config.defaultTaskContainerOptions,
+        global.config.defaultTaskContainerMounts)
     }
   };
   var defaultHostOpts = {
