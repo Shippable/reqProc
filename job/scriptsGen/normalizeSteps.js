@@ -1,9 +1,42 @@
 'use strict';
 
-var self = normalizeStepsV2;
+var self = normalizeSteps;
 module.exports = self;
 
-function normalizeStepsV2(steps, defaultRuntime) {
+function normalizeSteps(steps, defaultRuntime) {
+  var clonedSteps = _.clone(steps);
+  clonedSteps = _convertOldFormatStepsToNew(clonedSteps);
+  clonedSteps = _normalizeNewFormatSteps(clonedSteps, defaultRuntime);
+
+  return clonedSteps;
+}
+
+function _convertOldFormatStepsToNew(steps) {
+  _.each(steps,
+    function (step) {
+      if (!step.TASK)
+        return;
+
+      // if TASK is in old format convert it to new format
+      if (_.isArray(step.TASK)) {
+        var newTask = {
+          script: []
+        };
+        _.each(step.TASK,
+          function (oldTask) {
+            if (oldTask.script)
+              newTask.script.push(oldTask.script);
+          }
+        );
+        step.TASK = newTask;
+      }
+    }
+  );
+
+  return steps;
+}
+
+function _normalizeNewFormatSteps(steps, defaultRuntime) {
   var clonedSteps = _.clone(steps);
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
   var defaultIsContainer = true;

@@ -32,6 +32,10 @@ function setupMS(params) {
   global.config.buildDir = process.env.BUILD_DIR;
   global.config.reqProcContainerName = process.env.REQPROC_CONTAINER_NAME;
   global.config.execTemplatesPath = process.env.EXEC_TEMPLATES_PATH;
+  global.config.defaultTaskContainerMounts =
+    process.env.DEFAULT_TASK_CONTAINER_MOUNTS;
+  global.config.defaultTaskContainerOptions =
+    process.env.DEFAULT_TASK_CONTAINER_OPTIONS;
   /* Node Type Codes */
   global.nodeTypeCodes = {
     dynamic: 7000,
