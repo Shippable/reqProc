@@ -5,8 +5,7 @@ module.exports = self;
 
 var fs = require('fs-extra');
 var generateScript = require('./scriptsGen/generateScript.js');
-var normalizeStepsV1 = require('./scriptsGen/normalizeStepsV1.js');
-var normalizeStepsV2 = require('./scriptsGen/normalizeStepsV2.js');
+var normalizeSteps = require('./scriptsGen/normalizeSteps.js');
 
 function generateSteps(externalBag, callback) {
   var bag = {
@@ -72,8 +71,7 @@ function _normalizeSteps(bag, next) {
   var who = bag.who + '|' + _normalizeSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.steps = normalizeStepsV1(bag.inPayload.propertyBag.yml.steps);
-  bag.steps = normalizeStepsV2(bag.steps,
+  bag.steps = normalizeSteps(bag.inPayload.propertyBag.yml.steps,
     bag.inPayload.propertyBag.yml.runtime);
 
   bag.tasks = _.filter(bag.steps,
