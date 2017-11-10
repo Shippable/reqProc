@@ -57,10 +57,10 @@ function _getLatestBuildJobStatus(bag, next) {
         var msg = util.format('%s, Failed to get buildJob' +
           ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err);
         logger.warn(msg);
-        bag.jobStatusCode = getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
       }
 
-      if (buildJob.statusCode === getStatusCodeByName('cancelled', bag.isCI)) {
+      if (buildJob.statusCode === getStatusCodeByName('cancelled')) {
         bag.isJobCancelled = true;
         logger.warn(util.format('%s, Job with buildJobId:%s' +
           ' is cancelled', who, bag.buildJobId));

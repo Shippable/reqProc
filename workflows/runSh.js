@@ -5,6 +5,7 @@ module.exports = self;
 
 var fs = require('fs-extra');
 
+var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 var initJob = require('../job/initJob.js');
 var setupDirs = require('../job/setupDirs.js');
 var pollBuildJobStatus = require('../job/pollBuildJobStatus.js');
@@ -54,10 +55,7 @@ function runSh(externalBag, callback) {
       OUT: 'OUT',
       TASK: 'TASK',
       NOTIFY: 'NOTIFY'
-    },
-    // TODO: Currently reqProc could only run pipeline jobs
-    // set this to true for CI jobs when reqProc supports it in future
-    isCI: false
+    }
   };
 
   bag.subPrivateKeyPath = util.format('%s/00_sub', bag.buildSecretsDir);
@@ -104,7 +102,7 @@ function _initJob(bag, next) {
     function (err, resultBag) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         bag.isInitializingJobGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
@@ -123,7 +121,7 @@ function _setupDirectories(bag, next) {
     function (err) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         bag.isInitializingJobGrpSuccess = false;
       }
       return next();
@@ -162,7 +160,7 @@ function _setExecutorAsReqProc(bag, next) {
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
 
@@ -185,7 +183,7 @@ function _getPreviousState(bag, next) {
     function (err) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         bag.isInitializingJobGrpSuccess = false;
       }
       return next();
@@ -204,7 +202,7 @@ function _getSecrets(bag, next) {
     function (err, resultBag) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         bag.isInitializingJobGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
@@ -225,7 +223,7 @@ function _setupDependencies(bag, next) {
     function (err, resultBag) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         bag.isInitializingJobGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
@@ -245,7 +243,7 @@ function _processINs(bag, next) {
   processINs(bag,
     function (err) {
       if (err)
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
       return next();
     }
   );
@@ -261,7 +259,7 @@ function _generateSteps(bag, next) {
     function (err) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
 
@@ -280,7 +278,7 @@ function _handOffAndPoll(bag, next) {
     function (err) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
       return next();
@@ -300,7 +298,7 @@ function _readJobStatus(bag, next) {
     function (err, resultBag) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
 
@@ -320,7 +318,7 @@ function _processOUTs(bag, next) {
   processOUTs(bag,
     function (err) {
       if (err)
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
       return next();
     }
   );
@@ -335,7 +333,7 @@ function _createTrace(bag, next) {
   createTrace(bag,
     function (err, resultBag) {
       if (err)
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
       else
         bag = _.extend(bag, resultBag);
       return next();
@@ -367,7 +365,7 @@ function _saveStepState(bag, next) {
   saveStepState(bag,
     function (err, resultBag) {
       if (err) {
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         bag.consoleAdapter.closeGrp(false);
       } else {
         bag = _.extend(bag, resultBag);
@@ -387,7 +385,7 @@ function _postVersion(bag, next) {
   postVersion(bag,
     function (err, resultBag) {
       if (err) {
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         bag.consoleAdapter.closeGrp(false);
       } else {
         bag = _.extend(bag, resultBag);
@@ -407,7 +405,7 @@ function _cleanupBuildDirectory(bag, next) {
     function (err) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = __getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
 
@@ -432,25 +430,4 @@ function _updateBuildJobStatus(bag, next) {
       return next();
     }
   );
-}
-
-// TODO: remove this, change all references to use the function in
-//`common/getStatusCodeByName
-function __getStatusCodeByName(codeName, isCI) {
-  var group = 'status';
-  if (isCI) {
-    var pipelinesToCI = {
-      failure: 'FAILED',
-      processing: 'PROCESSING',
-      cancelled: 'CANCELED',
-      error: 'FAILED',
-      success: 'SUCCESS',
-      timeout: 'TIMEOUT'
-    };
-    group = 'statusCodes';
-    codeName = pipelinesToCI[codeName];
-  }
-
-  return _.findWhere(global.systemCodes,
-    { group: group, name: codeName}).code;
 }

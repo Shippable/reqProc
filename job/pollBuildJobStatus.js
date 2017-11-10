@@ -10,8 +10,7 @@ function pollBuildJobStatus(externalBag, callback) {
   var bag = {
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
-    buildStatusDir: externalBag.buildStatusDir,
-    isCI: externalBag.isCI
+    buildStatusDir: externalBag.buildStatusDir
   };
 
   async.series([
@@ -28,7 +27,7 @@ function _pollBuildJobStatus(bag, next) {
   logger.verbose(who, 'Inside');
 
   var isCancelled = false;
-  var cancelledStatusCode = getStatusCodeByName('cancelled', bag.isCI);
+  var cancelledStatusCode = getStatusCodeByName('cancelled');
   function poll(bag) {
     bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
       function (err, buildJob) {

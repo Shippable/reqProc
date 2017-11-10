@@ -20,7 +20,6 @@ function postVersion(externalBag, callback) {
     isJobCancelled: externalBag.isJobCancelled,
     resourceId: externalBag.resourceId,
     versionSha: externalBag.versionSha,
-    isCI: externalBag.isCI,
     projectId: externalBag.projectId,
     trace: externalBag.trace,
     builderApiAdapter: externalBag.builderApiAdapter,
@@ -157,7 +156,7 @@ function _postTaskVersion(bag, next) {
   // jobStatusCode is only set to failure/error, so if we reach this
   // function without any code we know job has succeeded
   if (!bag.jobStatusCode)
-    bag.jobStatusCode = getStatusCodeByName('success', bag.isCI);
+    bag.jobStatusCode = getStatusCodeByName('success');
 
   var version = {
     resourceId: bag.resourceId,
@@ -202,7 +201,7 @@ function _postTaskVersion(bag, next) {
 function _postOutResourceVersions(bag, next) {
   if (bag.isJobCancelled) return next();
   if (!bag.resourceId) return next();
-  if (bag.jobStatusCode !== getStatusCodeByName('success', bag.isCI))
+  if (bag.jobStatusCode !== getStatusCodeByName('success'))
     return next();
 
   var who = bag.who + '|' + _postOutResourceVersions.name;
@@ -298,7 +297,7 @@ function _postOutResourceVersions(bag, next) {
     },
     function (err) {
       if (err)
-        bag.jobStatusCode = getStatusCodeByName('failure', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('failure');
       return next();
     }
   );
