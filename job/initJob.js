@@ -31,7 +31,6 @@ function initJob(externalBag, callback) {
         logger.info(bag.who, util.format('Successfully init job'));
         result= {
           inPayload: bag.inPayload,
-          isCI: bag.isCI,
           buildId: bag.buildId,
           jobId: bag.jobId,
           buildJobId: bag.buildJobId,
@@ -84,25 +83,16 @@ function _validateIncomingMessage(bag, next) {
 
       if (!bag.inPayload.type)
         consoleErrors.push(util.format('%s is missing: payload.type', who));
-      else
-        bag.isCI = bag.inPayload.type === 'runCI';
 
-      if (!bag.isCI) {
-        if (!bag.rawMessage.buildJobId)
-          consoleErrors.push(util.format('%s is missing: buildJobId', who));
-        bag.buildJobId = bag.rawMessage.buildJobId;
+      if (!bag.rawMessage.buildJobId)
+        consoleErrors.push(util.format('%s is missing: buildJobId', who));
+      bag.buildJobId = bag.rawMessage.buildJobId;
 
-        if (!bag.inPayload.buildId)
-          consoleErrors.push(
-            util.format('%s is missing: payload.buildId', who)
-          );
-        bag.buildId = bag.inPayload.buildId;
-
-      } else {
-        if (!bag.rawMessage.jobId)
-          consoleErrors.push(util.format('%s is missing: jobId', who));
-        bag.jobId = bag.rawMessage.jobId;
-      }
+      if (!bag.inPayload.buildId)
+        consoleErrors.push(
+          util.format('%s is missing: payload.buildId', who)
+        );
+      bag.buildId = bag.inPayload.buildId;
 
       if (!bag.inPayload.resourceId)
         consoleErrors.push(
@@ -168,10 +158,10 @@ function _getBuildJobStatus(bag, next) {
         var msg = util.format('%s, Failed to get buildJob' +
           ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err);
         logger.warn(msg);
-        bag.jobStatusCode = getStatusCodeByName('error', bag.isCI);
+        bag.jobStatusCode = getStatusCodeByName('error');
       }
       bag.isJobCancelled = false;
-      if (buildJob.statusCode === getStatusCodeByName('cancelled', bag.isCI)) {
+      if (buildJob.statusCode === getStatusCodeByName('cancelled')) {
         bag.isJobCancelled = true;
         logger.warn(util.format('%s, Job with buildJobId:%s' +
           ' is cancelled', who, bag.buildJobId));

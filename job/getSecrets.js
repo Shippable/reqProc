@@ -12,7 +12,6 @@ function getSecrets(externalBag, callback) {
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
     jobStatusCode: externalBag.jobStatusCode,
-    isCI: externalBag.isCI,
     subPrivateKeyPath: externalBag.subPrivateKeyPath
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
