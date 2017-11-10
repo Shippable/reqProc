@@ -86,7 +86,7 @@ function _normalizeNewFormatSteps(steps, defaultRuntime) {
           task.runtime.options.imageName = defaultContainerOpts.imageName;
           task.runtime.options.imageTag = defaultContainerOpts.imageTag;
         }
-        if (_.isEmpty(task.runtime.options.pull))
+        if (!_.isBoolean(task.runtime.options.pull))
           task.runtime.options.pull = defaultContainerOpts.pull;
         if (_.isEmpty(task.runtime.options.options))
           task.runtime.options.options = '';

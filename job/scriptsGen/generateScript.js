@@ -275,6 +275,7 @@ function _generateBootScriptFromTemplate(bag, next) {
     options: dockerOptions,
     envs: bag.defaultDockerEnvs,
     image: dockerImage,
+    pull: bag.runtime.options.pull,
     containerName: dockerContainerName,
     command: dockerExecCommand
   };
