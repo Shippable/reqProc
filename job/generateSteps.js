@@ -5,7 +5,6 @@ module.exports = self;
 
 var fs = require('fs-extra');
 var generateScript = require('./scriptsGen/generateScript.js');
-var generateKillScript = require('./scriptsGen/generateKillScript.js');
 var normalizeStepsV1 = require('./scriptsGen/normalizeStepsV1.js');
 var normalizeStepsV2 = require('./scriptsGen/normalizeStepsV2.js');
 
