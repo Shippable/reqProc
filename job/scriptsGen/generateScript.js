@@ -35,7 +35,7 @@ function generateScript(externalBag, callback) {
   };
   bag.defaultDockerVolumeMounts = util.format('-v %s:%s -v %s:/reqExec',
     bag.buildRootDir, bag.buildRootDir, bag.reqExecDir);
-  bag.defaultDockerOptions = '-d --rm';
+  bag.defaultDockerOptions = '--rm';
   bag.defaultDockerEnvs = '';
 
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -61,8 +61,6 @@ function generateScript(externalBag, callback) {
         logger.info(bag.who, 'Successfully created script');
         result = {};
 
-        // TODO: Send back only the boot script once host's boot script
-        // can execute the task script.
         if (bag.runtime.container)
           result.scriptFileName = bag.bootScriptFileName;
         else
@@ -260,33 +258,30 @@ function _createTaskScriptFile(bag, next) {
 }
 
 function _generateBootScriptFromTemplate(bag, next) {
+  if (!bag.runtime.container) return next();
+
   var who = bag.who + '|' + _generateBootScriptFromTemplate.name;
   logger.verbose(who, 'Inside');
 
   // TODO: Some of the assumptions of paths here should be removed.
-  var object = {};
-  if (bag.runtime.container) {
-    var dockerContainerName = util.format('reqExec.%s.%s', bag.buildJobId,
-      bag.taskIndex);
-    var dockerExecCommand =
-      util.format('bash -c \'/reqExec/bin/dist/main/main ' +
-      '%s/%s %s/job.env\'', bag.buildScriptsDir, bag.taskScriptFileName,
-      bag.buildStatusDir);
-    var dockerOptions = util.format('%s --name %s', bag.defaultDockerOptions,
-      dockerContainerName);
-    var dockerImage = util.format('%s:%s', bag.runtime.options.imageName,
-      bag.runtime.options.imageTag);
-    object = {
-      isContainer: bag.runtime.container,
-      options: dockerOptions,
-      envs: bag.defaultDockerEnvs,
-      volumes: bag.defaultDockerVolumeMounts,
-      image: dockerImage,
-      containerName: dockerContainerName,
-      command: dockerExecCommand,
-      jobInfoPath: path.join(bag.buildStatusDir, 'job.info')
-    };
-  }
+  var dockerContainerName = util.format('reqExec.%s.%s', bag.buildJobId,
+    bag.taskIndex);
+  var dockerExecCommand =
+    util.format('bash -c \'/reqExec/bin/dist/main/main ' +
+    '%s/%s %s/job.env\'', bag.buildScriptsDir, bag.taskScriptFileName,
+    bag.buildStatusDir);
+  var dockerOptions = util.format('%s --name %s', bag.defaultDockerOptions,
+    dockerContainerName);
+  var dockerImage = util.format('%s:%s', bag.runtime.options.imageName,
+    bag.runtime.options.imageTag);
+  var object = {
+    options: dockerOptions,
+    envs: bag.defaultDockerEnvs,
+    volumes: bag.defaultDockerVolumeMounts,
+    image: dockerImage,
+    containerName: dockerContainerName,
+    command: dockerExecCommand
+  };
 
   var templateBag = {
     filePath: path.join(global.config.execTemplatesPath, 'job',
@@ -308,6 +303,8 @@ function _generateBootScriptFromTemplate(bag, next) {
 }
 
 function _createBootScript(bag, next) {
+  if (!bag.runtime.container) return next();
+
   var who = bag.who + '|' + _createBootScript.name;
   logger.verbose(who, 'Inside');
 

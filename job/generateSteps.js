@@ -32,7 +32,6 @@ function generateSteps(externalBag, callback) {
       _normalizeSteps.bind(null, bag),
       _generateSteps.bind(null, bag),
       _writeJobSteps.bind(null, bag),
-      _generateKillScript.bind(null, bag),
       _setJobEnvs.bind(null, bag)
     ],
     function (err) {
@@ -156,33 +155,6 @@ function _writeJobSteps(bag, next) {
       );
       bag.consoleAdapter.closeCmd(true);
       return next();
-    }
-  );
-}
-
-function _generateKillScript(bag, next) {
-  var who = bag.who + '|' + _generateKillScript.name;
-  logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openCmd('Generating kill script');
-  var killObj = {
-    buildScriptsDir: bag.buildScriptsDir,
-    buildStatusDir: bag.buildStatusDir
-  };
-  generateKillScript(killObj,
-    function (err) {
-      if (err) {
-        var msg = util.format(
-          '%s, Failed to generate kill script with err: %s',
-          who, err
-        );
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-      }
-
-      bag.consoleAdapter.publishMsg('Generated kill script');
-      bag.consoleAdapter.closeCmd(true);
-      return next(err);
     }
   );
 }
