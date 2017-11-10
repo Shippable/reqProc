@@ -107,7 +107,7 @@ function _generateEnvScriptFromTemplate(bag, next) {
     filePath: path.join(global.config.execTemplatesPath, 'job',
       bag.envTemplateFileName),
     object: {
-      envs: bag.envs
+      envs: bag.envs.concat(bag.runtime.options.env)
     }
   };
 
