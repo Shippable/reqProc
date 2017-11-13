@@ -12,6 +12,7 @@ function pollBuildJobStatus(externalBag, callback) {
     buildJobId: externalBag.buildJobId,
     buildStatusDir: externalBag.buildStatusDir
   };
+  bag.who = util.format('%s|job|%s', msName, self.name);
 
   async.series([
       _pollBuildJobStatus.bind(null, bag)

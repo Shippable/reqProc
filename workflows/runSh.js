@@ -12,6 +12,7 @@ var pollBuildJobStatus = require('../job/pollBuildJobStatus.js');
 var getPreviousState = require('../job/getPreviousState.js');
 var getSecrets = require('../job/getSecrets.js');
 var setupDependencies = require('../job/setupDependencies.js');
+var notifyOnStart = require('../job/notifyOnStart.js');
 var processINs = require('../job/processINs.js');
 var generateSteps = require('../job/generateSteps.js');
 var handoffAndPoll = require('../job/handoffAndPoll.js');
@@ -73,6 +74,7 @@ function runSh(externalBag, callback) {
       _getPreviousState.bind(null, bag),
       _getSecrets.bind(null, bag),
       _setupDependencies.bind(null, bag),
+      _notifyOnStart.bind(null, bag),
       _processINs.bind(null, bag),
       _generateSteps.bind(null, bag),
       _handOffAndPoll.bind(null, bag),
@@ -227,8 +229,35 @@ function _setupDependencies(bag, next) {
         bag.isInitializingJobGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
+      }
+      return next();
+    }
+  );
+}
+
+function _notifyOnStart(bag, next) {
+  if (bag.isJobCancelled) return next();
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _notifyOnStart.name;
+  logger.verbose(who, 'Inside');
+
+  notifyOnStart(bag,
+    function (err) {
+      // Log failure and continue with the build even if queuing notification
+      // fails.
+      if (err) {
+        logger.warn(util.format(
+          '%s: Failed to queue on_start notification with error: %s',
+          who, err));
+
+        // Closing of "Initializing job" is handled here as this is the last
+        // step of the group.
+        bag.consoleAdapter.closeGrp(false);
+      } else {
         bag.consoleAdapter.closeGrp(true);
       }
+
       return next();
     }
   );
