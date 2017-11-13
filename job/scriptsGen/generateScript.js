@@ -17,6 +17,7 @@ function generateScript(externalBag, callback) {
     scriptHeaderFileName: 'header.sh',
     bootTemplateFileName: 'boot.sh',
     envTemplateFileName: 'envs.sh',
+    scriptHelpersFileName: 'helpers.sh',
     inDependencyInitTemplateFileNamePattern:
       path.join('{{masterName}}', 'init.sh'),
     inDependencyCleanupTemplateFileNamePattern:
@@ -41,6 +42,7 @@ function generateScript(externalBag, callback) {
   async.series([
       _checkInputParams.bind(null, bag),
       _getScriptHeader.bind(null, bag),
+      _getScriptHelpers.bind(null, bag),
       _generateEnvScriptFromTemplate.bind(null, bag),
       _generateInDependencyInitScriptsFromTemplate.bind(null, bag),
       _generateScriptFromTemplate.bind(null, bag),
@@ -91,6 +93,26 @@ function _getScriptHeader(bag, next) {
       }
       bag.taskScript = bag.taskScript.concat(header);
       bag.bootScript = bag.bootScript.concat(header);
+      return next();
+    }
+  );
+}
+
+function _getScriptHelpers(bag, next) {
+  var who = bag.who + '|' + _getScriptHelpers.name;
+  logger.verbose(who, 'Inside');
+
+  var helperFile = path.join(global.config.execTemplatesPath, 'job',
+    bag.scriptHelpersFileName);
+
+  fs.readFile(helperFile, 'utf8',
+    function (err, helper) {
+      if (err) {
+        logger.error(util.format('%s, Failed to read file: %s ' +
+          'with err: %s', who, helperFile, err));
+        return next(err);
+      }
+      bag.taskScript = bag.taskScript.concat(helper);
       return next();
     }
   );
