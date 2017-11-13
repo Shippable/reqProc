@@ -3,10 +3,14 @@
 var self = normalizeSteps;
 module.exports = self;
 
-function normalizeSteps(steps, defaultRuntime) {
-  var clonedSteps = _.clone(steps);
+function normalizeSteps(yml) {
+  var clonedSteps = _.clone(yml.steps);
   clonedSteps = _convertOldFormatStepsToNew(clonedSteps);
-  clonedSteps = _normalizeNewFormatSteps(clonedSteps, defaultRuntime);
+  clonedSteps = _normalizeNewFormatSteps(clonedSteps, yml.runtime,
+    __convertOldFormatTerminalGroupToNew(yml.on_success),
+    __convertOldFormatTerminalGroupToNew(yml.on_failure),
+    __convertOldFormatTerminalGroupToNew(yml.always)
+  );
 
   return clonedSteps;
 }
@@ -36,7 +40,8 @@ function _convertOldFormatStepsToNew(steps) {
   return steps;
 }
 
-function _normalizeNewFormatSteps(steps, defaultRuntime) {
+function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
+  onFailure, always) {
   var clonedSteps = _.clone(steps);
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
   var defaultIsContainer = true;
@@ -64,6 +69,7 @@ function _normalizeNewFormatSteps(steps, defaultRuntime) {
   else
     _.extend(defaultHostOpts, defaultJobRuntime.options);
 
+  var lastTask;
   var taskIndex = 0;
   _.each(clonedSteps,
     function (step) {
@@ -104,13 +110,44 @@ function _normalizeNewFormatSteps(steps, defaultRuntime) {
       if (_.isUndefined(task.name))
         task.name = 'Task ' + taskIndex;
 
+      task.always = always;
+      task.onFailure = onFailure;
+      lastTask = task;
+
       task.taskIndex = taskIndex;
       taskIndex += 1;
     }
   );
+  lastTask.onSuccess = onSuccess;
 
   return clonedSteps;
 }
+
+function __convertOldFormatTerminalGroupToNew(terminalGroup) {
+  var clonedTerminalGroup = _.clone(terminalGroup);
+  var newTerminalGroup = {
+    script: []
+  };
+
+  // If the group is not defined, return the default group.
+  if (_.isEmpty(clonedTerminalGroup))
+    return newTerminalGroup;
+  // If the group is of array type (old), convert it into object.
+  else if (_.isArray(clonedTerminalGroup))
+    _.each(clonedTerminalGroup,
+      function (section) {
+        if (section.script)
+          newTerminalGroup.script.push(section.script);
+      }
+    );
+  // If the group is of object type (new), convert any string script to array.
+  else if (_.isObject(terminalGroup))
+    if (_.isString(clonedTerminalGroup.script))
+      newTerminalGroup.script.push(clonedTerminalGroup.script);
+
+  return newTerminalGroup;
+}
+
 
 function __normalizeEnvs(envs) {
   var clonedEnvs = _.clone(envs);

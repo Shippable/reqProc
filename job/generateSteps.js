@@ -71,8 +71,7 @@ function _normalizeSteps(bag, next) {
   var who = bag.who + '|' + _normalizeSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.steps = normalizeSteps(bag.inPayload.propertyBag.yml.steps,
-    bag.inPayload.propertyBag.yml.runtime);
+  bag.steps = normalizeSteps(bag.inPayload.propertyBag.yml);
 
   bag.tasks = _.filter(bag.steps,
     function (step) {

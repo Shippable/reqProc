@@ -11,6 +11,9 @@ var generateScriptFromTemplate = require('./generateScriptFromTemplate.js');
 function generateScript(externalBag, callback) {
   var bag = {
     script: externalBag.script,
+    onSuccess: externalBag.onSuccess,
+    onFailure: externalBag.onFailure,
+    always: externalBag.always,
     taskIndex: externalBag.taskIndex,
     name: externalBag.name,
     taskTemplateFileName: 'task.sh',
@@ -45,7 +48,7 @@ function generateScript(externalBag, callback) {
       _getScriptHelpers.bind(null, bag),
       _generateEnvScriptFromTemplate.bind(null, bag),
       _generateInDependencyInitScriptsFromTemplate.bind(null, bag),
-      _generateScriptFromTemplate.bind(null, bag),
+      _generateTaskScriptFromTemplate.bind(null, bag),
       _generateInDependencyCleanupScriptsFromTemplate.bind(null, bag),
       _createTaskScriptFile.bind(null, bag),
       _generateBootScriptFromTemplate.bind(null, bag),
@@ -185,8 +188,8 @@ function _generateInDependencyInitScriptsFromTemplate(bag, next) {
   );
 }
 
-function _generateScriptFromTemplate(bag, next) {
-  var who = bag.who + '|' + _generateScriptFromTemplate.name;
+function _generateTaskScriptFromTemplate(bag, next) {
+  var who = bag.who + '|' + _generateTaskScriptFromTemplate.name;
   logger.verbose(who, 'Inside');
 
   bag.taskName = bag.name || util.format('task_%s', bag.taskIndex);
@@ -195,6 +198,9 @@ function _generateScriptFromTemplate(bag, next) {
       bag.taskTemplateFileName),
     object: {
       script: bag.script,
+      onSuccess: bag.onSuccess,
+      onFailure: bag.onFailure,
+      always: bag.always,
       name: bag.taskName,
       container: bag.runtime.container
     }
