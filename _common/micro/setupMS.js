@@ -36,6 +36,12 @@ function setupMS(params) {
     process.env.DEFAULT_TASK_CONTAINER_MOUNTS;
   global.config.defaultTaskContainerOptions =
     process.env.DEFAULT_TASK_CONTAINER_OPTIONS;
+  global.config.shippableNodeArchitecture =
+    process.env.SHIPPABLE_NODE_ARCHITECTURE;
+  global.config.shippableNodeOperatingSystem =
+    process.env.SHIPPABLE_NODE_OPERATING_SYSTEM;
+  global.config.shippableReleaseVersion = process.env.SHIPPABLE_RELEASE_VERSION;
+
   /* Node Type Codes */
   global.nodeTypeCodes = {
     dynamic: 7000,

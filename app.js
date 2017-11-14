@@ -53,6 +53,34 @@ if (!global.config.buildDir)
 if (!global.config.reqProcContainerName)
   consoleErrors.push(util.format('%s is missing: reqProcContainerName', who));
 
+if (!global.config.execTemplatesPath)
+  consoleErrors.push(util.format('%s is missing: execTemplatesPath', who));
+
+if (!global.config.defaultTaskContainerMounts)
+  consoleErrors.push(
+    util.format('%s is missing: defaultTaskContainerMounts', who)
+  );
+
+if (!global.config.defaultTaskContainerOptions)
+  consoleErrors.push(
+    util.format('%s is missing: defaultTaskContainerOptions', who)
+  );
+
+if (!global.config.shippableNodeArchitecture)
+  consoleErrors.push(
+    util.format('%s is missing: shippableNodeArchitecture', who)
+  );
+
+if (!global.config.shippableNodeOperatingSystem)
+  consoleErrors.push(
+    util.format('%s is missing: shippableNodeOperatingSystem', who)
+  );
+
+if (!global.config.shippableReleaseVersion)
+  consoleErrors.push(
+    util.format('%s is missing: shippableReleaseVersion', who)
+  );
+
 if (!_dirExistsSync(global.config.baseDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
     global.config.baseDir));

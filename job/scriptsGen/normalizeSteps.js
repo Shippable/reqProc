@@ -45,10 +45,14 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   var clonedSteps = _.clone(steps);
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
   var defaultIsContainer = true;
-  // TODO: This needs to be OS/Arch specific.
+
+  // TODO: The image names need to be come from a config.
+  var imageName = 'drydock/microbase';
+  if (global.config.shippableNodeArchitecture === 'aarch64')
+    imageName = 'drydockaarch64/microbase';
   var defaultContainerOpts = {
-    'imageName': 'drydock/microbase',
-    'imageTag': 'master',
+    'imageName': imageName,
+    'imageTag': global.config.shippableReleaseVersion,
     'pull': true,
     'options': {
       env: {},
