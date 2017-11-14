@@ -66,6 +66,13 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
     }
   };
 
+  // TODO: This might not be the best place to do this, we need to move this
+  // once we have everything driven with ENVs.
+  var defaultENVs = {
+    SHIPPABLE_NODE_ARCHITECTURE: global.config.shippableNodeArchitecture,
+    SHIPPABLE_NODE_OPERATING_SYSTEM: global.config.shippableNodeOperatingSystem
+  };
+
   if (defaultJobRuntime.container === false)
     defaultIsContainer = false;
   if (defaultJobRuntime.container)
@@ -110,6 +117,8 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
         if (_.isEmpty(task.runtime.options.env))
           task.runtime.options.env = defaultHostOpts.options.env;
       }
+
+      _.extend(task.runtime.options.env, defaultENVs);
       task.runtime.options.env = __normalizeEnvs(task.runtime.options.env);
       if (_.isUndefined(task.name))
         task.name = 'Task ' + taskIndex;
