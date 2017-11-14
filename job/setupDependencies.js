@@ -396,6 +396,10 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
           sanitizedDependencyName,
           ___escapeEnvironmentVariable(shaData.isPullRequest)
         ));
+        bag.commonEnvs.push(util.format('%s_IS_PULL_REQUEST_CLOSE="%s"',
+          sanitizedDependencyName,
+          ___escapeEnvironmentVariable(shaData.isPullRequestClose)
+        ));
         var pullRequestRepoFullName = shaData.pullRequestRepoFullName || '';
         bag.commonEnvs.push(util.format('%s_PULL_REQUEST_REPO_FULL_NAME="%s"',
           sanitizedDependencyName,

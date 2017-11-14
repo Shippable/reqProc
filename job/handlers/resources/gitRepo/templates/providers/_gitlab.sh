@@ -23,6 +23,7 @@ export PROJECT_CLONE_URL="<%=projectUrl%>"
 export PROJECT_CLONE_LOCATION="<%=cloneLocation%>"
 export COMMIT_SHA="<%=commitSha%>"
 export IS_PULL_REQUEST=<%=shaData.isPullRequest%>
+export IS_PULL_REQUEST_CLOSE=<%=shaData.isPullRequestClose%>
 export PULL_REQUEST="<%=shaData.pullRequestNumber%>"
 export PULL_REQUEST_BASE_BRANCH="<%=shaData.pullRequestBaseBranch%>"
 export PROJECT="<%=name%>"
