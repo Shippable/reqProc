@@ -7,7 +7,7 @@ var fs = require('fs-extra');
 
 function cleanup(externalBag, callback) {
   var bag = {
-    buildRootDir: externalBag.buildRootDir,    
+    buildRootDir: externalBag.buildRootDir,
     consoleAdapter: externalBag.consoleAdapter
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -33,12 +33,25 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  if (_.isEmpty(bag.buildRootDir)) {
-    logger.warn(util.format('%s, Build dir is empty.', who));
-    return next(true);
-  }
+  var expectedParams = [
+    'buildRootDir',
+    'consoleAdapter'
+  ];
 
-  return next();
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+  return next(hasErrors);
 }
 
 function _cleanupBuildDirectory(bag, next) {
@@ -46,7 +59,7 @@ function _cleanupBuildDirectory(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd(
-    util.format('Cleaning %s directory', bag.buildRootDir)
+    util.format('Cleaning directory %s', bag.buildRootDir)
   );
 
   fs.emptyDir(bag.buildRootDir,
@@ -59,7 +72,8 @@ function _cleanupBuildDirectory(bag, next) {
         return next();
       }
 
-      bag.consoleAdapter.publishMsg('Successfully cleaned up');
+      bag.consoleAdapter.publishMsg(
+        'Successfully cleaned up ' + bag.buildRootDir);
       bag.consoleAdapter.closeCmd(true);
       return next();
     }

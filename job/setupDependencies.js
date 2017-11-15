@@ -8,11 +8,9 @@ var fs = require('fs-extra');
 function setupDependencies(externalBag, callback) {
   var bag = {
     inPayload: _.clone(externalBag.inPayload),
-    buildJobStatus: externalBag.buildJobStatus,
     consoleAdapter: externalBag.consoleAdapter,
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
-    jobStatusCode: externalBag.jobStatusCode,
     operation: externalBag.operation,
     messageFilePath: externalBag.messageFilePath,
     buildRootDir: externalBag.buildRootDir,
@@ -57,13 +55,42 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  return next();
+  var expectedParams = [
+    'inPayload',
+    'consoleAdapter',
+    'builderApiAdapter',
+    'buildJobId',
+    'operation',
+    'messageFilePath',
+    'buildRootDir',
+    'buildStateDir',
+    'buildPreviousStateDir',
+    'resourceId',
+    'buildId',
+    'buildNumber',
+    'secrets',
+    'stepMessageFilename',
+    'buildSharedDir'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+
+  return next(hasErrors);
 }
 
 function _setUpDependencies(bag, next) {
-  if (bag.isJobCancelled) return next();
-  if (bag.jobStatusCode) return next();
-
   var who = bag.who + '|' + _setUpDependencies.name;
   logger.verbose(who, 'Inside');
 
@@ -181,9 +208,6 @@ function _setUpDependencies(bag, next) {
       );
     },
     function (err) {
-      if (!isGrpSuccess)
-        bag.isInitializingJobGrpSuccess = false;
-
       if (err)
         return next(err);
 
@@ -906,9 +930,6 @@ function __appendFile(bag, next) {
 }
 
 function _saveTaskMessage(bag, next) {
-  if (bag.isJobCancelled) return next();
-  if (bag.jobStatusCode) return next();
-
   var who = bag.who + '|' + _saveTaskMessage.name;
   logger.verbose(who, 'Inside');
 

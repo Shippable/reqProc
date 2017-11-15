@@ -1,11 +1,11 @@
 'use strict';
 
-var self = initJob;
+var self = initializeJob;
 module.exports = self;
 
 var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 
-function initJob(externalBag, callback) {
+function initializeJob(externalBag, callback) {
   var bag = {
     consoleAdapter: externalBag.consoleAdapter,
     rawMessage: _.clone(externalBag.rawMessage),
@@ -25,25 +25,24 @@ function initJob(externalBag, callback) {
     ],
     function (err) {
       var result;
-      if (err) {
-        logger.error(bag.who, util.format('Failed to init job'));
-      } else {
-        logger.info(bag.who, util.format('Successfully init job'));
-        result= {
-          inPayload: bag.inPayload,
-          buildId: bag.buildId,
-          jobId: bag.jobId,
-          buildJobId: bag.buildJobId,
-          resourceId: bag.resourceId,
-          buildNumber: bag.buildNumber,
-          buildJobPropertyBag: bag.buildJobPropertyBag,
-          projectId: bag.projectId,
-          nodeId: bag.nodeId,
-          statusCode: bag.statusCode,
-          isJobCancelled: bag.isJobCancelled
-        };
-      }
+      if (err)
+        logger.error(bag.who, util.format('Failed to initialize job'));
+      else
+        logger.info(bag.who, util.format('Successfully initialized job'));
 
+      result = {
+        inPayload: bag.inPayload,
+        buildId: bag.buildId,
+        jobId: bag.jobId,
+        buildJobId: bag.buildJobId,
+        resourceId: bag.resourceId,
+        buildNumber: bag.buildNumber,
+        buildJobPropertyBag: bag.buildJobPropertyBag,
+        projectId: bag.projectId,
+        nodeId: bag.nodeId,
+        statusCode: bag.statusCode,
+        isJobCancelled: bag.isJobCancelled
+      };
       return callback(err, result);
     }
   );
@@ -53,12 +52,27 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  if (_.isEmpty(bag.consoleAdapter)) {
-    logger.error(util.format('%s, Missing consoleAdapter.', who));
-    return next(true);
-  }
+  var expectedParams = [
+    'consoleAdapter',
+    'rawMessage',
+    'builderApiAdapter',
+    'nodeId'
+  ];
 
-  return next();
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+  return next(hasErrors);
 }
 
 function _validateIncomingMessage(bag, next) {
@@ -67,10 +81,7 @@ function _validateIncomingMessage(bag, next) {
 
   bag.consoleAdapter.openCmd('Validating incoming message');
 
-  // We don't know where the group will end so need a flag
-  bag.isInitializingJobGrpSuccess = true;
   var consoleErrors = [];
-
   if (_.isEmpty(bag.rawMessage))
     consoleErrors.push(util.format('%s is missing: rawMessage', who));
 
@@ -152,20 +163,26 @@ function _getBuildJobStatus(bag, next) {
   var who = bag.who + '|' + _getBuildJobStatus.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openCmd('Obtaining latest job status code');
   bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
     function (err, buildJob) {
       if (err) {
-        var msg = util.format('%s, Failed to get buildJob' +
+        var msg = util.format('%s: failed to getBuildJobById' +
           ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err);
         logger.warn(msg);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+
         bag.jobStatusCode = getStatusCodeByName('error');
+      } else {
+        bag.consoleAdapter.publishMsg(
+          util.format('Successfully obtained latest job status code: %s',
+          buildJob.statusCode));
+        bag.consoleAdapter.closeCmd(true);
+
+        bag.jobStatusCode = buildJob.statusCode;
       }
-      bag.isJobCancelled = false;
-      if (buildJob.statusCode === getStatusCodeByName('cancelled')) {
-        bag.isJobCancelled = true;
-        logger.warn(util.format('%s, Job with buildJobId:%s' +
-          ' is cancelled', who, bag.buildJobId));
-      }
+
       return next(err);
     }
   );
@@ -259,23 +276,23 @@ function _validateDependencies(bag, next) {
 function _updateNodeIdInBuildJob(bag, next) {
   var who = bag.who + '|' + _updateNodeIdInBuildJob.name;
   logger.verbose(who, 'Inside');
-  bag.consoleAdapter.openCmd('Updating node');
+  bag.consoleAdapter.openCmd('Updating job with nodeId');
 
   var update = {
     nodeId: bag.nodeId
   };
-
   bag.builderApiAdapter.putBuildJobById(bag.buildJobId, update,
     function (err) {
       if (err) {
         var msg =
-          util.format('%s, failed to :putBuildJobById for buildJobId: %s, %s',
+          util.format('%s: failed to :putBuildJobById for buildJobId: %s, %s',
             who, bag.buildJobId, err);
-
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
         return next(err);
       } else {
+        bag.consoleAdapter.publishMsg(
+          'Successfully job with nodeId: ' + bag.nodeId);
         bag.consoleAdapter.closeCmd(true);
       }
       return next();

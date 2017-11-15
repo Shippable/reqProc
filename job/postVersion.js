@@ -17,7 +17,6 @@ function postVersion(externalBag, callback) {
     buildOutDir: externalBag.buildOutDir,
     stepMessageFilename: externalBag.stepMessageFilename,
     jobStatusCode: externalBag.jobStatusCode,
-    isJobCancelled: externalBag.isJobCancelled,
     resourceId: externalBag.resourceId,
     versionSha: externalBag.versionSha,
     projectId: externalBag.projectId,
@@ -57,15 +56,47 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  return next();
+  var expectedParams = [
+    'rawMessage',
+    'inPayload',
+    'outputVersionFilePath',
+    'consoleAdapter',
+    'buildStateDir',
+    'buildInDir',
+    'buildOutDir',
+    'stepMessageFilename',
+    'jobStatusCode',
+    'resourceId',
+    'versionSha',
+    'projectId',
+    'trace',
+    'builderApiAdapter',
+    'operation'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+
+  return next(hasErrors);
 }
 
 function _getOutputVersion(bag, next) {
-  if (bag.isJobCancelled) return next();
-  if (bag.jobStatusCode) return next();
+  if (bag.jobStatusCode !== getStatusCodeByName('success')) return next();
 
   var who = bag.who + '|' + _getOutputVersion.name;
   logger.verbose(who, 'Inside');
+
   bag.consoleAdapter.openGrp('Saving resource version');
   bag.consoleAdapter.openCmd('Reading output version');
 
@@ -89,8 +120,7 @@ function _getOutputVersion(bag, next) {
 }
 
 function _extendOutputVersionWithEnvs(bag, next) {
-  if (bag.isJobCancelled) return next();
-  if (bag.jobStatusCode) return next();
+  if (bag.jobStatusCode !== getStatusCodeByName('success')) return next();
 
   var who = bag.who + '|' + _extendOutputVersionWithEnvs.name;
   logger.verbose(who, 'Inside');
@@ -103,7 +133,7 @@ function _extendOutputVersionWithEnvs(bag, next) {
     var envFile = fs.readFileSync(envFilePath).toString();
     var lines = envFile.split('\n');
     bag.consoleAdapter.publishMsg(
-      util.format('found file %s.  Checking for additional properties.',
+      util.format('Found file %s. Checking for additional properties.',
       envFilePath)
     );
     _.each(lines,
@@ -145,19 +175,10 @@ function _extendOutputVersionWithEnvs(bag, next) {
 }
 
 function _postTaskVersion(bag, next) {
-  if (bag.isJobCancelled) return next();
-  if (!bag.resourceId) return next();
-
   var who = bag.who + '|' + _postTaskVersion.name;
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Updating resource version');
-
-  // jobStatusCode is only set to failure/error, so if we reach this
-  // function without any code we know job has succeeded
-  if (!bag.jobStatusCode)
-    bag.jobStatusCode = getStatusCodeByName('success');
-
   var version = {
     resourceId: bag.resourceId,
     projectId: bag.projectId,
@@ -186,7 +207,7 @@ function _postTaskVersion(bag, next) {
         bag.isGrpSuccess = false;
       } else {
         bag.version = newVersion;
-        msg = util.format('Successfully posted version:%s for ' +
+        msg = util.format('Successfully posted version: %s for ' +
           'resourceId: %s', newVersion.id, bag.resourceId);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(true);
@@ -199,10 +220,7 @@ function _postTaskVersion(bag, next) {
 }
 
 function _postOutResourceVersions(bag, next) {
-  if (bag.isJobCancelled) return next();
-  if (!bag.resourceId) return next();
-  if (bag.jobStatusCode !== getStatusCodeByName('success'))
-    return next();
+  if (bag.jobStatusCode !== getStatusCodeByName('success')) return next();
 
   var who = bag.who + '|' + _postOutResourceVersions.name;
   logger.verbose(who, 'Inside');
@@ -296,9 +314,7 @@ function _postOutResourceVersions(bag, next) {
       );
     },
     function (err) {
-      if (err)
-        bag.jobStatusCode = getStatusCodeByName('failure');
-      return next();
+      return next(err);
     }
   );
 }
@@ -460,7 +476,7 @@ function __compareVersions(bag, next) {
   var who = bag.who + '|' + __compareVersions.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('comparing current version to original');
+  bag.consoleAdapter.openCmd('Comparing current version to original');
   var originalVersion = bag.dependency.version;
 
   // Don't compare the trace

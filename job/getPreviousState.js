@@ -14,7 +14,7 @@ function getPreviousState(externalBag, callback) {
   };
 
   bag.who = util.format('%s|job|%s', msName, self.name);
-  logger.verbose(bag.who, 'Inside');
+  logger.info(bag.who, 'Inside');
 
   async.series([
       _checkInputParams.bind(null, bag),
@@ -30,41 +30,34 @@ function getPreviousState(externalBag, callback) {
 
 function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
-  logger.debug(who, 'Inside');
+  logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating dependencies to get ' +
-    'previous job files');
+  var expectedParams = [
+    'builderApiAdapter',
+    'resourceId',
+    'previousStateDir',
+    'consoleAdapter'
+  ];
 
-  var consoleErrors = [];
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
 
-  if (!bag.resourceId)
-    consoleErrors.push(util.format('%s is missing: resourceId', who));
-
-  if (!bag.previousStateDir)
-    consoleErrors.push(util.format('%s is missing: previousStateDir', who));
-
-  if (consoleErrors.length > 0) {
-    _.each(consoleErrors,
-      function (e) {
-        var msg = e;
-        bag.consoleAdapter.publishMsg(msg);
-      }
-    );
-
-    bag.consoleAdapter.closeCmd(false);
-    return next(true);
-  }
-
-  bag.consoleAdapter.publishMsg('Successfully validated ' +
-    'dependencies of previous job');
-  bag.consoleAdapter.closeCmd(true);
-
-  return next();
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+  return next(hasErrors);
 }
 
 function _getFiles(bag, next) {
   var who = bag.who + '|' + _getFiles.name;
-  logger.debug(who, 'Inside');
+  logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Getting files of previous job');
 
@@ -100,7 +93,7 @@ function _createFiles(bag, next) {
   if (_.isEmpty(bag.stateFileJSON)) return next();
 
   var who = bag.who + '|' + _createFiles.name;
-  logger.debug(who, 'Inside');
+  logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Saving files of previous job');
 
@@ -139,7 +132,7 @@ function _setPermissions(bag, next) {
   if (_.isEmpty(bag.stateFileJSON)) return next();
 
   var who = bag.who + '|' + _setPermissions.name;
-  logger.debug(who, 'Inside');
+  logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Setting permissions on files of previous job');
 

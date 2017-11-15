@@ -11,7 +11,6 @@ function getSecrets(externalBag, callback) {
     consoleAdapter: externalBag.consoleAdapter,
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
-    jobStatusCode: externalBag.jobStatusCode,
     subPrivateKeyPath: externalBag.subPrivateKeyPath
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -43,13 +42,35 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  return next();
+  var expectedParams = [
+    'inPayload',
+    'consoleAdapter',
+    'builderApiAdapter',
+    'buildJobId',
+    'subPrivateKeyPath'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+  return next(hasErrors);
 }
 
 function _getPipelineSecrets(bag, next) {
   var who = bag.who + '|' + _getPipelineSecrets.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openCmd('Fetching job secrets');
   bag.builderApiAdapter.headers['X-SECRETS-TOKEN'] =
     bag.inPayload.secretsToken;
   bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
@@ -58,7 +79,10 @@ function _getPipelineSecrets(bag, next) {
         var msg = util.format('%s, Failed to get buildJob secrets' +
           ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err);
         logger.warn(msg);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
       } else {
+        bag.consoleAdapter.publishMsg('Successfully obtained job secrets');
         bag.secrets = buildJob.secrets;
       }
 
@@ -97,8 +121,13 @@ function _saveSubPrivateKey(bag, next) {
         var msg = util.format('%s, Failed to save subscription private key, %s',
           who, err);
         logger.warn(msg);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
         return next(err);
       } else {
+        bag.consoleAdapter.publishMsg(
+          'Successfully saved subscription private key');
+        bag.consoleAdapter.closeCmd(true);
         fs.chmodSync(bag.subPrivateKeyPath, '600');
       }
       return next();

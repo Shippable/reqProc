@@ -47,24 +47,34 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  if (_.isEmpty(bag.builderApiToken)) {
-    logger.warn(util.format('%s, No builderApiToken present' +
-      ' in incoming message', who));
-    return next(true);
-  }
+  var expectedParams = [
+    'inPayload',
+    'buildStatusDir',
+    'buildScriptsDir',
+    'builderApiToken',
+    'buildJobId',
+    'consoleAdapter',
+    'jobSteps',
+    'buildRootDir',
+    'reqExecDir',
+    'commonEnvs'
+  ];
 
-  if (_.isEmpty(bag.buildJobId)) {
-    logger.warn(util.format('%s, No buildJobId present' +
-      ' in incoming message', who));
-    return next(true);
-  }
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
 
-  if (_.isEmpty(bag.buildStatusDir)) {
-    logger.warn(util.format('%s, Build status dir is empty.', who));
-    return next(true);
-  }
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
 
-  return next();
+  return next(hasErrors);
 }
 
 function _normalizeSteps(bag, next) {
@@ -108,8 +118,10 @@ function _generateSteps(bag, next) {
       generateScript(taskObj,
         function (err, resultBag) {
           if (err) {
-            logger.error(util.format('%s, Failed to generate script for task '+
-              ': %s with err: %s', who, index, err));
+            var msg = util.format('%s, Failed to generate script for task '+
+              ': %s with err: %s', who, index, err);
+            bag.consoleAdapter.publishMsg(msg);
+            logger.error(msg);
             return nextTask(err);
           }
           bag.jobSteps.reqKick.push(resultBag.scriptFileName);
