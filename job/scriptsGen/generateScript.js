@@ -20,11 +20,6 @@ function generateScript(externalBag, callback) {
     scriptHeaderFileName: 'header.sh',
     bootTemplateFileName: 'boot.sh',
     envTemplateFileName: 'envs.sh',
-    scriptHelpersFileName: 'helpers.sh',
-    inDependencyInitTemplateFileNamePattern:
-      path.join('{{masterName}}', 'init.sh'),
-    inDependencyCleanupTemplateFileNamePattern:
-      path.join('{{masterName}}', 'cleanup.sh'),
     runtime: externalBag.runtime,
     buildScriptsDir: externalBag.buildScriptsDir,
     taskScript: '',
@@ -35,7 +30,9 @@ function generateScript(externalBag, callback) {
     buildJobId: externalBag.buildJobId,
     envs: externalBag.commonEnvs,
     inDependencies: externalBag.inDependencies,
-    buildStatusDir: externalBag.buildStatusDir
+    buildStatusDir: externalBag.buildStatusDir,
+    integrationInitScripts: [],
+    integrationCleanupScripts: []
   };
   bag.defaultDockerEnvs = '';
 
@@ -45,11 +42,9 @@ function generateScript(externalBag, callback) {
   async.series([
       _checkInputParams.bind(null, bag),
       _getScriptHeader.bind(null, bag),
-      _getScriptHelpers.bind(null, bag),
       _generateEnvScriptFromTemplate.bind(null, bag),
-      _generateInDependencyInitScriptsFromTemplate.bind(null, bag),
+      _addInDependencyScripts.bind(null, bag),
       _generateTaskScriptFromTemplate.bind(null, bag),
-      _generateInDependencyCleanupScriptsFromTemplate.bind(null, bag),
       _createTaskScriptFile.bind(null, bag),
       _generateBootScriptFromTemplate.bind(null, bag),
       _createBootScript.bind(null, bag)
@@ -101,26 +96,6 @@ function _getScriptHeader(bag, next) {
   );
 }
 
-function _getScriptHelpers(bag, next) {
-  var who = bag.who + '|' + _getScriptHelpers.name;
-  logger.verbose(who, 'Inside');
-
-  var helperFile = path.join(global.config.execTemplatesPath, 'job',
-    bag.scriptHelpersFileName);
-
-  fs.readFile(helperFile, 'utf8',
-    function (err, helper) {
-      if (err) {
-        logger.error(util.format('%s, Failed to read file: %s ' +
-          'with err: %s', who, helperFile, err));
-        return next(err);
-      }
-      bag.taskScript = bag.taskScript.concat(helper);
-      return next();
-    }
-  );
-}
-
 function _generateEnvScriptFromTemplate(bag, next) {
   var who = bag.who + '|' + _generateEnvScriptFromTemplate.name;
   logger.verbose(who, 'Inside');
@@ -147,45 +122,20 @@ function _generateEnvScriptFromTemplate(bag, next) {
   );
 }
 
-function _generateInDependencyInitScriptsFromTemplate(bag, next) {
-  var who = bag.who + '|' + _generateInDependencyInitScriptsFromTemplate.name;
+function _addInDependencyScripts(bag, next) {
+  var who = bag.who + '|' + _addInDependencyScripts.name;
   logger.verbose(who, 'Inside');
 
-  async.eachSeries(bag.inDependencies,
-    function (inDependency, nextDependency) {
-      // This might have to change later. We're only going to generate
-      // templates for IN dependencies with integrations for now.
-      if (!inDependency.subscriptionIntegration) return nextDependency();
-      if (!inDependency.accountIntegration) return nextDependency();
-
-      var templateBag = {
-        filePath: path.join(global.config.execTemplatesPath, 'resources',
-          inDependency.type,
-          bag.inDependencyInitTemplateFileNamePattern.replace('{{masterName}}',
-            inDependency.accountIntegration.masterName)
-          ),
-        object: {
-          dependency: inDependency
-        }
-      };
-
-      generateScriptFromTemplate(templateBag,
-        function (err, resultBag) {
-          if (err) {
-            logger.error(util.format('%s,' +
-              'Generate script from template failed ' +
-              'with err: %s', who, err));
-            return nextDependency(err);
-          }
-          bag.taskScript = bag.taskScript.concat(resultBag.script);
-          return nextDependency();
-        }
-      );
-    },
-    function (err) {
-      return next(err);
+  _.each(bag.inDependencies,
+    function (inDependency) {
+      bag.integrationInitScripts.push(
+        inDependency.integrationInitScriptCommand);
+      bag.integrationCleanupScripts.push(
+        inDependency.integrationCleanupScriptCommand);
     }
   );
+
+  return next();
 }
 
 function _generateTaskScriptFromTemplate(bag, next) {
@@ -202,7 +152,9 @@ function _generateTaskScriptFromTemplate(bag, next) {
       onFailure: bag.onFailure,
       always: bag.always,
       name: bag.taskName,
-      container: bag.runtime.container
+      container: bag.runtime.container,
+      integrationInitScripts: _.compact(bag.integrationInitScripts),
+      integrationCleanupScripts: _.compact(bag.integrationCleanupScripts)
     }
   };
 
@@ -215,49 +167,6 @@ function _generateTaskScriptFromTemplate(bag, next) {
       }
       bag.taskScript = bag.taskScript.concat(resultBag.script);
       return next();
-    }
-  );
-}
-
-function _generateInDependencyCleanupScriptsFromTemplate(bag, next) {
-  var who = bag.who + '|' +
-    _generateInDependencyCleanupScriptsFromTemplate.name;
-  logger.verbose(who, 'Inside');
-
-  async.eachSeries(bag.inDependencies,
-    function (inDependency, nextDependency) {
-      // This might have to change later. We're only going to generate
-      // templates for IN dependencies with integrations for now.
-      if (!inDependency.subscriptionIntegration) return nextDependency();
-      if (!inDependency.accountIntegration) return nextDependency();
-
-      var templateBag = {
-        filePath: path.join(global.config.execTemplatesPath, 'resources',
-          inDependency.type,
-          bag.inDependencyCleanupTemplateFileNamePattern
-            .replace('{{masterName}}',
-            inDependency.accountIntegration.masterName)
-          ),
-        object: {
-          dependency: inDependency
-        }
-      };
-
-      generateScriptFromTemplate(templateBag,
-        function (err, resultBag) {
-          if (err) {
-            logger.error(util.format('%s,' +
-              'Generate script from template failed ' +
-              'with err: %s', who, err));
-            return nextDependency(err);
-          }
-          bag.taskScript = bag.taskScript.concat(resultBag.script);
-          return nextDependency();
-        }
-      );
-    },
-    function (err) {
-      return next(err);
     }
   );
 }
