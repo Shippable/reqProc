@@ -29,10 +29,15 @@ function inStep(params, callback) {
     ],
     function (err) {
       logger.verbose(bag.who, 'Completed');
-      if (err)
+      if (err) {
         bag.consoleAdapter.publishMsg('No integration script found');
-      else
+      } else {
+        bag.dependency.integrationInitScriptCommand =
+          bag.integrationInitScriptCommand;
+        bag.dependency.integrationCleanupScriptCommand =
+          bag.integrationCleanupScriptCommand;
         bag.consoleAdapter.publishMsg('Successfully copied integration script');
+      }
       return callback();
   });
 }
@@ -56,15 +61,18 @@ function _copyIntegrationInitScript(bag, next) {
     bag.dependency.type, bag.dependency.accountIntegration.masterName,
     'init.sh');
 
-  fs.copySync(templatesCommonFolderPath, path.join(bag.buildScriptsDir,
-    'resources', 'common'));
-  fs.copySync(integrationScriptTemplate, destinationInitFilePath);
-  fs.chmodSync(destinationInitFilePath, '755');
-
+  try {
+    fs.copySync(templatesCommonFolderPath, path.join(bag.buildScriptsDir,
+      'resources', 'common'));
+    fs.copySync(integrationScriptTemplate, destinationInitFilePath);
+    fs.chmodSync(destinationInitFilePath, '755');
+  } catch (e) {
+    return next(e);
+  }
   var scopes = ['configure'];
-  bag.scopes = scopes.concat(bag.dependency.step.scopes);
+  bag.scopes = _.uniq(_.compact(scopes.concat(bag.dependency.step.scopes)));
 
-  bag.dependency.integrationInitScriptCommand = util.format('%s %s %s',
+  bag.integrationInitScriptCommand = util.format('%s %s %s',
   destinationInitFilePath, bag.dependency.name, bag.scopes.join(','));
 
   return next();
@@ -83,10 +91,14 @@ function _copyIntegrationCleanupScript(bag, next) {
     bag.dependency.type, bag.dependency.accountIntegration.masterName,
     'cleanup.sh');
 
-  fs.copySync(integrationScriptTemplate, destinationCleanupFilePath);
-  fs.chmodSync(destinationCleanupFilePath, '755');
+  try {
+    fs.copySync(integrationScriptTemplate, destinationCleanupFilePath);
+    fs.chmodSync(destinationCleanupFilePath, '755');
+  } catch (e) {
+    return next(e);
+  }
 
-  bag.dependency.integrationCleanupScriptCommand = util.format('%s %s %s',
+  bag.integrationCleanupScriptCommand = util.format('%s %s %s',
     destinationCleanupFilePath, bag.dependency.name, bag.scopes.join(','));
 
   return next();
