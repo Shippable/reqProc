@@ -128,10 +128,12 @@ function _addInDependencyScripts(bag, next) {
 
   _.each(bag.inDependencies,
     function (inDependency) {
-      bag.integrationInitScripts.push(
-        inDependency.integrationInitScriptCommand);
-      bag.integrationCleanupScripts.push(
-        inDependency.integrationCleanupScriptCommand);
+      if (!_.isEmpty(inDependency.integrationInitScriptCommand))
+        bag.integrationInitScripts.push(
+          inDependency.integrationInitScriptCommand);
+      if (!_.isEmpty(inDependency.integrationCleanupScriptCommand))
+        bag.integrationCleanupScripts.push(
+          inDependency.integrationCleanupScriptCommand);
     }
   );
 
@@ -153,8 +155,8 @@ function _generateTaskScriptFromTemplate(bag, next) {
       always: bag.always,
       name: bag.taskName,
       container: bag.runtime.container,
-      integrationInitScripts: _.compact(bag.integrationInitScripts),
-      integrationCleanupScripts: _.compact(bag.integrationCleanupScripts)
+      integrationInitScripts: bag.integrationInitScripts,
+      integrationCleanupScripts: bag.integrationCleanupScripts
     }
   };
 

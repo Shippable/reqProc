@@ -494,8 +494,9 @@ function __getDependencyIntegrations(bag, dependency, next) {
       var accountIntegration = _.findWhere(bag.secrets.data.accountIntegrations,
        { id: subInt.accountIntegrationId });
 
-      dependency.subscriptionIntegration = subInt;
-      dependency.accountIntegration = accountIntegration;
+      dependency.accountIntegration = {
+        masterName: accountIntegration.masterName
+      };
 
       var stringData = {};
       var arrayData = {};
