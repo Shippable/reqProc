@@ -15,7 +15,8 @@ function processOUTs(externalBag, callback) {
     buildJobId: externalBag.buildJobId,
     buildInDir: externalBag.buildInDir,
     buildOutDir: externalBag.buildOutDir,
-    stepMessageFilename: externalBag.stepMessageFilename
+    stepMessageFilename: externalBag.stepMessageFilename,
+    buildScriptsDir: externalBag.buildScriptsDir
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
