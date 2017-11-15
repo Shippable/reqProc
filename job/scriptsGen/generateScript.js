@@ -203,9 +203,11 @@ function _generateBootScriptFromTemplate(bag, next) {
   var dockerContainerName = util.format('reqExec.%s.%s', bag.buildJobId,
     bag.taskIndex);
   var dockerExecCommand =
-    util.format('bash -c \'/reqExec/bin/dist/main/main ' +
-    '%s/%s %s/job.env\'', bag.buildScriptsDir, bag.taskScriptFileName,
-    bag.buildStatusDir);
+    util.format('%s %s %s',
+      global.config.taskContainerCommand,
+      path.join(bag.buildScriptsDir, bag.taskScriptFileName),
+      path.join(bag.buildStatusDir, 'job.env')
+    );
   var dockerOptions = util.format('%s --name %s', bag.runtime.options.options,
     dockerContainerName);
   var dockerImage = util.format('%s:%s', bag.runtime.options.imageName,
