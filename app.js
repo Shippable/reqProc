@@ -66,6 +66,9 @@ if (!global.config.defaultTaskContainerOptions)
     util.format('%s is missing: defaultTaskContainerOptions', who)
   );
 
+if (!global.config.taskContainerCommand)
+  consoleErrors.push(util.format('%s is missing: taskContainerCommand', who));
+
 if (!global.config.shippableNodeArchitecture)
   consoleErrors.push(
     util.format('%s is missing: shippableNodeArchitecture', who)
