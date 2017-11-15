@@ -16,6 +16,7 @@ function handleDependency(externalBag, dependency, callback) {
     buildJobId: externalBag.buildJobId,
     buildInDir: externalBag.buildInDir,
     buildOutDir: externalBag.buildOutDir,
+    buildScriptsDir: externalBag.buildScriptsDir,
     stepMessageFilename: externalBag.stepMessageFilename
   };
   bag.who = util.format('%s|job|handlers|%s', msName, self.name);
@@ -113,7 +114,8 @@ function _handleDependency(bag, dependency, next) {
     builderApiAdapter: bag.builderApiAdapter,
     rawMessage: bag.rawMessage,
     rootDir: rootDir,
-    stepMessageFilename: bag.stepMessageFilename
+    stepMessageFilename: bag.stepMessageFilename,
+    buildScriptsDir: bag.buildScriptsDir
   };
 
   dependencyHandler(params,
