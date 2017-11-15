@@ -4,6 +4,7 @@ var self = readJobStatus;
 module.exports = self;
 
 var fs = require('fs-extra');
+var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 
 function readJobStatus(externalBag, callback) {
   var bag = {
@@ -18,6 +19,7 @@ function readJobStatus(externalBag, callback) {
 
   async.series([
       _checkInputParams.bind(null, bag),
+      _getBuildJobStatus.bind(null, bag),
       _readJobStatus.bind(null, bag)
     ],
     function (err) {
@@ -64,7 +66,39 @@ function _checkInputParams(bag, next) {
   return next(hasErrors);
 }
 
+
+function _getBuildJobStatus(bag, next) {
+  var who = bag.who + '|' + _getBuildJobStatus.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Obtaining latest job status code');
+  bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
+    function (err, buildJob) {
+      if (err) {
+        var msg = util.format('%s: failed to getBuildJobById' +
+          ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err);
+        logger.warn(msg);
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+
+        bag.jobStatusCode = getStatusCodeByName('error');
+      } else {
+        bag.consoleAdapter.publishMsg(
+          util.format('Successfully obtained latest job status code: %s',
+          buildJob.statusCode));
+        bag.consoleAdapter.closeCmd(true);
+
+        bag.jobStatusCode = buildJob.statusCode;
+      }
+
+      return next(err);
+    }
+  );
+}
+
 function _readJobStatus(bag, next) {
+  if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+
   var who = bag.who + '|' + _readJobStatus.name;
   logger.verbose(who, 'Inside');
 
