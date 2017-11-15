@@ -356,11 +356,11 @@ function _readJobStatus(bag, next) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('failure');
-        return next();
+      } else {
+        bag = _.extend(bag, resultBag);
+        bag.consoleAdapter.closeGrp(true);
       }
 
-      bag = _.extend(bag, resultBag);
-      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
@@ -389,12 +389,16 @@ function _createTrace(bag, next) {
   var who = bag.who + '|' + _createTrace.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openGrp('Creating trace');
   createTrace(bag,
     function (err, resultBag) {
-      if (err)
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('failure');
-      else
+      } else {
         bag = _.extend(bag, resultBag);
+        bag.consoleAdapter.closeGrp(true);
+      }
       return next();
     }
   );
@@ -407,10 +411,16 @@ function _persistPreviousState(bag, next) {
   var who = bag.who + '|' + _persistPreviousState.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openGrp('Persisting previous state');
   persistPreviousState(bag,
-    function (err, resultBag) {
-      if (!err)
-        bag = _.extend(bag, resultBag);
+    function (err) {
+      if (err) {
+        bag.jobStatusCode = getStatusCodeByName('failure');
+        bag.consoleAdapter.closeGrp(false);
+      } else {
+        bag.consoleAdapter.closeGrp(true);
+      }
+
       return next();
     }
   );

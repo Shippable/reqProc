@@ -1,11 +1,11 @@
 'use strict';
 
-var self = saveState;
+var self = persistPreviousState;
 module.exports = self;
 
 var fs = require('fs-extra');
 
-function saveState(externalBag, callback) {
+function persistPreviousState(externalBag, callback) {
   var bag = {
     consoleAdapter: externalBag.consoleAdapter,
     buildStateDir: externalBag.buildStateDir,
@@ -19,14 +19,12 @@ function saveState(externalBag, callback) {
       _persistPreviousStateOnFailure.bind(null, bag)
     ],
     function (err) {
-      var result;
-      if (err) {
+      if (err)
         logger.error(bag.who, util.format('Failed to create trace'));
-      } else{
+      else
         logger.info(bag.who, 'Successfully created trace');
-        result = {};
-      }
-      return callback(err, result);
+
+      return callback(err);
     }
   );
 }
@@ -61,7 +59,6 @@ function _persistPreviousStateOnFailure(bag, next) {
   var who = bag.who + '|' + _persistPreviousStateOnFailure.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Persisting previous state');
   bag.consoleAdapter.openCmd('Copy previous state to current state');
   var srcDir = bag.buildPreviousStateDir ;
   var destDir = bag.buildStateDir;
@@ -71,14 +68,12 @@ function _persistPreviousStateOnFailure(bag, next) {
         bag.consoleAdapter.publishMsg(
           'Failed to persist previous state of job');
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
       } else {
         bag.consoleAdapter.publishMsg(
           'Successfully persisted previous state of job');
         bag.consoleAdapter.closeCmd(true);
-        bag.consoleAdapter.closeGrp(true);
       }
-      return next();
+      return next(err);
     }
   );
 }

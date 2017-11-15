@@ -60,7 +60,6 @@ function _checkInputParams(bag, next) {
 function _createTrace(bag, next) {
   if (!_.isArray(bag.inPayload.dependencies)) return next();
 
-  bag.consoleAdapter.openGrp('Creating trace');
   bag.consoleAdapter.openCmd('Creating trace from dependencies');
   var who = bag.who + '|' + _createTrace.name;
   logger.verbose(who, 'Inside');
@@ -126,6 +125,5 @@ function _createTrace(bag, next) {
 
   bag.consoleAdapter.publishMsg('Successfully generated trace');
   bag.consoleAdapter.closeCmd(true);
-  bag.consoleAdapter.closeGrp(true);
   return next();
 }
