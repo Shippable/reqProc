@@ -88,6 +88,7 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
       if (!step.TASK.script) return;
 
       var task = step.TASK;
+
       if (_.isString(task.script))
         task.script = [task.script];
 
@@ -97,7 +98,7 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
 
       if (task.runtime.container) {
         if (_.isEmpty(task.runtime.options))
-          task.runtime.options = defaultContainerOpts.options;
+          task.runtime.options = _.clone(defaultContainerOpts.options);
         if (_.isEmpty(task.runtime.options.imageName) ||
           _.isEmpty(task.runtime.options.imageTag)) {
           task.runtime.options.imageName = defaultContainerOpts.imageName;
@@ -108,14 +109,14 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
         if (_.isEmpty(task.runtime.options.options))
           task.runtime.options.options = '';
         if (_.isEmpty(task.runtime.options.env))
-          task.runtime.options.env = defaultContainerOpts.options.env;
+          task.runtime.options.env = _.clone(defaultContainerOpts.options.env);
         task.runtime.options.options = util.format('%s %s',
           defaultContainerOpts.options.options, task.runtime.options.options);
       } else {
         if (_.isEmpty(task.runtime.options))
-          task.runtime.options = defaultHostOpts.options;
+          task.runtime.options = _.clone(defaultHostOpts.options);
         if (_.isEmpty(task.runtime.options.env))
-          task.runtime.options.env = defaultHostOpts.options.env;
+          task.runtime.options.env = _.clone(defaultHostOpts.options.env);
       }
 
       _.extend(task.runtime.options.env, defaultENVs);
