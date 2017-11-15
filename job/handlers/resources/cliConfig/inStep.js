@@ -65,7 +65,6 @@ function _copyIntegrationInitScript(bag, next) {
     fs.copySync(templatesCommonFolderPath, path.join(bag.buildScriptsDir,
       'resources', 'common'));
     fs.copySync(integrationScriptTemplate, destinationInitFilePath);
-    fs.chmodSync(destinationInitFilePath, '755');
   } catch (e) {
     return next(e);
   }
@@ -93,7 +92,6 @@ function _copyIntegrationCleanupScript(bag, next) {
 
   try {
     fs.copySync(integrationScriptTemplate, destinationCleanupFilePath);
-    fs.chmodSync(destinationCleanupFilePath, '755');
   } catch (e) {
     return next(e);
   }
