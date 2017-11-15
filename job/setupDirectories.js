@@ -1,11 +1,11 @@
 'use strict';
 
-var self = setupDirs;
+var self = setupDirectories;
 module.exports = self;
 
 var fs = require('fs-extra');
 
-function setupDirs(externalBag, callback) {
+function setupDirectories(externalBag, callback) {
   var bag = {
     reqProcDir: externalBag.reqProcDir,
     reqKickDir: externalBag.reqKickDir,
@@ -45,21 +45,45 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  if (_.isEmpty(bag.consoleAdapter)) {
-    logger.error(util.format('%s, Missing consoleAdapter.', who));
-    return next(true);
-  }
+  var expectedParams = [
+    'reqProcDir',
+    'reqKickDir',
+    'reqExecDir',
+    'reqKickScriptsDir',
+    'buildInDir',
+    'buildOutDir',
+    'buildStateDir',
+    'buildStatusDir',
+    'buildSharedDir',
+    'buildScriptsDir',
+    'buildSecretsDir',
+    'buildPreviousStateDir',
+    'consoleAdapter',
+    'inPayload'
+  ];
 
-  return next();
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+
+  return next(hasErrors);
 }
-
 
 function _setupDirectories(bag, next) {
   var who = bag.who + '|' + _setupDirectories.name;
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Creating required directories');
-
   var dirsToBeCreated = [
     bag.reqKickScriptsDir, bag.buildInDir, bag.buildOutDir, bag.buildStateDir,
     bag.buildStatusDir, bag.buildSharedDir, bag.buildScriptsDir,

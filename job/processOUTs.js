@@ -28,7 +28,7 @@ function processOUTs(externalBag, callback) {
     function (err) {
       if (err)
         logger.error(bag.who, util.format('Failed to process OUT ' +
-        'dependencies'));
+          'dependencies'));
       else
         logger.info(bag.who, 'Successfully processed OUT dependencies');
 
@@ -41,7 +41,33 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  return next();
+  var expectedParams = [
+    'rawMessage',
+    'inPayload',
+    'operation',
+    'consoleAdapter',
+    'builderApiAdapter',
+    'buildJobId',
+    'buildInDir',
+    'buildOutDir',
+    'stepMessageFilename'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+
+  return next(hasErrors);
 }
 
 function _processOutSteps(bag, next) {

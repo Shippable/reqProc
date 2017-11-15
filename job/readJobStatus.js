@@ -7,8 +7,10 @@ var fs = require('fs-extra');
 
 function readJobStatus(externalBag, callback) {
   var bag = {
+    buildJobId: externalBag.buildJobId,
+    builderApiAdapter: externalBag.builderApiAdapter,
     buildStatusDir: externalBag.buildStatusDir,
-    jobStatusCode: null,
+    jobStatusCode: externalBag.jobStatusCode,
     consoleAdapter: externalBag.consoleAdapter
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -37,12 +39,29 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  if (_.isEmpty(bag.buildStatusDir)) {
-    logger.warn(util.format('%s, Build status dir is empty.', who));
-    return next(true);
-  }
+  var expectedParams = [
+    'buildJobId',
+    'builderApiAdapter',
+    'buildStatusDir',
+    'jobStatusCode',
+    'consoleAdapter'
+  ];
 
-  return next();
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+
+  return next(hasErrors);
 }
 
 function _readJobStatus(bag, next) {
@@ -74,11 +93,9 @@ function _readJobStatus(bag, next) {
         return next();
       }
 
-      // Do not set status to success here, as OUT dependencies can fail.
-      if (status.trim() !== 'success')
-        bag.jobStatusCode = jobStatusSystemCode.code;
-
-      bag.consoleAdapter.publishMsg('Successfully read job status');
+      bag.jobStatusCode = jobStatusSystemCode.code;
+      bag.consoleAdapter.publishMsg(
+        'Successfully read job status: ' + JSON.stringify(bag.jobStatusCode));
       bag.consoleAdapter.closeCmd(true);
       return next();
     }

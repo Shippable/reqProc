@@ -10,11 +10,13 @@ function pollBuildJobStatus(externalBag, callback) {
   var bag = {
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
-    buildStatusDir: externalBag.buildStatusDir
+    buildStatusDir: externalBag.buildStatusDir,
+    consoleAdapter: externalBag.consoleAdapter
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
 
   async.series([
+      _checkInputParams.bind(null, bag),
       _pollBuildJobStatus.bind(null, bag)
     ],
     function () {
@@ -23,10 +25,38 @@ function pollBuildJobStatus(externalBag, callback) {
   );
 }
 
+function _checkInputParams(bag, next) {
+  var who = bag.who + '|' + _checkInputParams.name;
+  logger.verbose(who, 'Inside');
+
+  var expectedParams = [
+    'builderApiAdapter',
+    'buildJobId',
+    'buildStatusDir',
+    'consoleAdapter'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+  return next(hasErrors);
+}
+
 function _pollBuildJobStatus(bag, next) {
   var who = bag.who + '|' + _pollBuildJobStatus.name;
   logger.verbose(who, 'Inside');
 
+  bag.consoleAdapter.openCmd('Starting job status poll');
   var isCancelled = false;
   var cancelledStatusCode = getStatusCodeByName('cancelled');
   function poll(bag) {
@@ -60,5 +90,9 @@ function _pollBuildJobStatus(bag, next) {
   }
 
   poll(bag);
+  bag.consoleAdapter.publishMsg(
+    'Configured job status poll for every ' +
+    global.config.runShJobStatusPollIntervalMS / 1000 + ' seconds');
+  bag.consoleAdapter.closeCmd(true);
   return next();
 }

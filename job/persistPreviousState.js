@@ -5,13 +5,8 @@ module.exports = self;
 
 var fs = require('fs-extra');
 
-var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
-
 function saveState(externalBag, callback) {
   var bag = {
-    buildJobId: externalBag.buildJobId,
-    builderApiAdapter: externalBag.builderApiAdapter,
-    jobStatusCode: externalBag.jobStatusCode,
     consoleAdapter: externalBag.consoleAdapter,
     buildStateDir: externalBag.buildStateDir,
     buildPreviousStateDir: externalBag.buildPreviousStateDir
@@ -21,7 +16,6 @@ function saveState(externalBag, callback) {
 
   async.series([
       _checkInputParams.bind(null, bag),
-      _getLatestBuildJobStatus.bind(null, bag),
       _persistPreviousStateOnFailure.bind(null, bag)
     ],
     function (err) {
@@ -30,10 +24,7 @@ function saveState(externalBag, callback) {
         logger.error(bag.who, util.format('Failed to create trace'));
       } else{
         logger.info(bag.who, 'Successfully created trace');
-        result = {
-          jobStatusCode: bag.jobStatusCode,
-          isJobCancelled: bag.isJobCancelled
-        };
+        result = {};
       }
       return callback(err, result);
     }
@@ -44,41 +35,34 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  return next();
-}
+  var expectedParams = [
+    'consoleAdapter',
+    'buildStateDir',
+    'buildPreviousStateDir'
+  ];
 
-function _getLatestBuildJobStatus(bag, next) {
-  var who = bag.who + '|' + _getLatestBuildJobStatus.name;
-  logger.verbose(who, 'Inside');
-
-  bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
-    function (err, buildJob) {
-      if (err) {
-        var msg = util.format('%s, Failed to get buildJob' +
-          ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err);
-        logger.warn(msg);
-        bag.jobStatusCode = getStatusCodeByName('error');
-      }
-
-      if (buildJob.statusCode === getStatusCodeByName('cancelled')) {
-        bag.isJobCancelled = true;
-        logger.warn(util.format('%s, Job with buildJobId:%s' +
-          ' is cancelled', who, bag.buildJobId));
-      }
-      return next();
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
     }
   );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+  return next(hasErrors);
 }
 
 function _persistPreviousStateOnFailure(bag, next) {
-  if (!bag.jobStatusCode) return next();
-
   var who = bag.who + '|' + _persistPreviousStateOnFailure.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Persisting Previous State');
+  bag.consoleAdapter.openGrp('Persisting previous state');
   bag.consoleAdapter.openCmd('Copy previous state to current state');
-
   var srcDir = bag.buildPreviousStateDir ;
   var destDir = bag.buildStateDir;
   fs.copy(srcDir, destDir,

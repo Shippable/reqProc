@@ -42,6 +42,8 @@ function _notifyOnStart(bag, next) {
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
       } else {
+        bag.consoleAdapter.publishMsg(
+          'Successfully queued on_start notifications');
         bag.consoleAdapter.closeCmd(true);
       }
 

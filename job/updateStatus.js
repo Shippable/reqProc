@@ -5,7 +5,6 @@ module.exports = self;
 
 function updateStatus(externalBag, callback) {
   var bag = {
-    buildJobStatus: externalBag.buildJobStatus,
     consoleAdapter: externalBag.consoleAdapter,
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
@@ -34,14 +33,34 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  return next();
+  var expectedParams = [
+    'consoleAdapter',
+    'builderApiAdapter',
+    'buildJobId',
+    'jobStatusCode'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+  return next(hasErrors);
 }
 
 function _updateBuildJobStatusAndVersion(bag, next) {
   var who = bag.who + '|' + _updateBuildJobStatusAndVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Updating build job status & version');
+  bag.consoleAdapter.openCmd('Updating build job status and version');
   var update = {};
 
   update.statusCode = bag.jobStatusCode;
@@ -56,8 +75,10 @@ function _updateBuildJobStatusAndVersion(bag, next) {
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
       } else {
-        bag.consoleAdapter.publishMsg('Successfully updated buildJob status &' +
-        ' version');
+        bag.consoleAdapter.publishMsg(
+          util.format('Successfully updated job with status %s and' +
+          ' versionId %s', update.statusCode, update.versionId)
+        );
         bag.consoleAdapter.closeCmd(true);
       }
       return next(err);

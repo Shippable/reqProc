@@ -35,12 +35,28 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  if (_.isEmpty(bag.buildStatusDir)) {
-    logger.warn(util.format('%s, Build status dir is empty.', who));
-    return next(true);
+  var expectedParams = [
+    'buildStatusDir',
+    'consoleAdapter'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors) {
+    logger.error(paramErrors.join('\n'));
+    bag.consoleAdapter.publishMsg(paramErrors.join('\n'));
   }
 
-  return next();
+  return next(hasErrors);
 }
 
 function _setExecutorAsReqKick(bag, next) {
@@ -48,7 +64,6 @@ function _setExecutorAsReqKick(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Setting executor as reqKick');
-
   var whoPath = util.format('%s/job.who', bag.buildStatusDir);
   fs.writeFile(whoPath, 'reqKick\n',
     function (err) {
@@ -64,7 +79,6 @@ function _setExecutorAsReqKick(bag, next) {
         util.format('Updated %s', whoPath)
       );
       bag.consoleAdapter.closeCmd(true);
-      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
