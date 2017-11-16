@@ -201,6 +201,13 @@ function _setExecutorAsReqProc(bag, next) {
 function _getPreviousState(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.rawMessage.payload.reset) {
+    bag.consoleAdapter.openCmd('Checking previous state information for job');
+    bag.consoleAdapter.publishMsg(
+      'Ignoring previous state information for job as reset is true');
+    bag.consoleAdapter.closeCmd(true);
+    return next();
+  }
 
   var who = bag.who + '|' + _getPreviousState.name;
   logger.verbose(who, 'Inside');
