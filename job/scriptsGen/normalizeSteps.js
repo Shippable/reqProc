@@ -136,13 +136,13 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
 function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
   buildStatusDir) {
   var defaultENVs = {
-    SHIPPABLE_NODE_ARCHITECTURE: global.config.shippableNodeArchitecture,
-    SHIPPABLE_NODE_OPERATING_SYSTEM: global.config.shippableNodeOperatingSystem
+    shippableNodeArchitecture: global.config.shippableNodeArchitecture,
+    shippableNodeOperatingSystem: global.config.shippableNodeOperatingSystem
   };
   var taskEnvs = _.extend({}, defaultENVs);
   _.extend(taskEnvs, {
-    TASK_NAME: task.name || util.format('task_%s', task.taskIndex),
-    TASK_IN_CONTAINER: task.runtime.container
+    taskName: task.name || util.format('task_%s', task.taskIndex),
+    isTaskInContainer: task.runtime.container
   });
   task.taskScriptFileName = util.format('task_%s.sh', task.taskIndex);
   if (task.runtime.container) {
@@ -153,11 +153,11 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
     task.bootScriptFileName = util.format('boot_%s.sh', task.taskIndex);
     // sets container task envs
     var taskContainerEnvs = {
-      TASK_CONTAINER_OPTIONS: task.runtime.options.options,
-      TASK_CONTAINER_IMAGE: util.format('%s:%s',
+      taskContainerOptions: task.runtime.options.options,
+      taskContainerImage: util.format('%s:%s',
         task.runtime.options.imageName, task.runtime.options.imageTag),
-      TASK_CONTAINER_IMAGE_SHOULD_PULL: task.runtime.options.pull,
-      TASK_CONTAINER_COMMAND: util.format('%s %s %s',
+      shouldPullTaskContainerImage: task.runtime.options.pull,
+      taskContainerCommand: util.format('%s %s %s',
         global.config.taskContainerCommand,
         path.join(buildScriptsDir, task.taskScriptFileName),
         path.join(buildStatusDir, 'job.env')
