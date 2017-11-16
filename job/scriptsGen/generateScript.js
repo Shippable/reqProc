@@ -30,7 +30,8 @@ function generateScript(externalBag, callback) {
     buildRootDir: externalBag.buildRootDir,
     reqExecDir: externalBag.reqExecDir,
     buildJobId: externalBag.buildJobId,
-    envs: externalBag.commonEnvs,
+    commonEnvs: externalBag.commonEnvs,
+    shippableRuntimeEnvs: externalBag.shippableRuntimeEnvs,
     inDependencies: externalBag.inDependencies,
     buildStatusDir: externalBag.buildStatusDir,
     integrationInitScripts: [],
@@ -106,7 +107,9 @@ function _generateEnvScriptFromTemplate(bag, next) {
     filePath: path.join(global.config.execTemplatesPath, 'job',
       bag.envTemplateFileName),
     object: {
-      envs: bag.envs.concat(bag.runtime.options.env)
+      commonEnvs: bag.commonEnvs,
+      taskEnvs: bag.runtime.options.env,
+      shippableRuntimeEnvs: bag.shippableRuntimeEnvs,
     }
   };
 

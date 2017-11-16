@@ -165,7 +165,7 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
     };
     _.extend(taskEnvs, taskContainerEnvs);
   }
-  _.extend(task.runtime.options.env, taskEnvs);
+  task.shippableRuntimeEnvs = taskEnvs;
 }
 
 function __convertOldFormatTerminalGroupToNew(terminalGroup) {
