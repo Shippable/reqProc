@@ -10,7 +10,8 @@ function getPreviousState(externalBag, callback) {
     builderApiAdapter: externalBag.builderApiAdapter,
     resourceId: externalBag.inPayload.resourceId,
     previousStateDir: externalBag.buildPreviousStateDir,
-    consoleAdapter: externalBag.consoleAdapter
+    consoleAdapter: externalBag.consoleAdapter,
+    rawMessage: externalBag.rawMessage
   };
 
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -36,7 +37,8 @@ function _checkInputParams(bag, next) {
     'builderApiAdapter',
     'resourceId',
     'previousStateDir',
-    'consoleAdapter'
+    'consoleAdapter',
+    'rawMessage'
   ];
 
   var paramErrors = [];
@@ -56,6 +58,16 @@ function _checkInputParams(bag, next) {
 }
 
 function _getFiles(bag, next) {
+  if (bag.rawMessage && bag.rawMessage.payload &&
+    bag.rawMessage.payload.reset) {
+    bag.consoleAdapter.openCmd('Checking previous state information for job');
+    bag.consoleAdapter.publishMsg(
+      'Ignoring previous state information for job as reset is true');
+    bag.consoleAdapter.closeCmd(true);
+    bag.stateFileJSON = [];
+    return next();
+  }
+
   var who = bag.who + '|' + _getFiles.name;
   logger.verbose(who, 'Inside');
 
