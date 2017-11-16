@@ -15,6 +15,8 @@ function generateScript(externalBag, callback) {
     onFailure: externalBag.onFailure,
     always: externalBag.always,
     taskIndex: externalBag.taskIndex,
+    taskScriptFileName: externalBag.taskScriptFileName,
+    bootScriptFileName: externalBag.bootScriptFileName,
     name: externalBag.name,
     taskTemplateFileName: 'task.sh',
     scriptHeaderFileName: 'header.sh',
@@ -28,7 +30,8 @@ function generateScript(externalBag, callback) {
     buildRootDir: externalBag.buildRootDir,
     reqExecDir: externalBag.reqExecDir,
     buildJobId: externalBag.buildJobId,
-    envs: externalBag.commonEnvs,
+    commonEnvs: externalBag.commonEnvs,
+    shippableRuntimeEnvs: externalBag.shippableRuntimeEnvs,
     inDependencies: externalBag.inDependencies,
     buildStatusDir: externalBag.buildStatusDir,
     integrationInitScripts: [],
@@ -46,7 +49,7 @@ function generateScript(externalBag, callback) {
       _addInDependencyScripts.bind(null, bag),
       _generateTaskScriptFromTemplate.bind(null, bag),
       _createTaskScriptFile.bind(null, bag),
-      _generateBootScriptFromTemplate.bind(null, bag),
+      _getContainerBootScript.bind(null, bag),
       _createBootScript.bind(null, bag)
     ],
     function (err) {
@@ -104,7 +107,9 @@ function _generateEnvScriptFromTemplate(bag, next) {
     filePath: path.join(global.config.execTemplatesPath, 'job',
       bag.envTemplateFileName),
     object: {
-      envs: bag.envs.concat(bag.runtime.options.env)
+      commonEnvs: bag.commonEnvs,
+      taskEnvs: bag.runtime.options.env,
+      shippableRuntimeEnvs: bag.shippableRuntimeEnvs,
     }
   };
 
@@ -144,7 +149,6 @@ function _generateTaskScriptFromTemplate(bag, next) {
   var who = bag.who + '|' + _generateTaskScriptFromTemplate.name;
   logger.verbose(who, 'Inside');
 
-  bag.taskName = bag.name || util.format('task_%s', bag.taskIndex);
   var templateBag = {
     filePath: path.join(global.config.execTemplatesPath, 'job',
       bag.taskTemplateFileName),
@@ -153,8 +157,6 @@ function _generateTaskScriptFromTemplate(bag, next) {
       onSuccess: bag.onSuccess,
       onFailure: bag.onFailure,
       always: bag.always,
-      name: bag.taskName,
-      container: bag.runtime.container,
       integrationInitScripts: bag.integrationInitScripts,
       integrationCleanupScripts: bag.integrationCleanupScripts
     }
@@ -177,8 +179,7 @@ function _createTaskScriptFile(bag, next) {
   var who = bag.who + '|' + _createTaskScriptFile.name;
   logger.verbose(who, 'Inside');
 
-  var scriptFileName = util.format('task_%s.sh', bag.taskIndex);
-  var scriptFilePath = path.join(bag.buildScriptsDir, scriptFileName);
+  var scriptFilePath = path.join(bag.buildScriptsDir, bag.taskScriptFileName);
 
   __writeScriptFile(bag.taskScript, scriptFilePath, bag.scriptFilePermissions,
     function (err) {
@@ -187,54 +188,28 @@ function _createTaskScriptFile(bag, next) {
           'with err: %s', who, scriptFilePath, err));
         return next(err);
       }
-      bag.taskScriptFileName = scriptFileName;
       return next();
     }
   );
 }
 
-function _generateBootScriptFromTemplate(bag, next) {
+function _getContainerBootScript(bag, next) {
   if (!bag.runtime.container) return next();
 
-  var who = bag.who + '|' + _generateBootScriptFromTemplate.name;
+  var who = bag.who + '|' + _getContainerBootScript.name;
   logger.verbose(who, 'Inside');
 
-  // TODO: Some of the assumptions of paths here should be removed.
-  var dockerContainerName = util.format('reqExec.%s.%s', bag.buildJobId,
-    bag.taskIndex);
-  var dockerExecCommand =
-    util.format('%s %s %s',
-      global.config.taskContainerCommand,
-      path.join(bag.buildScriptsDir, bag.taskScriptFileName),
-      path.join(bag.buildStatusDir, 'job.env')
-    );
-  var dockerOptions = util.format('%s --name %s', bag.runtime.options.options,
-    dockerContainerName);
-  var dockerImage = util.format('%s:%s', bag.runtime.options.imageName,
-    bag.runtime.options.imageTag);
-  var object = {
-    options: dockerOptions,
-    envs: bag.defaultDockerEnvs,
-    image: dockerImage,
-    pull: bag.runtime.options.pull,
-    containerName: dockerContainerName,
-    command: dockerExecCommand
-  };
+  var bootScriptFilePath = path.join(global.config.execTemplatesPath, 'job',
+    bag.bootTemplateFileName);
 
-  var templateBag = {
-    filePath: path.join(global.config.execTemplatesPath, 'job',
-      bag.bootTemplateFileName),
-    object: object
-  };
-
-  generateScriptFromTemplate(templateBag,
-    function (err, resultBag) {
+  fs.readFile(bootScriptFilePath, 'utf8',
+    function (err, bootScript) {
       if (err) {
-        logger.error(util.format('%s, Generate script from template failed ' +
-          'with err: %s', who, err));
+        logger.error(util.format('%s, Failed to read file: %s ' +
+          'with err: %s', who, bootScriptFilePath, err));
         return next(err);
       }
-      bag.bootScript = bag.bootScript.concat(resultBag.script);
+      bag.bootScript = bag.bootScript.concat(bootScript);
       return next();
     }
   );
@@ -246,8 +221,7 @@ function _createBootScript(bag, next) {
   var who = bag.who + '|' + _createBootScript.name;
   logger.verbose(who, 'Inside');
 
-  var scriptFileName = util.format('boot_%s.sh', bag.taskIndex);
-  var scriptFilePath = path.join(bag.buildScriptsDir, scriptFileName);
+  var scriptFilePath = path.join(bag.buildScriptsDir, bag.bootScriptFileName);
 
   __writeScriptFile(bag.bootScript, scriptFilePath, bag.scriptFilePermissions,
     function (err) {
@@ -256,7 +230,6 @@ function _createBootScript(bag, next) {
           'with err: %s', who, scriptFilePath, err));
         return next(err);
       }
-      bag.bootScriptFileName = scriptFileName;
       return next();
     }
   );

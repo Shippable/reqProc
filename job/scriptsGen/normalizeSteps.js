@@ -3,13 +3,16 @@
 var self = normalizeSteps;
 module.exports = self;
 
-function normalizeSteps(yml) {
+var path = require('path');
+
+function normalizeSteps(yml, buildJobId, buildScriptsDir, buildStatusDir) {
   var clonedSteps = _.clone(yml.steps);
   clonedSteps = _convertOldFormatStepsToNew(clonedSteps);
   clonedSteps = _normalizeNewFormatSteps(clonedSteps, yml.runtime,
     __convertOldFormatTerminalGroupToNew(yml.on_success),
     __convertOldFormatTerminalGroupToNew(yml.on_failure),
-    __convertOldFormatTerminalGroupToNew(yml.always)
+    __convertOldFormatTerminalGroupToNew(yml.always), buildJobId,
+    buildScriptsDir, buildStatusDir
   );
 
   return clonedSteps;
@@ -41,7 +44,7 @@ function _convertOldFormatStepsToNew(steps) {
 }
 
 function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
-  onFailure, always) {
+  onFailure, always, buildJobId, buildScriptsDir, buildStatusDir) {
   var clonedSteps = _.clone(steps);
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
   var defaultIsContainer = true;
@@ -64,13 +67,6 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
     options: {
       env: {}
     }
-  };
-
-  // TODO: This might not be the best place to do this, we need to move this
-  // once we have everything driven with ENVs.
-  var defaultENVs = {
-    SHIPPABLE_NODE_ARCHITECTURE: global.config.shippableNodeArchitecture,
-    SHIPPABLE_NODE_OPERATING_SYSTEM: global.config.shippableNodeOperatingSystem
   };
 
   if (defaultJobRuntime.container === false)
@@ -119,22 +115,57 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
           task.runtime.options.env = _.clone(defaultHostOpts.options.env);
       }
 
-      _.extend(task.runtime.options.env, defaultENVs);
-      task.runtime.options.env = __normalizeEnvs(task.runtime.options.env);
       if (_.isUndefined(task.name))
         task.name = 'Task ' + taskIndex;
 
       task.always = always;
       task.onFailure = onFailure;
-      lastTask = task;
 
       task.taskIndex = taskIndex;
+      __generateRuntimeInfo(task, buildJobId, buildScriptsDir, buildStatusDir);
+      task.runtime.options.env = __normalizeEnvs(task.runtime.options.env);
+      lastTask = task;
       taskIndex += 1;
     }
   );
   lastTask.onSuccess = onSuccess;
 
   return clonedSteps;
+}
+
+function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
+  buildStatusDir) {
+  var defaultENVs = {
+    shippableNodeArchitecture: global.config.shippableNodeArchitecture,
+    shippableNodeOperatingSystem: global.config.shippableNodeOperatingSystem
+  };
+  var taskEnvs = _.extend({}, defaultENVs);
+  _.extend(taskEnvs, {
+    taskName: task.name || util.format('task_%s', task.taskIndex),
+    isTaskInContainer: task.runtime.container
+  });
+  task.taskScriptFileName = util.format('task_%s.sh', task.taskIndex);
+  if (task.runtime.container) {
+    var containerName =  util.format('reqExec.%s.%s', buildJobId,
+      task.taskIndex);
+    task.runtime.options.options = util.format('%s --name %s',
+      task.runtime.options.options, containerName);
+    task.bootScriptFileName = util.format('boot_%s.sh', task.taskIndex);
+    // sets container task envs
+    var taskContainerEnvs = {
+      taskContainerOptions: task.runtime.options.options,
+      taskContainerImage: util.format('%s:%s',
+        task.runtime.options.imageName, task.runtime.options.imageTag),
+      shouldPullTaskContainerImage: task.runtime.options.pull,
+      taskContainerCommand: util.format('%s %s %s',
+        global.config.taskContainerCommand,
+        path.join(buildScriptsDir, task.taskScriptFileName),
+        path.join(buildStatusDir, 'job.env')
+      )
+    };
+    _.extend(taskEnvs, taskContainerEnvs);
+  }
+  task.shippableRuntimeEnvs = taskEnvs;
 }
 
 function __convertOldFormatTerminalGroupToNew(terminalGroup) {
@@ -183,12 +214,18 @@ function __normalizeEnvs(envs) {
   }
   _.each(clonedEnvs,
     function (value, key) {
-      value = value.replace(/ /g, '\\ ');
-      value = ___escapeEnvironmentVariable(value);
-      escapedEnvs.push(util.format('%s="%s"',
-        key.replace(/[^A-Za-z0-9_]/g, ''),
-        value
-      ));
+      if (typeof value === 'string') {
+        value = ___escapeEnvironmentVariable(value);
+        escapedEnvs.push(util.format('%s="%s"',
+          key.replace(/[^A-Za-z0-9_]/g, ''),
+          value
+        ));
+      } else {
+        escapedEnvs.push(util.format('%s=%s',
+          key.replace(/[^A-Za-z0-9_]/g, ''),
+          value
+        ));
+      }
     }
   );
   return escapedEnvs;
