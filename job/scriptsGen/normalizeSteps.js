@@ -72,8 +72,6 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   if (defaultJobRuntime.container === false)
     defaultIsContainer = false;
 
-  _.extend(defaultHostOpts, defaultJobRuntime.options);
-
   var lastTask;
   var taskIndex = 0;
   _.each(clonedSteps,
