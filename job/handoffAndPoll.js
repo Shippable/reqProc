@@ -4,6 +4,7 @@ var self = handoffAndPoll;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 
 function handoffAndPoll(externalBag, callback) {
   var bag = {
@@ -90,7 +91,7 @@ function __setStepsFileName(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Setting executor as reqKick');
-  var whoPath = util.format('%s/job.steps.path', bag.buildStatusDir);
+  var whoPath = path.join(bag.buildStatusDir, 'job.steps.path');
   fs.writeFile(whoPath, bag.stepsFileName,
     function (err) {
       if (err) {
@@ -115,7 +116,7 @@ function __setExecutorAsReqKick(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Setting executor as reqKick');
-  var whoPath = util.format('%s/job.who', bag.buildStatusDir);
+  var whoPath = path.join(bag.buildStatusDir, 'job.who');
   fs.writeFile(whoPath, 'reqKick\n',
     function (err) {
       if (err) {
@@ -140,7 +141,7 @@ function __pollExecutorForReqProc(bag, next) {
   logger.verbose(who, 'Inside');
 
   function checkForReqProc(bag, callback) {
-    var whoPath = util.format('%s/job.who', bag.buildStatusDir);
+    var whoPath = path.join(bag.buildStatusDir, 'job.who');
     var isReqProc = false;
 
     try {
