@@ -309,13 +309,14 @@ function _generateSteps(bag, next) {
 
   bag.consoleAdapter.openGrp('Generating steps');
   generateSteps(bag,
-    function (err) {
+    function (err, resultBag) {
       if (err) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
 
+      _.extend(bag, resultBag);
       bag.consoleAdapter.closeGrp(true);
       return next();
     }

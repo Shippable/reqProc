@@ -4,6 +4,8 @@ var self = generateSteps;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
+
 var generateScript = require('./scriptsGen/generateScript.js');
 var normalizeSteps = require('./scriptsGen/normalizeSteps.js');
 
@@ -16,8 +18,17 @@ function generateSteps(externalBag, callback) {
     buildJobId: externalBag.buildJobId,
     consoleAdapter: externalBag.consoleAdapter,
     jobSteps: {
-      reqKick: []
+      in: {
+        reqKick: []
+      },
+      yml: {
+        reqKick: []
+      },
+      out: {
+        reqKick: []
+      }
     },
+    stepsFileNames: [],
     buildRootDir: externalBag.buildRootDir,
     reqExecDir: externalBag.reqExecDir,
     commonEnvs: externalBag.commonEnvs
@@ -28,17 +39,22 @@ function generateSteps(externalBag, callback) {
   async.series([
       _checkInputParams.bind(null, bag),
       _normalizeSteps.bind(null, bag),
-      _generateSteps.bind(null, bag),
+      _generateScript.bind(null, bag),
       _writeJobSteps.bind(null, bag),
       _setJobEnvs.bind(null, bag)
     ],
     function (err) {
-      if (err)
+      var result;
+      if (err) {
         logger.error(bag.who, util.format('Failed to generate steps'));
-      else
+      } else {
+        result = {
+          stepsFileNames: bag.stepsFileNames
+        };
         logger.info(bag.who, util.format('Successfully generated steps'));
+      }
 
-      return callback(err);
+      return callback(err, result);
     }
   );
 }
@@ -81,14 +97,17 @@ function _normalizeSteps(bag, next) {
   var who = bag.who + '|' + _normalizeSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.steps = normalizeSteps(bag.inPayload.propertyBag.yml, bag.buildJobId,
-    bag.buildScriptsDir, bag.buildStatusDir);
+  bag.ymlSteps = normalizeSteps(bag.inPayload.propertyBag.yml, bag.buildJobId,
+    bag.buildScriptsDir, bag.buildStatusDir, 'yml');
 
-  bag.tasks = _.filter(bag.steps,
+  bag.ymlTasks = _.filter(bag.ymlSteps,
     function (step) {
       return !!step.TASK;
     }
   );
+
+  // concat in, out & yml tasks here
+  bag.tasks = bag.ymlTasks;
 
   bag.inDependencies = _.filter(bag.inPayload.dependencies,
     function (dependency) {
@@ -99,8 +118,8 @@ function _normalizeSteps(bag, next) {
   return next();
 }
 
-function _generateSteps(bag, next) {
-  var who = bag.who + '|' + _generateSteps.name;
+function _generateScript(bag, next) {
+  var who = bag.who + '|' + _generateScript.name;
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Generating job steps');
@@ -125,7 +144,8 @@ function _generateSteps(bag, next) {
             logger.error(msg);
             return nextTask(err);
           }
-          bag.jobSteps.reqKick.push(resultBag.scriptFileName);
+          bag.jobSteps[task.TASK.group].reqKick.push(
+            resultBag.scriptFileName);
           return nextTask();
         }
       );
@@ -146,26 +166,35 @@ function _writeJobSteps(bag, next) {
   var who = bag.who + '|' + _writeJobSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Writing job steps');
+  async.forEachOfSeries(bag.jobSteps,
+    function (steps, type, nextStep) {
+      if (_.isEmpty(steps.reqKick)) return nextStep();
+      bag.consoleAdapter.openCmd(util.format('Writing %s steps', type));
 
-  var stepsPath = util.format('%s/job.steps.json', bag.buildStatusDir);
-  fs.writeFile(stepsPath, JSON.stringify(bag.jobSteps),
-    function (err) {
-      if (err) {
-        var msg = util.format('%s, Failed to write file: %s ' +
-          'with err: %s', who, stepsPath, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-        return next(err);
-      }
+      var stepsFileName = util.format('%s.steps.json', type);
+      var stepsPath = path.join(bag.buildStatusDir, stepsFileName);
+      fs.writeFile(stepsPath, JSON.stringify(steps),
+        function (err) {
+          if (err) {
+            var msg = util.format('%s, Failed to write file: %s ' +
+              'with err: %s', who, stepsPath, err);
+            bag.consoleAdapter.publishMsg(msg);
+            bag.consoleAdapter.closeCmd(false);
+            return nextStep(err);
+          }
 
-      bag.consoleAdapter.publishMsg(
-        util.format('Updated %s', stepsPath)
+          bag.stepsFileNames.push(stepsFileName);
+          bag.consoleAdapter.publishMsg(util.format('Updated %s', stepsPath));
+          bag.consoleAdapter.closeCmd(true);
+          return nextStep();
+        }
       );
-      bag.consoleAdapter.closeCmd(true);
-      return next();
+    },
+    function (err) {
+      return next(err);
     }
   );
+
 }
 
 function _setJobEnvs(bag, next) {
