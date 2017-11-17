@@ -35,8 +35,7 @@ function generateScript(externalBag, callback) {
     inDependencies: externalBag.inDependencies,
     buildStatusDir: externalBag.buildStatusDir,
     integrationInitScripts: [],
-    integrationCleanupScripts: [],
-    taskGroup: externalBag.group
+    integrationCleanupScripts: []
   };
   bag.defaultDockerEnvs = '';
 
@@ -66,7 +65,6 @@ function generateScript(externalBag, callback) {
           result.scriptFileName = bag.bootScriptFileName;
         else
           result.scriptFileName = bag.taskScriptFileName;
-        result.taskGroup = bag.taskGroup;
       }
       return callback(err, result);
     }

@@ -118,7 +118,7 @@ function _normalizeSteps(bag, next) {
   return next();
 }
 
-function _generateScript(bag, nextStep) {
+function _generateScript(bag, next) {
   var who = bag.who + '|' + _generateScript.name;
   logger.verbose(who, 'Inside');
 
@@ -144,7 +144,7 @@ function _generateScript(bag, nextStep) {
             logger.error(msg);
             return nextTask(err);
           }
-          bag.jobSteps[resultBag.taskGroup].reqKick.push(
+          bag.jobSteps[task.TASK.group].reqKick.push(
             resultBag.scriptFileName);
           return nextTask();
         }
@@ -157,7 +157,7 @@ function _generateScript(bag, nextStep) {
         bag.consoleAdapter.publishMsg('Successfully generated job steps');
         bag.consoleAdapter.closeCmd(true);
       }
-      return nextStep(err);
+      return next(err);
     }
   );
 }
@@ -167,9 +167,8 @@ function _writeJobSteps(bag, next) {
   logger.verbose(who, 'Inside');
 
   async.forEachOfSeries(bag.jobSteps,
-    function (steps, key, nextStep) {
+    function (steps, type, nextStep) {
       if (_.isEmpty(steps.reqKick)) return nextStep();
-      var type = key;
       bag.consoleAdapter.openCmd(util.format('Writing %s steps', type));
 
       var stepsFileName = util.format('%s.steps.json', type);
