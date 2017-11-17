@@ -5,14 +5,15 @@ module.exports = self;
 
 var path = require('path');
 
-function normalizeSteps(yml, buildJobId, buildScriptsDir, buildStatusDir) {
+function normalizeSteps(yml, buildJobId, buildScriptsDir, buildStatusDir,
+  group) {
   var clonedSteps = _.clone(yml.steps);
   clonedSteps = _convertOldFormatStepsToNew(clonedSteps);
   clonedSteps = _normalizeNewFormatSteps(clonedSteps, yml.runtime,
     __convertOldFormatTerminalGroupToNew(yml.on_success),
     __convertOldFormatTerminalGroupToNew(yml.on_failure),
     __convertOldFormatTerminalGroupToNew(yml.always), buildJobId,
-    buildScriptsDir, buildStatusDir
+    buildScriptsDir, buildStatusDir, group
   );
 
   return clonedSteps;
@@ -44,7 +45,7 @@ function _convertOldFormatStepsToNew(steps) {
 }
 
 function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
-  onFailure, always, buildJobId, buildScriptsDir, buildStatusDir) {
+  onFailure, always, buildJobId, buildScriptsDir, buildStatusDir, group) {
   var clonedSteps = _.clone(steps);
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
   var defaultIsContainer = true;
@@ -122,7 +123,8 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
       task.onFailure = onFailure;
 
       task.taskIndex = taskIndex;
-      __generateRuntimeInfo(task, buildJobId, buildScriptsDir, buildStatusDir);
+      __generateRuntimeInfo(task, buildJobId, buildScriptsDir, buildStatusDir,
+        group);
       task.runtime.options.env = __normalizeEnvs(task.runtime.options.env);
       lastTask = task;
       taskIndex += 1;
@@ -134,7 +136,7 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
 }
 
 function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
-  buildStatusDir) {
+  buildStatusDir, group) {
   var defaultENVs = {
     shippableNodeArchitecture: global.config.shippableNodeArchitecture,
     shippableNodeOperatingSystem: global.config.shippableNodeOperatingSystem
@@ -144,13 +146,14 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
     taskName: task.name || util.format('task_%s', task.taskIndex),
     isTaskInContainer: task.runtime.container
   });
-  task.taskScriptFileName = util.format('task_%s.sh', task.taskIndex);
+  task.taskScriptFileName = util.format('%s_task_%s.sh', group, task.taskIndex);
   if (task.runtime.container) {
     var containerName =  util.format('reqExec.%s.%s', buildJobId,
       task.taskIndex);
     task.runtime.options.options = util.format('%s --name %s',
       task.runtime.options.options, containerName);
-    task.bootScriptFileName = util.format('boot_%s.sh', task.taskIndex);
+    task.bootScriptFileName = util.format('%s_boot_%s.sh', group,
+      task.taskIndex);
     // sets container task envs
     var taskContainerEnvs = {
       taskContainerOptions: task.runtime.options.options,
@@ -166,6 +169,7 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
     _.extend(taskEnvs, taskContainerEnvs);
   }
   task.shippableRuntimeEnvs = taskEnvs;
+  task.group = group;
 }
 
 function __convertOldFormatTerminalGroupToNew(terminalGroup) {

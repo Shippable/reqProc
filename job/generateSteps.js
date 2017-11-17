@@ -4,6 +4,8 @@ var self = generateSteps;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
+
 var generateScript = require('./scriptsGen/generateScript.js');
 var normalizeSteps = require('./scriptsGen/normalizeSteps.js');
 
@@ -16,7 +18,15 @@ function generateSteps(externalBag, callback) {
     buildJobId: externalBag.buildJobId,
     consoleAdapter: externalBag.consoleAdapter,
     jobSteps: {
-      reqKick: []
+      in: {
+        reqKick: []
+      },
+      yml: {
+        reqKick: []
+      },
+      out: {
+        reqKick: []
+      }
     },
     stepsFileNames: [],
     buildRootDir: externalBag.buildRootDir,
@@ -29,7 +39,8 @@ function generateSteps(externalBag, callback) {
   async.series([
       _checkInputParams.bind(null, bag),
       _normalizeSteps.bind(null, bag),
-      _generateSteps.bind(null, bag),
+      _generateScript.bind(null, bag),
+      _writeJobSteps.bind(null, bag),
       _setJobEnvs.bind(null, bag)
     ],
     function (err) {
@@ -87,13 +98,16 @@ function _normalizeSteps(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.ymlSteps = normalizeSteps(bag.inPayload.propertyBag.yml, bag.buildJobId,
-    bag.buildScriptsDir, bag.buildStatusDir);
+    bag.buildScriptsDir, bag.buildStatusDir, 'yml');
 
   bag.ymlTasks = _.filter(bag.ymlSteps,
     function (step) {
       return !!step.TASK;
     }
   );
+
+  // concat in, out & yml tasks here
+  bag.tasks = bag.ymlTasks;
 
   bag.inDependencies = _.filter(bag.inPayload.dependencies,
     function (dependency) {
@@ -104,47 +118,11 @@ function _normalizeSteps(bag, next) {
   return next();
 }
 
-function _generateSteps(bag, next) {
-  var who = bag.who + '|' + _generateSteps.name;
+function _generateScript(bag, nextStep) {
+  var who = bag.who + '|' + _generateScript.name;
   logger.verbose(who, 'Inside');
 
-  var tasks = {
-    yml: bag.ymlTasks
-  };
-  var stepsFileNames = [];
-
-  async.forEachOf(tasks,
-    function (value, key, nextTask) {
-      var innerBag = {
-        type: key,
-        tasks: value
-      };
-      _.extend(innerBag, bag);
-      bag.jobSteps.reqKick = [];
-      async.series([
-          __generateScript.bind(null, innerBag),
-          __writeJobSteps.bind(null, innerBag)
-        ],
-        function (err) {
-          if (!err)
-            stepsFileNames.push(innerBag.stepsFileName);
-          return nextTask(err);
-        }
-      );
-    },
-    function (err) {
-      if (!err)
-        bag.stepsFileNames = stepsFileNames;
-      return next(err);
-    }
-  );
-}
-
-function __generateScript(bag, nextStep) {
-  var who = bag.who + '|' + __generateScript.name;
-  logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openCmd(util.format('Generating %s steps', bag.type));
+  bag.consoleAdapter.openCmd('Generating job steps');
 
   async.forEachOfSeries(bag.tasks,
     function (task, index, nextTask) {
@@ -166,7 +144,8 @@ function __generateScript(bag, nextStep) {
             logger.error(msg);
             return nextTask(err);
           }
-          bag.jobSteps.reqKick.push(resultBag.scriptFileName);
+          bag.jobSteps[resultBag.taskGroup].reqKick.push(
+            resultBag.scriptFileName);
           return nextTask();
         }
       );
@@ -175,8 +154,7 @@ function __generateScript(bag, nextStep) {
       if (err) {
         bag.consoleAdapter.closeCmd(false);
       } else {
-        bag.consoleAdapter.publishMsg(util.format('Successfully generated %s '+
-          'steps', bag.type));
+        bag.consoleAdapter.publishMsg('Successfully generated job steps');
         bag.consoleAdapter.closeCmd(true);
       }
       return nextStep(err);
@@ -184,30 +162,40 @@ function __generateScript(bag, nextStep) {
   );
 }
 
-function __writeJobSteps(bag, nextStep) {
-  var who = bag.who + '|' + __writeJobSteps.name;
+function _writeJobSteps(bag, next) {
+  var who = bag.who + '|' + _writeJobSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd(util.format('Writing %s steps', bag.type));
+  async.forEachOfSeries(bag.jobSteps,
+    function (steps, key, nextStep) {
+      if (_.isEmpty(steps.reqKick)) return nextStep();
+      var type = key;
+      bag.consoleAdapter.openCmd(util.format('Writing %s steps', type));
 
-  var stepsFileName = util.format('%s.steps.json', bag.type);
-  var stepsPath = util.format('%s/%s', bag.buildStatusDir, stepsFileName);
-  fs.writeFile(stepsPath, JSON.stringify(bag.jobSteps),
+      var stepsFileName = util.format('%s.steps.json', type);
+      var stepsPath = path.join(bag.buildStatusDir, stepsFileName);
+      fs.writeFile(stepsPath, JSON.stringify(steps),
+        function (err) {
+          if (err) {
+            var msg = util.format('%s, Failed to write file: %s ' +
+              'with err: %s', who, stepsPath, err);
+            bag.consoleAdapter.publishMsg(msg);
+            bag.consoleAdapter.closeCmd(false);
+            return nextStep(err);
+          }
+
+          bag.stepsFileNames.push(stepsFileName);
+          bag.consoleAdapter.publishMsg(util.format('Updated %s', stepsPath));
+          bag.consoleAdapter.closeCmd(true);
+          return nextStep();
+        }
+      );
+    },
     function (err) {
-      if (err) {
-        var msg = util.format('%s, Failed to write file: %s ' +
-          'with err: %s', who, stepsPath, err);
-        bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-        return nextStep(err);
-      }
-
-      bag.stepsFileName = stepsFileName;
-      bag.consoleAdapter.publishMsg(util.format('Updated %s', stepsPath));
-      bag.consoleAdapter.closeCmd(true);
-      return nextStep();
+      return next(err);
     }
   );
+
 }
 
 function _setJobEnvs(bag, next) {
