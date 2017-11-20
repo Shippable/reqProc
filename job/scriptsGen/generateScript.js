@@ -28,7 +28,6 @@ function generateScript(externalBag, callback) {
     bootScript: '',
     scriptFilePermissions: '755',
     buildRootDir: externalBag.buildRootDir,
-    reqExecDir: externalBag.reqExecDir,
     buildJobId: externalBag.buildJobId,
     commonEnvs: externalBag.commonEnvs,
     shippableRuntimeEnvs: externalBag.shippableRuntimeEnvs,
@@ -82,7 +81,7 @@ function _getScriptHeader(bag, next) {
   var who = bag.who + '|' + _getScriptHeader.name;
   logger.verbose(who, 'Inside');
 
-  var headerFile = path.join(global.config.execTemplatesPath, 'job',
+  var headerFile = path.join(global.config.execTemplatesDir, 'job',
     bag.scriptHeaderFileName);
 
   fs.readFile(headerFile, 'utf8',
@@ -104,7 +103,7 @@ function _generateEnvScriptFromTemplate(bag, next) {
   logger.verbose(who, 'Inside');
 
   var templateBag = {
-    filePath: path.join(global.config.execTemplatesPath, 'job',
+    filePath: path.join(global.config.execTemplatesDir, 'job',
       bag.envTemplateFileName),
     object: {
       commonEnvs: bag.commonEnvs,
@@ -150,7 +149,7 @@ function _generateTaskScriptFromTemplate(bag, next) {
   logger.verbose(who, 'Inside');
 
   var templateBag = {
-    filePath: path.join(global.config.execTemplatesPath, 'job',
+    filePath: path.join(global.config.execTemplatesDir, 'job',
       bag.taskTemplateFileName),
     object: {
       script: bag.script,
@@ -199,7 +198,7 @@ function _getContainerBootScript(bag, next) {
   var who = bag.who + '|' + _getContainerBootScript.name;
   logger.verbose(who, 'Inside');
 
-  var bootScriptFilePath = path.join(global.config.execTemplatesPath, 'job',
+  var bootScriptFilePath = path.join(global.config.execTemplatesDir, 'job',
     bag.bootTemplateFileName);
 
   fs.readFile(bootScriptFilePath, 'utf8',

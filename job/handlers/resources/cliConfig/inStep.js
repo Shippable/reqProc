@@ -47,7 +47,7 @@ function _copyIntegrationInitScript(bag, next) {
   logger.debug(who, 'Inside');
 
   var integrationScriptTemplate =
-    path.join(global.config.execTemplatesPath, 'resources',
+    path.join(global.config.execTemplatesDir, 'resources',
     bag.dependency.type,
     bag.inDependencyInitTemplateFileNamePattern.replace('{{masterName}}',
     bag.dependency.accountIntegration.masterName));
@@ -55,7 +55,7 @@ function _copyIntegrationInitScript(bag, next) {
   if (!fs.existsSync(integrationScriptTemplate))
     return next(true);
 
-  var templatesCommonFolderPath = path.join(global.config.execTemplatesPath,
+  var templatesCommonFolderPath = path.join(global.config.execTemplatesDir,
     'resources', 'common');
   var destinationInitFilePath = path.join(bag.buildScriptsDir, 'resources',
     bag.dependency.type, bag.dependency.accountIntegration.masterName,
@@ -82,7 +82,7 @@ function _copyIntegrationCleanupScript(bag, next) {
   logger.debug(who, 'Inside');
 
   var integrationScriptTemplate =
-    path.join(global.config.execTemplatesPath, 'resources',
+    path.join(global.config.execTemplatesDir, 'resources',
     bag.dependency.type,
     bag.inDependencyCleanupTemplateFileNamePattern.replace('{{masterName}}',
     bag.dependency.accountIntegration.masterName));
