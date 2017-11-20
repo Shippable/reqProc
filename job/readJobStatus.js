@@ -4,6 +4,8 @@ var self = readJobStatus;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
+
 var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 
 function readJobStatus(externalBag, callback) {
@@ -104,7 +106,7 @@ function _readJobStatus(bag, next) {
 
   bag.consoleAdapter.openCmd('Reading job status');
 
-  var statusPath = util.format('%s/job.status', bag.buildStatusDir);
+  var statusPath = path.join(bag.buildStatusDir, 'job.status');
   fs.readFile(statusPath, 'utf8',
     function (err, status) {
       var msg;

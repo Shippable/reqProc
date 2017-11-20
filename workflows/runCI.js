@@ -40,14 +40,15 @@ function runCI(externalBag, callback) {
       NOTIFY: 'NOTIFY'
     }
   };
-  bag.inRootDir = bag.buildRootDir + '/IN';
-  bag.outRootDir = bag.buildRootDir + '/OUT';
-  bag.stateDir = bag.buildRootDir + '/state';
-  bag.previousStateDir = bag.buildRootDir + '/previousState';
+  bag.inRootDir = path.join(bag.buildRootDir, 'IN');
+  bag.outRootDir = path.join(bag.buildRootDir, 'OUT');
+  bag.stateDir = path.join(bag.buildRootDir, 'state');
+  bag.previousStateDir = path.join(bag.buildRootDir, 'previousState');
   bag.subPrivateKeyPath = '/tmp/00_sub';
-  bag.messageFilePath = bag.buildRootDir + '/message.json';
+  bag.messageFilePath = path.join(bag.buildRootDir, 'message.json');
   bag.stepMessageFilename = 'version.json';
-  bag.outputVersionFilePath = bag.buildRootDir + '/state/outputVersion.json';
+  bag.outputVersionFilePath = path.join(bag.stateDir,
+    'outputVersion.json');
   bag.jobEnvDir = path.join(bag.artifactsDir, bag.onStartEnvDir);
 
   // push all the directories that need to be cleaned into this array
@@ -572,10 +573,11 @@ function __createTemplateFiles(bag, next) {
   // <resourceName>.env
   var fileList = _.map(bag.inPayload.dependencies,
     function (dependency) {
-      return bag.stateDir + '/' + dependency.name + '.env';
+      return path.join(bag.stateDir, util.format('%s.env', dependency.name));
     }
   );
-  fileList.push(bag.stateDir + '/' + bag.inPayload.name + '.env');
+  fileList.push(path.join(bag.stateDir, util.format('%s.env',
+    bag.inPayload.name)));
 
   async.eachLimit(fileList, 10,
     function (filePath, done) {
@@ -829,12 +831,12 @@ function __createDataFile(bag, dependency, next) {
   var who = bag.who + '|' + __createDataFile.name;
   logger.verbose(who, 'Inside');
 
-  var path = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name;
+  var dataFilePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name);
 
   var innerBag = {
     who: who,
-    path: path,
+    path: dataFilePath,
     fileName: bag.stepMessageFilename,
     object: dependency,
     consoleAdapter: bag.consoleAdapter
@@ -869,8 +871,8 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
   );
 
   bag.commonEnvs.push(
-    util.format('%s_STATE="%s/%s"',
-      sanitizedDependencyName, dependencyPath, dependency.type)
+    util.format('%s_STATE="%s"',
+      sanitizedDependencyName, path.join(dependencyPath, dependency.type))
   );
 
   bag.commonEnvs.push(
@@ -1100,8 +1102,8 @@ function __getDependencyIntegrations(bag, dependency, next) {
   var who = bag.who + '|' + __getDependencyIntegrations.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyPath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name;
+  var dependencyPath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name);
 
   bag.builderApiAdapter.getSubscriptionIntegrationById(
     dependency.subscriptionIntegrationId,
@@ -1255,22 +1257,22 @@ function __getDependencyIntegrations(bag, dependency, next) {
         innerBagKey.object = accountIntegration.privateKey;
         innerBagKey.hasKey = true;
         bag.commonEnvs.push(util.format('%s_PRIVATE_KEY_PATH="%s"',
-          sanitizedDependencyName, dependencyPath + '/' + innerBagKey.fileName
-        ));
+          sanitizedDependencyName, path.join(dependencyPath,
+          innerBagKey.fileName)));
 
         // public key
         innerBagSshPublicKey.fileName = dependency.name + '_key.pub';
         innerBagSshPublicKey.object = accountIntegration.publicKey;
         innerBagSshPublicKey.hasKey = true;
         bag.commonEnvs.push(util.format('%s_PUBLIC_KEY_PATH="%s"',
-          sanitizedDependencyName, dependencyPath + '/' +
-          innerBagSshPublicKey.fileName
-        ));
+          sanitizedDependencyName, path.join(dependencyPath,
+          innerBagSshPublicKey.fileName)));
       }
 
       if (innerBagKey.hasKey)
         bag.commonEnvs.push(util.format('%s_KEYPATH="%s"',
-          sanitizedDependencyName, dependencyPath + '/' + innerBagKey.fileName
+          sanitizedDependencyName, path.join(dependencyPath,
+          innerBagKey.fileName)
         ));
       else
         innerBagKey = {};
@@ -1324,8 +1326,8 @@ function __createStateDirectory(bag, dependency, next) {
   var who = bag.who + '|' + __createStateDirectory.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyStatePath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name + '/' + dependency.type;
+  var dependencyStatePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name, dependency.type);
 
   var innerBag = {
     who: who,
@@ -1393,8 +1395,8 @@ function __createStateFiles(bag, dependency, next) {
   var who = bag.who + '|' + __createStateFiles.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyStatePath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name + '/' + dependency.type;
+  var dependencyStatePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name, dependency.type);
 
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
@@ -1425,8 +1427,8 @@ function __setStateFilePermissions(bag, dependency, next) {
   var who = bag.who + '|' + __setStateFilePermissions.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyStatePath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name + '/' + dependency.type;
+  var dependencyStatePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name, dependency.type);
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
       var path = util.format('%s%s', dependencyStatePath, file.path);
@@ -1521,7 +1523,7 @@ function _saveTaskMessage(bag, next) {
   taskMessage.dependencies = _.map(bag.inPayload.dependencies,
     function (dep) {
 
-      var depPath = bag.buildRootDir + '/' + dep.operation + '/' + dep.name;
+      var depPath = path.join(bag.buildRootDir, dep.operation, dep.name);
       var taskMessageDependency = {
         operation: dep.operation,
         name: dep.name,
@@ -2012,7 +2014,8 @@ function _extendOutputVersionWithEnvs(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Reading additional job properties');
-  var envFilePath = bag.stateDir + '/' + bag.inPayload.name + '.env';
+  var envFilePath = path.join(bag.stateDir, util.format('%s.env',
+    bag.inPayload.name));
   var newVersionName = '';
   var propertyBag = {};
   try {
@@ -2225,11 +2228,11 @@ function __readVersionJson(bag, next) {
   var who = bag.who + '|' + __readVersionJson.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyPath = bag.outRootDir + '/' + bag.dependency.name;
+  var dependencyPath = path.join(bag.outRootDir, bag.dependency.name);
 
   bag.consoleAdapter.openCmd('Reading dependency metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
-  var checkFile = dependencyPath + '/' + bag.stepMessageFilename;
+  var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
     function (err, resource) {
       if (err) {
@@ -2293,11 +2296,11 @@ function __readReplicatedVersionJson(bag, next) {
   var who = bag.who + '|' + __readReplicatedVersionJson.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyPath = bag.inRootDir + '/' + bag.replicate;
+  var dependencyPath = path.join(bag.inRootDir, bag.replicate);
 
   bag.consoleAdapter.openCmd('Reading replicated metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
-  var checkFile = dependencyPath + '/' + bag.stepMessageFilename;
+  var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
     function (err, resource) {
       if (err) {
@@ -2330,7 +2333,8 @@ function __readVersionEnv(bag, next) {
 
   bag.consoleAdapter.openCmd('Reading resource env file');
 
-  var envFilePath = bag.stateDir + '/' + bag.dependency.name + '.env';
+  var envFilePath = path.join(bag.stateDir, util.format('%s.env',
+    bag.dependency.name));
   try {
     var envFile = fs.readFileSync(envFilePath).toString();
     var lines = envFile.split('\n');
@@ -2601,16 +2605,16 @@ function __saveFile(bag, next) {
   var who = bag.who + '|' + __saveFile.name;
   logger.debug(who, 'Inside');
 
-  var path = bag.path + '/' + bag.fileName;
+  var filePath = path.join(bag.path, bag.fileName);
   var data = bag.object;
   if (_.isObject(bag.object))
     data = JSON.stringify(bag.object);
 
-  fs.writeFile(path, data, [],
+  fs.writeFile(filePath, data, [],
     function (err) {
       if (err) {
         var msg = util.format('%s, Failed to save file:%s at %s with ' +
-          'err: %s', who, bag.object, path, err);
+          'err: %s', who, bag.object, filePath, err);
         bag.consoleAdapter.publishMsg(msg);
         return next(true);
       }
@@ -2630,16 +2634,16 @@ function __appendFile(bag, next) {
   var who = bag.who + '|' + __appendFile.name;
   logger.debug(who, 'Inside');
 
-  var path = bag.path + '/' + bag.fileName;
+  var filePath = path.join(bag.path, bag.fileName);
   var data = bag.object;
   if (_.isObject(bag.object))
     data = JSON.stringify(bag.object);
 
-  fs.appendFile(path, data, [],
+  fs.appendFile(filePath, data, [],
     function (err) {
       if (err) {
         var msg = util.format('%s, Failed to append file: %s with ' +
-          'err: %s', who, path, err);
+          'err: %s', who, filePath, err);
         bag.consoleAdapter.publishMsg(msg);
         return next(true);
       }

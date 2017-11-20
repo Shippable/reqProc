@@ -4,6 +4,7 @@ var self = runSh;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 
 var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 var initializeJob = require('../job/initializeJob.js');
@@ -39,17 +40,16 @@ function runSh(externalBag, callback) {
     reqKickDir: global.config.reqKickDir,
     reqExecDir: global.config.reqExecDir,
     buildRootDir: global.config.buildDir,
-    reqKickScriptsDir: util.format('%s/scripts', global.config.reqKickDir),
-    buildInDir: util.format('%s/IN', global.config.buildDir),
-    buildOutDir: util.format('%s/OUT', global.config.buildDir),
-    buildStateDir: util.format('%s/state', global.config.buildDir),
-    buildStatusDir: util.format('%s/status', global.config.buildDir),
-    buildSharedDir: util.format('%s/shared', global.config.buildDir),
-    buildScriptsDir: util.format('%s/scripts', global.config.buildDir),
-    buildSecretsDir: util.format('%s/secrets', global.config.buildDir),
-    buildPreviousStateDir: util.format('%s/previousState',
-      global.config.buildDir),
-    messageFilePath: util.format('%s/message.json', global.config.buildDir),
+    reqKickScriptsDir: path.join(global.config.reqKickDir, 'scripts'),
+    buildInDir: path.join(global.config.buildDir, 'IN'),
+    buildOutDir: path.join(global.config.buildDir, 'OUT'),
+    buildStateDir: path.join(global.config.buildDir, 'state'),
+    buildStatusDir: path.join(global.config.buildDir, 'status'),
+    buildSharedDir: path.join(global.config.buildDir, 'shared'),
+    buildScriptsDir: path.join(global.config.buildDir, 'scripts'),
+    buildSecretsDir: path.join(global.config.buildDir, 'secrets'),
+    buildPreviousStateDir: path.join(global.config.buildDir, 'previousState'),
+    messageFilePath: path.join(global.config.buildDir, 'message.json'),
     stepMessageFilename: 'version.json',
     operation: {
       IN: 'IN',
@@ -60,9 +60,9 @@ function runSh(externalBag, callback) {
     jobStatusCode: getStatusCodeByName('success')
   };
 
-  bag.subPrivateKeyPath = util.format('%s/00_sub', bag.buildSecretsDir);
-  bag.outputVersionFilePath = util.format('%s/outputVersion.json',
-    bag.buildStateDir);
+  bag.subPrivateKeyPath = path.join(bag.buildSecretsDir, '00_sub');
+  bag.outputVersionFilePath = path.join(bag.buildStateDir,
+    'outputVersion.json');
 
   bag.who = util.format('%s|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -176,7 +176,7 @@ function _setExecutorAsReqProc(bag, next) {
 
   bag.consoleAdapter.openCmd('Setting executor as reqProc');
 
-  var whoPath = util.format('%s/job.who', bag.buildStatusDir);
+  var whoPath = path.join(bag.buildStatusDir, 'job.who');
   fs.writeFile(whoPath, 'reqProc\n',
     function (err) {
       if (err) {

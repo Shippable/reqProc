@@ -4,6 +4,7 @@ var self = saveState;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 
 function saveState(externalBag, callback) {
   var bag = {
@@ -199,10 +200,10 @@ function getFileListRecursively(dir, filelist) {
 
   _.each(files,
     function (file) {
-      if (fs.statSync(dir + '/' + file).isDirectory())
-        filelist = getFileListRecursively(dir + '/' + file, filelist);
+      if (fs.statSync(path.join(dir, file)).isDirectory())
+        filelist = getFileListRecursively(path.join(dir, file), filelist);
       else
-        filelist.push(dir + '/' + file);
+        filelist.push(path.join(dir, file));
     }
   );
   return filelist;

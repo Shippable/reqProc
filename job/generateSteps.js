@@ -208,7 +208,7 @@ function _setJobEnvs(bag, next) {
   jobEnvs.push(util.format('RUN_MODE=%s', global.config.runMode));
   jobEnvs.push(util.format('BUILD_DIR=%s', bag.buildRootDir));
 
-  var envPath = util.format('%s/job.env', bag.buildStatusDir);
+  var envPath = path.join(bag.buildStatusDir, 'job.env');
   fs.writeFile(envPath, jobEnvs.join('\n'),
     function (err) {
       if (err) {

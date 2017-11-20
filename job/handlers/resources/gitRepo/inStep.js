@@ -89,7 +89,7 @@ function _injectDependencies(bag, next) {
         bag.dependency.propertyBag.normalizedRepo.repositoryHttpsUrl;
   }
 
-  bag.dependency.cloneLocation = util.format('%s/%s/%s', bag.buildInDir,
+  bag.dependency.cloneLocation = path.join(bag.buildInDir,
     bag.dependency.name, bag.dependency.type);
   bag.dependency.commitSha = bag.dependency.version.versionName;
   bag.dependency.shaData = bag.dependency.version.propertyBag.shaData;

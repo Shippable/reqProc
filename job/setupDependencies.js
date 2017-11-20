@@ -4,6 +4,7 @@ var self = setupDependencies;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 
 function setupDependencies(externalBag, callback) {
   var bag = {
@@ -228,12 +229,12 @@ function __createDataFile(bag, dependency, next) {
   var who = bag.who + '|' + __createDataFile.name;
   logger.verbose(who, 'Inside');
 
-  var path = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name;
+  var dataFilePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name);
 
   var innerBag = {
     who: who,
-    path: path,
+    path: dataFilePath,
     fileName: bag.stepMessageFilename,
     object: dependency,
     consoleAdapter: bag.consoleAdapter
@@ -259,16 +260,16 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
   var sanitizedDependencyName =
     dependency.name.replace(/[^A-Za-z0-9_]/g, '').toUpperCase();
 
-  var dependencyPath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name;
+  var dependencyPath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name);
 
   bag.commonEnvs.push(
     util.format('%s_PATH="%s"', sanitizedDependencyName, dependencyPath)
   );
 
   bag.commonEnvs.push(
-    util.format('%s_STATE="%s/%s"',
-      sanitizedDependencyName, dependencyPath, dependency.type)
+    util.format('%s_STATE="%s"',
+      sanitizedDependencyName, path.join(dependencyPath, dependency.type))
   );
 
   bag.commonEnvs.push(
@@ -502,8 +503,8 @@ function __getDependencyIntegrations(bag, dependency, next) {
   var who = bag.who + '|' + __getDependencyIntegrations.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyPath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name;
+  var dependencyPath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name);
 
   bag.builderApiAdapter.getSubscriptionIntegrationById(
     dependency.subscriptionIntegrationId,
@@ -660,23 +661,22 @@ function __getDependencyIntegrations(bag, dependency, next) {
         innerBagKey.object = accountIntegration.privateKey;
         innerBagKey.hasKey = true;
         bag.commonEnvs.push(util.format('%s_PRIVATE_KEY_PATH="%s"',
-          sanitizedDependencyName, dependencyPath + '/' + innerBagKey.fileName
-        ));
+          sanitizedDependencyName, path.join(dependencyPath,
+          innerBagKey.fileName)));
 
         // public key
         innerBagSshPublicKey.fileName = dependency.name + '_key.pub';
         innerBagSshPublicKey.object = accountIntegration.publicKey;
         innerBagSshPublicKey.hasKey = true;
         bag.commonEnvs.push(util.format('%s_PUBLIC_KEY_PATH="%s"',
-          sanitizedDependencyName, dependencyPath + '/' +
-          innerBagSshPublicKey.fileName
-        ));
+          sanitizedDependencyName, path.join(dependencyPath,
+          innerBagSshPublicKey.fileName)));
       }
 
       if (innerBagKey.hasKey)
         bag.commonEnvs.push(util.format('%s_KEYPATH="%s"',
-          sanitizedDependencyName, dependencyPath + '/' + innerBagKey.fileName
-        ));
+          sanitizedDependencyName, path.join(dependencyPath,
+          innerBagKey.fileName)));
       else
         innerBagKey = {};
 
@@ -728,8 +728,8 @@ function __createStateDirectory(bag, dependency, next) {
   var who = bag.who + '|' + __createStateDirectory.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyStatePath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name + '/' + dependency.type;
+  var dependencyStatePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name, dependency.type);
 
   var innerBag = {
     who: who,
@@ -798,13 +798,13 @@ function __createStateFiles(bag, dependency, next) {
   var who = bag.who + '|' + __createStateFiles.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyStatePath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name + '/' + dependency.type;
+  var dependencyStatePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name, dependency.type);
 
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
-      var path = util.format('%s%s', dependencyStatePath, file.path);
-      fs.outputFile(path, file.contents,
+      var outputFilePath = path.join(dependencyStatePath, file.path);
+      fs.outputFile(outputFilePath, file.contents,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to create file:%s with err:%s',
@@ -831,16 +831,16 @@ function __setStateFilePermissions(bag, dependency, next) {
   var who = bag.who + '|' + __setStateFilePermissions.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyStatePath = bag.buildRootDir + '/' +
-    dependency.operation + '/' + dependency.name + '/' + dependency.type;
+  var dependencyStatePath = path.join(bag.buildRootDir, dependency.operation,
+    dependency.name, dependency.type);
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
-      var path = util.format('%s%s', dependencyStatePath, file.path);
-      fs.chmod(path, file.permissions,
+      var outputFilePath = path.join(dependencyStatePath, file.path);
+      fs.chmod(outputFilePath, file.permissions,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to set permissions for ' +
-              'file:%s with err:%s', who, path, err);
+              'file:%s with err:%s', who, outputFilePath, err);
             bag.consoleAdapter.publishMsg(msg);
             return nextFile(true);
           }
@@ -882,12 +882,12 @@ function __saveFile(bag, next) {
   var who = bag.who + '|' + __saveFile.name;
   logger.debug(who, 'Inside');
 
-  var path = bag.path + '/' + bag.fileName;
+  var filePath = path.join(bag.path, bag.fileName);
   var data = bag.object;
   if (_.isObject(bag.object))
     data = JSON.stringify(bag.object);
 
-  fs.writeFile(path, data, [],
+  fs.writeFile(filePath, data, [],
     function (err) {
       if (err) {
         var msg = util.format('%s, Failed to save file:%s at %s with ' +
@@ -911,16 +911,16 @@ function __appendFile(bag, next) {
   var who = bag.who + '|' + __appendFile.name;
   logger.debug(who, 'Inside');
 
-  var path = bag.path + '/' + bag.fileName;
+  var filePath = util.format(bag.path, bag.fileName);
   var data = bag.object;
   if (_.isObject(bag.object))
     data = JSON.stringify(bag.object);
 
-  fs.appendFile(path, data, [],
+  fs.appendFile(filePath, data, [],
     function (err) {
       if (err) {
         var msg = util.format('%s, Failed to append file: %s with ' +
-          'err: %s', who, path, err);
+          'err: %s', who, filePath, err);
         bag.consoleAdapter.publishMsg(msg);
         return next(true);
       }
@@ -963,7 +963,7 @@ function _saveTaskMessage(bag, next) {
 
   taskMessage.dependencies = _.map(bag.inPayload.dependencies,
     function (dep) {
-      var depPath = bag.buildRootDir + '/' + dep.operation + '/' + dep.name;
+      var depPath = path.join(bag.buildRootDir, dep.operation, dep.name);
       var taskMessageDependency = {
         operation: dep.operation,
         name: dep.name,

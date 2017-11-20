@@ -4,6 +4,7 @@ var self = postVersion;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 
 function postVersion(externalBag, callback) {
@@ -126,7 +127,8 @@ function _extendOutputVersionWithEnvs(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Reading additional job properties');
-  var envFilePath = bag.buildStateDir + '/' + bag.inPayload.name + '.env';
+  var envFilePath = path.join(bag.buildStateDir,
+    util.format('%s.env', bag.inPayload.name));
   var newVersionName = '';
   var propertyBag = {};
   try {
@@ -325,11 +327,11 @@ function __readVersionJson(bag, next) {
   var who = bag.who + '|' + __readVersionJson.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyPath = bag.buildOutDir + '/' + bag.dependency.name;
+  var dependencyPath = path.join(bag.buildOutDir, bag.dependency.name);
 
   bag.consoleAdapter.openCmd('Reading dependency metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
-  var checkFile = dependencyPath + '/' + bag.stepMessageFilename;
+  var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
     function (err, resource) {
       if (err) {
@@ -393,11 +395,11 @@ function __readReplicatedVersionJson(bag, next) {
   var who = bag.who + '|' + __readReplicatedVersionJson.name;
   logger.verbose(who, 'Inside');
 
-  var dependencyPath = bag.buildInDir + '/' + bag.replicate;
+  var dependencyPath = path.join(bag.buildInDir, bag.replicate);
 
   bag.consoleAdapter.openCmd('Reading replicated metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
-  var checkFile = dependencyPath + '/' + bag.stepMessageFilename;
+  var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
     function (err, resource) {
       if (err) {
@@ -430,7 +432,8 @@ function __readVersionEnv(bag, next) {
 
   bag.consoleAdapter.openCmd('Reading resource env file');
 
-  var envFilePath = bag.buildStateDir + '/' + bag.dependency.name + '.env';
+  var envFilePath = path.join(bag.buildStateDir, util.format('%s.env',
+    bag.dependency.name));
   try {
     var envFile = fs.readFileSync(envFilePath).toString();
     var lines = envFile.split('\n');

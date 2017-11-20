@@ -3,6 +3,7 @@ var self = logger;
 module.exports = self;
 
 var winston = require('winston');
+var path = require('path');
 
 function logger() {
   var logger = winston;
@@ -22,7 +23,7 @@ function logger() {
       name: 'file#out',
       timestamp: true,
       colorize: true,
-      filename: util.format('logs/%s.log', global.msName),
+      filename: path.join('logs', util.format('%s.log', global.msName)),
       maxsize: 10 * 1024 * 1024,  // 10 MB
       maxFiles: 20,
       level: defaultLogLevel,
@@ -34,7 +35,7 @@ function logger() {
       name: 'file#err',
       timestamp: true,
       colorize: true,
-      filename: util.format('logs/%s_err.log', global.msName),
+      filename: path.join('logs', util.format('%s_err.log', global.msName)),
       maxsize: 10 * 1024 * 1024, // 10 MB
       maxFiles: 20,
       level: 'error',
@@ -46,7 +47,7 @@ function logger() {
       name: 'file#warn',
       timestamp: true,
       colorize: true,
-      filename: util.format('logs/%s_warn.log', global.msName),
+      filename: path.join('logs', util.format('%s_warn.log', global.msName)),
       maxsize: 5 * 1024 * 1024, // 5 MB
       maxFiles: 20,
       level: 'warn',
@@ -58,7 +59,7 @@ function logger() {
       name: 'file#info',
       timestamp: true,
       colorize: true,
-      filename: util.format('logs/%s_info.log', global.msName),
+      filename: path.join('logs', util.format('%s_info.log', global.msName)),
       maxsize: 5 * 1024 * 1024, // 5 MB
       maxFiles: 20,
       level: 'info',
@@ -70,7 +71,7 @@ function logger() {
       name: 'file#debug',
       timestamp: true,
       colorize: true,
-      filename: util.format('logs/%s_debug.log', global.msName),
+      filename: path.join('logs', util.format('%s_debug.log', global.msName)),
       maxsize: 5 * 1024 * 1024, // 5 MB
       maxFiles: 20,
       level: 'debug',
