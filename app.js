@@ -41,9 +41,6 @@ if (!global.config.reqProcDir)
 if (!global.config.reqExecDir)
   consoleErrors.push(util.format('%s is missing: reqExecDir', who));
 
-if (!global.config.reqExecBinDir)
-  consoleErrors.push(util.format('%s is missing: reqExecBinDir', who));
-
 if (!global.config.reqKickDir)
   consoleErrors.push(util.format('%s is missing: reqKickDir', who));
 
@@ -53,8 +50,8 @@ if (!global.config.buildDir)
 if (!global.config.reqProcContainerName)
   consoleErrors.push(util.format('%s is missing: reqProcContainerName', who));
 
-if (!global.config.execTemplatesPath)
-  consoleErrors.push(util.format('%s is missing: execTemplatesPath', who));
+if (!global.config.execTemplatesDir)
+  consoleErrors.push(util.format('%s is missing: execTemplatesDir', who));
 
 if (!global.config.defaultTaskContainerMounts)
   consoleErrors.push(
@@ -95,10 +92,6 @@ if (!_dirExistsSync(global.config.reqProcDir))
 if (!_dirExistsSync(global.config.reqExecDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
     global.config.reqExecDir));
-
-if (!_dirExistsSync(global.config.reqExecBinDir))
-  consoleErrors.push(util.format('%s is missing directory: %s', who,
-    global.config.reqExecBinDir));
 
 if (!_dirExistsSync(global.config.reqKickDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,

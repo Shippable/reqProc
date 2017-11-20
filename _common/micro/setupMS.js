@@ -27,11 +27,10 @@ function setupMS(params) {
   global.config.baseDir = process.env.BASE_DIR;
   global.config.reqProcDir = process.env.REQPROC_DIR;
   global.config.reqExecDir = process.env.REQEXEC_DIR;
-  global.config.reqExecBinDir = process.env.REQEXEC_BIN_DIR;
   global.config.reqKickDir = process.env.REQKICK_DIR;
   global.config.buildDir = process.env.BUILD_DIR;
   global.config.reqProcContainerName = process.env.REQPROC_CONTAINER_NAME;
-  global.config.execTemplatesPath = process.env.EXEC_TEMPLATES_PATH;
+  global.config.execTemplatesDir = process.env.IMAGE_EXEC_TEMPLATES_DIR;
   global.config.defaultTaskContainerMounts =
     process.env.DEFAULT_TASK_CONTAINER_MOUNTS;
   global.config.defaultTaskContainerOptions =

@@ -30,7 +30,6 @@ function generateSteps(externalBag, callback) {
     },
     stepsFileNames: [],
     buildRootDir: externalBag.buildRootDir,
-    reqExecDir: externalBag.reqExecDir,
     commonEnvs: externalBag.commonEnvs
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -72,7 +71,6 @@ function _checkInputParams(bag, next) {
     'consoleAdapter',
     'jobSteps',
     'buildRootDir',
-    'reqExecDir',
     'commonEnvs'
   ];
 
@@ -129,7 +127,6 @@ function _generateScript(bag, next) {
       var taskObj = _.extend(task.TASK, {
         buildScriptsDir: bag.buildScriptsDir,
         buildRootDir: bag.buildRootDir,
-        reqExecDir: bag.reqExecDir,
         buildStatusDir: bag.buildStatusDir,
         buildJobId: bag.buildJobId,
         commonEnvs: bag.commonEnvs,
