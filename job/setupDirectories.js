@@ -4,6 +4,7 @@ var self = setupDirectories;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 
 function setupDirectories(externalBag, callback) {
   var bag = {
@@ -127,23 +128,24 @@ function _setupFiles(bag, next) {
   bag.consoleAdapter.openCmd('Creating required files');
 
   var filesToBeCreated = [
-    util.format('%s/job.env', bag.buildStatusDir),
-    util.format('%s/job.status', bag.buildStatusDir),
-    util.format('%s/job.who', bag.buildStatusDir),
-    util.format('%s/job.steps.json', bag.buildStatusDir),
-    util.format('%s/version', bag.reqProcDir),
-    util.format('%s/status', bag.reqProcDir),
-    util.format('%s/version', bag.reqKickDir),
-    util.format('%s/status', bag.reqKickDir),
-    util.format('%s/version', bag.reqExecDir)
+    path.join(bag.buildStatusDir, 'job.env'),
+    path.join(bag.buildStatusDir, 'job.status'),
+    path.join(bag.buildStatusDir, 'job.who'),
+    path.join(bag.reqProcDir, 'version'),
+    path.join(bag.reqProcDir, 'status'),
+    path.join(bag.reqKickDir, 'version'),
+    path.join(bag.reqKickDir, 'status'),
+    path.join(bag.reqExecDir, 'version')
   ];
 
   var fileList = _.map(bag.inPayload.dependencies,
     function (dependency) {
-      return bag.buildStateDir + '/' + dependency.name + '.env';
+      return path.join(bag.buildStateDir, util.format('%s.env',
+      dependency.name));
     }
   );
-  fileList.push(bag.buildStateDir + '/' + bag.inPayload.name + '.env');
+  fileList.push(path.join(bag.buildStateDir, util.format('%s.env',
+    bag.inPayload.name)));
   filesToBeCreated = _.uniq(filesToBeCreated.concat(fileList));
 
   async.eachLimit(filesToBeCreated, 10,

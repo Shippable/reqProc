@@ -5,6 +5,7 @@ module.exports = self;
 
 var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
 var fs = require('fs-extra');
+var path = require('path');
 
 function pollBuildJobStatus(externalBag, callback) {
   var bag = {
@@ -67,7 +68,7 @@ function _pollBuildJobStatus(bag, next) {
             ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err));
         } else if (buildJob.statusCode === cancelledStatusCode) {
           isCancelled = true;
-          var statusPath = util.format('%s/job.status', bag.buildStatusDir);
+          var statusPath = path.join(bag.buildStatusDir, 'job.status');
           try {
             fs.writeFileSync(statusPath, 'cancelled\n');
           } catch (e) {

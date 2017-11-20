@@ -4,6 +4,7 @@ var self = getPreviousState;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 
 function getPreviousState(externalBag, callback) {
   var bag = {
@@ -106,8 +107,8 @@ function _createFiles(bag, next) {
 
   async.eachLimit(bag.stateFileJSON, 10,
     function (file, nextFile) {
-      var path = util.format('%s%s', bag.previousStateDir, file.path);
-      fs.outputFile(path, file.contents,
+      var stateFilePath = path.join(bag.previousStateDir, file.path);
+      fs.outputFile(stateFilePath, file.contents,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to save file:%s with err:%s',
@@ -145,12 +146,12 @@ function _setPermissions(bag, next) {
 
   async.eachLimit(bag.stateFileJSON, 10,
     function (file, nextFile) {
-      var path = util.format('%s%s', bag.previousStateDir, file.path);
-      fs.chmod(path, file.permissions,
+      var stateFilePath = path.join(bag.previousStateDir, file.path);
+      fs.chmod(stateFilePath, file.permissions,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to set permissions for ' +
-              'file:%s with err:%s', who, path, err);
+              'file:%s with err:%s', who, stateFilePath, err);
 
             bag.consoleAdapter.publishMsg(msg);
 

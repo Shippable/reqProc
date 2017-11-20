@@ -86,13 +86,11 @@ function _getFiles(bag, next) {
         return next();
       }
       bag.outputFileJSON = data;
-      logger.error(bag.outputFileJSON);
       if (_.isEmpty(bag.outputFileJSON))
         msg = 'No files found for resource';
       else
         msg = 'Successfully received files for resource';
 
-      logger.error(bag.outputFileJSON);
       bag.consoleAdapter.publishMsg(msg);
       bag.consoleAdapter.closeCmd(true);
       return next();
@@ -110,12 +108,9 @@ function _createFiles(bag, next) {
   bag.consoleAdapter.openCmd('Creating resource files');
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
-      logger.error(file);
-      var path = util.format('%s/%s/%s/%s', bag.buildInDir,
-        bag.dependency.name, bag.dependency.type, file.path);
-      logger.error('path');
-      logger.error(path);
-      fs.outputFile(path, file.contents,
+      var outPutFilePath = path.join(bag.buildInDir, bag.dependency.name,
+        bag.dependency.type, file.path);
+      fs.outputFile(outPutFilePath, file.contents,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to create file:%s with err:%s',
@@ -149,13 +144,13 @@ function _setPermissions(bag, next) {
   bag.consoleAdapter.openCmd('Setting resource files permissions');
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
-      var path = util.format('%s/%s/%s/%s', bag.buildInDir,
-        bag.dependency.name, bag.dependency.type, file.path);
-      fs.chmod(path, file.permissions,
+      var outPutFilePath = path.join(bag.buildInDir, bag.dependency.name,
+        bag.dependency.type, file.path);
+      fs.chmod(outPutFilePath, file.permissions,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to set permissions for ' +
-              'file:%s with err:%s', who, path, err);
+              'file:%s with err:%s', who, outPutFilePath, err);
             bag.consoleAdapter.publishMsg(msg);
             return nextFile(true);
           }

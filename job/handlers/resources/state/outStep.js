@@ -4,6 +4,7 @@ var self = outStep;
 module.exports = self;
 
 var fs = require('fs-extra');
+var path = require('path');
 
 function outStep(externalBag, callback) {
   var bag = {
@@ -77,8 +78,8 @@ function _getFilePaths(bag, next) {
 
   bag.consoleAdapter.openCmd('Creating file list for current resource');
 
-  bag.resourceOutStatePath = util.format('%s/%s/%s', bag.outRootDir,
-    bag.dependency.name, bag.dependency.type);
+  bag.resourceOutStatePath = path.join(bag.outRootDir, bag.dependency.name,
+    bag.dependency.type);
 
   try {
     bag.allFilesLocation = getFileListRecursively(bag.resourceOutStatePath);
@@ -218,14 +219,14 @@ function _readResourceVersion(bag, next) {
 
   bag.consoleAdapter.openCmd('Reading version file');
 
-  var path = util.format('%s/%s/%s', bag.rootDir, bag.dependency.name,
+  var resourceVersionPath = path.join(bag.rootDir, bag.dependency.name,
     bag.stepMessageFilename);
 
-  fs.readJson(path,
+  fs.readJson(resourceVersionPath,
     function (err, resource) {
       if (err) {
         bag.consoleAdapter.publishMsg(util.format('Failed to read file %s.' +
-          ' Hence skipping.', path));
+          ' Hence skipping.', resourceVersionPath));
         bag.consoleAdapter.publishMsg(err);
         bag.consoleAdapter.closeCmd(false);
         return next();
@@ -262,14 +263,14 @@ function _writeResourceVersion(bag, next) {
 
   bag.consoleAdapter.openCmd('Overriding version file');
 
-  var path = util.format('%s/%s/%s', bag.rootDir, bag.dependency.name,
+  var resourceVersionPath = path.join(bag.rootDir, bag.dependency.name,
     bag.stepMessageFilename);
 
-  fs.writeJson(path, bag.resource,
+  fs.writeJson(resourceVersionPath, bag.resource,
     function (err) {
       if (err) {
         bag.consoleAdapter.publishMsg(util.format('Failed to write file %s.' +
-          ' Hence skipping.', path));
+          ' Hence skipping.', resourceVersionPath));
         bag.consoleAdapter.publishMsg(err);
         bag.consoleAdapter.closeCmd(false);
         return next();
@@ -288,10 +289,10 @@ function getFileListRecursively(dir, filelist) {
 
   _.each(files,
     function (file) {
-      if (fs.statSync(dir + '/' + file).isDirectory())
-        filelist = getFileListRecursively(dir + '/' + file, filelist);
+      if (fs.statSync(path.join(dir, file)).isDirectory())
+        filelist = getFileListRecursively(path.join(dir, file), filelist);
       else
-        filelist.push(dir + '/' + file);
+        filelist.push(path.join(dir, file));
     }
   );
   return filelist;
