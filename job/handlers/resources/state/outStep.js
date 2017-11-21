@@ -8,7 +8,6 @@ var path = require('path');
 
 function outStep(externalBag, callback) {
   var bag = {
-    rawMessage: externalBag.rawMessage,
     outRootDir: externalBag.rootDir,
     builderApiAdapter: externalBag.builderApiAdapter,
     dependency: externalBag.dependency,

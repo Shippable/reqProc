@@ -112,7 +112,7 @@ function _handleDependency(bag, dependency, next) {
     dependency: dependency,
     consoleAdapter: bag.consoleAdapter,
     builderApiAdapter: bag.builderApiAdapter,
-    rawMessage: bag.rawMessage,
+    inPayload: bag.inPayload,
     rootDir: rootDir,
     stepMessageFilename: bag.stepMessageFilename,
     buildScriptsDir: bag.buildScriptsDir
