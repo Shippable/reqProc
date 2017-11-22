@@ -4,7 +4,7 @@ module.exports = self;
 
 function outStep(params, callback) {
   var bag = {
-    rawMessage: params.rawMessage,
+    inPayload: params.inPayload,
     dependency: params.dependency,
     builderApiAdapter: params.builderApiAdapter,
     consoleAdapter: params.consoleAdapter,
@@ -125,7 +125,7 @@ function _generateNewVersion(bag, next) {
 
   bag.consoleAdapter.openCmd('Checking for matching gitRepo IN step.');
 
-  var matchingGitRepo = _.find(bag.rawMessage.payload.dependencies,
+  var matchingGitRepo = _.find(bag.inPayload.dependencies,
     function (dependency) {
       var isInOperation = dependency.operation === 'IN';
       var isGitRepo = dependency.type === 'gitRepo';
