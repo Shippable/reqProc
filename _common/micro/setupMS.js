@@ -5,6 +5,7 @@ module.exports = self;
 global.util = require('util');
 global._ = require('underscore');
 global.async = require('async');
+var path = require('path');
 
 function setupMS(params) {
   global.msName = params.msName;
@@ -30,7 +31,6 @@ function setupMS(params) {
   global.config.reqKickDir = process.env.REQKICK_DIR;
   global.config.buildDir = process.env.BUILD_DIR;
   global.config.reqProcContainerName = process.env.REQPROC_CONTAINER_NAME;
-  global.config.execTemplatesDir = process.env.IMAGE_EXEC_TEMPLATES_DIR;
   global.config.defaultTaskContainerMounts =
     process.env.DEFAULT_TASK_CONTAINER_MOUNTS;
   global.config.defaultTaskContainerOptions =
@@ -40,6 +40,11 @@ function setupMS(params) {
     process.env.SHIPPABLE_NODE_ARCHITECTURE;
   global.config.shippableNodeOperatingSystem =
     process.env.SHIPPABLE_NODE_OPERATING_SYSTEM;
+  global.config.execTemplatesDir = path.join(
+    process.env.IMAGE_EXEC_TEMPLATES_DIR,
+    process.env.SHIPPABLE_NODE_OPERATING_SYSTEM
+  );
+
   global.config.shippableReleaseVersion = process.env.SHIPPABLE_RELEASE_VERSION;
 
   /* Node Type Codes */
