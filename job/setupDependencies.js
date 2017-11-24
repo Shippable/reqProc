@@ -898,7 +898,7 @@ function __saveFile(bag, next) {
       bag.consoleAdapter.publishMsg(
         'Successfully saved file: ' + bag.fileName);
       if (bag.permissions)
-        fs.chmodSync(path, bag.permissions);
+        fs.chmodSync(filePath, bag.permissions);
 
       return next();
     }
