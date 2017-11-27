@@ -1,5 +1,6 @@
-# TODO: move this to microbase. needed to debug
+#!/bin/bash -e
 
+# TODO: move this to microbase later 
 echo "installing chocolatey"
 Set-ExecutionPolicy Bypass -Scope Process -Force
 iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -11,9 +12,3 @@ echo "Installing vim"
 choco install -y vim
 refreshenv
 
-# echo "installing node dependencies"
-# npm install --global --production windows-build-tools
-# npm install
-
-echo "creating reqexec directory"
-mkdir $Env:USERPROFILE/shippable/reqexec
