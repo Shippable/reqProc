@@ -11,12 +11,17 @@ RUN mkdir -p $IMAGE_EXEC_TEMPLATES_DIR && \
     tar -xzvf /tmp/execTemplates.tar.gz -C $IMAGE_EXEC_TEMPLATES_DIR --strip-components=1 && \
     rm /tmp/execTemplates.tar.gz
 
-# With our current design, we need to pull all reqExec binaries.
+# Pull all reqExec binaries as designed.
 # TODO: Pull all binaries that reqExec has here once we start pushing them to S3.
 ENV IMAGE_REQEXEC_DIR /root/reqExec
 RUN mkdir -p $IMAGE_REQEXEC_DIR/x86_64/Ubuntu_16.04 && \
     wget https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-x86_64-Ubuntu_16.04.tar.gz -O /tmp/reqExec.tar.gz && \
     tar -xzvf /tmp/reqExec.tar.gz -C $IMAGE_REQEXEC_DIR/x86_64/Ubuntu_16.04 && \
+    rm /tmp/reqExec.tar.gz
+
+RUN mkdir -p $IMAGE_REQEXEC_DIR/aarch64/Ubuntu_16.04 && \
+    wget https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-aarch64-Ubuntu_16.04.tar.gz -O /tmp/reqExec.tar.gz && \
+    tar -xzvf /tmp/reqExec.tar.gz -C $IMAGE_REQEXEC_DIR/aarch64/Ubuntu_16.04 && \
     rm /tmp/reqExec.tar.gz
 
 # Bundle docker binary as we cannot use the one on host in Linux.
