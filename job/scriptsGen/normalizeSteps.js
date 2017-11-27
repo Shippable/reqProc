@@ -55,7 +55,6 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   if (global.config.shippableNodeOperatingSystem === 'macOS_10.12')
     defaultIsContainer = false;
 
-  // TODO: The image names need to be come from a config.
   var imageName = 'drydock/microbase';
   if (global.config.shippableNodeArchitecture === 'aarch64')
     imageName = 'drydockaarch64/microbase';
