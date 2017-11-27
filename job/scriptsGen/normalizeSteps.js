@@ -48,7 +48,12 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   onFailure, always, buildJobId, buildScriptsDir, buildStatusDir, group) {
   var clonedSteps = _.clone(steps);
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
+
+  // TODO: Move setting defaults to rSync
   var defaultIsContainer = true;
+
+  if (global.config.shippableNodeOperatingSystem === 'macOS_10.12')
+    defaultIsContainer = false;
 
   // TODO: The image names need to be come from a config.
   var imageName = 'drydock/microbase';
