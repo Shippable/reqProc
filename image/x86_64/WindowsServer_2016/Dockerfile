@@ -33,41 +33,19 @@ RUN Invoke-WebRequest $('https://nodejs.org/dist/v{0}/node-v{0}-win-x64.zip' -f 
 
 ENV NPM_CONFIG_LOGLEVEL info
 
-COPY --from=download /nodejs /nodejs
-
 RUN New-Item $($env:APPDATA + '\npm') ; \
     $env:PATH = 'C:\nodejs;{0}\npm;{1}' -f $env:APPDATA, $env:PATH ; \
     [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
 
-RUN Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-
-
-RUN choco install -y python2
-RUN refreshenv
-
-# TODO: move this to microbase. needed to debug
-RUN choco install -y vim
-RUN refreshenv
+RUN .\image\x86_64\WindowsServer_2016\node.ps1
 
 RUN mkdir $Env:USERPROFILE/shippable/reqproc
 WORKDIR  C:/Users/ContainerAdministrator/shippable/reqproc
 ADD . .
-RUN dir
-RUN npm install --global --production windows-build-tools
-RUN npm install
+RUN .\image\x86_64\WindowsServer_2016\util.ps1
 
-# TODO: fix this when other stuff is done.
-#RUN mkdir %USERPROFILE%\shippable\execTemplates
-#WORKDIR %USERPROFILE%\shippable\execTemplates
-#RUN ..\shippable\reqproc\windows\utils\wget https://github.com/Shippable/execTemplates/archive/master.tar.gz -O %TMP%\execTemplates.tar.gz && \
-#    ..\shippable\reqproc\windows\utils\gzip -d  %TMP%\execTemplates.tar.gz && \
-#    copy %TMP%\execTemplates.tar . && \
-#    ..\shippable\reqproc\windows\utils\tar xvf execTemplates.tar && \
-#    del %TMP%\execTemplates.tar.gz
-
-RUN mkdir $Env:USERPROFILE/shippable/reqexec
+# TODO: add exec templates
 WORKDIR C:/Users/ContainerAdministrator/shippable/reqexec
-RUN dir
 COPY ./windows/reqexec/bin/main.exe .
 
 WORKDIR C:/Users/ContainerAdministrator/shippable/reqproc
