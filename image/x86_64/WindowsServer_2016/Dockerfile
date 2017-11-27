@@ -12,7 +12,7 @@ RUN npm install
 # TODO: add exec templates later
 RUN mkdir $Env:USERPROFILE/Shippable/reqExec
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqExec
-# TODO: should fetch cexec binaries and copy to correct path once pipeline is in place
+# TODO: should fetch reqexec binaries and copy to correct path once pipeline is in place
 COPY ./windows/reqExec/bin/main.exe .
 
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqProc
