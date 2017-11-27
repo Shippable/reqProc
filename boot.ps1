@@ -1,4 +1,4 @@
 #!/bin/bash -e
 
-mkdir logs
+New-Item -ItemType Directory -Force -Path .\logs
 node app.js
