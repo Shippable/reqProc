@@ -31,7 +31,12 @@ check_input() {
 }
 
 set_build_context() {
-  sed -i "s/{{%TAG%}}/$TAG/g" ./image/$ARCHITECTURE/$OS/Dockerfile
+  # sed -i syntax is different on macOS
+  if [ "$OS" == "macOS_10.12" ]; then
+    sed -i "" "s/{{%TAG%}}/$TAG/g" ./image/$ARCHITECTURE/$OS/Dockerfile
+  else
+    sed -i "s/{{%TAG%}}/$TAG/g" ./image/$ARCHITECTURE/$OS/Dockerfile
+  fi
 }
 
 build_and_tag_image() {
