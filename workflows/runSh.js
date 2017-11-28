@@ -68,8 +68,8 @@ function runSh(externalBag, callback) {
   logger.info(bag.who, 'Inside');
 
   async.series([
-      _initialBuildDirectoryCleanup.bind(null, bag),
       _initializeJob.bind(null, bag),
+      _initialBuildDirectoryCleanup.bind(null, bag),
       _setupDirectories.bind(null, bag),
       _pollBuildJobStatus.bind(null, bag),
       _setExecutorAsReqProc.bind(null, bag),
@@ -95,28 +95,11 @@ function runSh(externalBag, callback) {
   );
 }
 
-function _initialBuildDirectoryCleanup(bag, next) {
-  var who = bag.who + '|' + _initialBuildDirectoryCleanup.name;
+function _initializeJob(bag, next) {
+  var who = bag.who + '|' + _initializeJob.name;
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openGrp('Initializing job');
-  cleanup(bag,
-    function (err) {
-      if (err) {
-        bag.consoleAdapter.closeGrp(false);
-        bag.jobStatusCode = getStatusCodeByName('error');
-      }
-
-      return next();
-    }
-  );
-}
-
-function _initializeJob(bag, next) {
-  if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
-
-  var who = bag.who + '|' + _initializeJob.name;
-  logger.verbose(who, 'Inside');
 
   initializeJob(bag,
     function (err, resultBag) {
@@ -126,6 +109,24 @@ function _initializeJob(bag, next) {
       }
 
       bag = _.extend(bag, resultBag);
+      return next();
+    }
+  );
+}
+
+function _initialBuildDirectoryCleanup(bag, next) {
+  if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
+
+  var who = bag.who + '|' + _initialBuildDirectoryCleanup.name;
+  logger.verbose(who, 'Inside');
+
+  cleanup(bag,
+    function (err) {
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = getStatusCodeByName('error');
+      }
+
       return next();
     }
   );

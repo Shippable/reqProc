@@ -69,7 +69,7 @@ function _cleanupBuildDirectory(bag, next) {
           who, bag.buildRootDir, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        return next();
+        return next(err);
       }
 
       bag.consoleAdapter.publishMsg(
