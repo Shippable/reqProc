@@ -47,35 +47,37 @@ function _convertOldFormatStepsToNew(steps) {
 function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   onFailure, always, buildJobId, buildScriptsDir, buildStatusDir, group) {
   var clonedSteps = _.clone(steps);
+  // This is the top-level defaults defined in the job.
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
 
-  // TODO: Move setting defaults to rSync
+  // TODO: Handle defaults in rSync.
+  // Assume the default is container first. Override based on priority next.
   var defaultIsContainer = true;
-
-  if (global.config.shippableNodeOperatingSystem === 'macOS_10.12')
+  if (_.isBoolean(defaultJobRuntime.container))
+    defaultIsContainer = defaultIsContainer.container;
+  else if (global.config.shippableNodeOperatingSystem === 'macOS_10.12')
     defaultIsContainer = false;
 
+  // Default image.
   var imageName = 'drydock/microbase';
   if (global.config.shippableNodeArchitecture === 'aarch64')
     imageName = 'drydockaarch64/microbase';
+
+  // Default options for container tasks.
   var defaultContainerOpts = {
-    'imageName': imageName,
-    'imageTag': global.config.shippableReleaseVersion,
-    'pull': true,
-    'options': {
-      env: {},
-      options: util.format('%s %s', global.config.defaultTaskContainerOptions,
-        global.config.defaultTaskContainerMounts)
-    }
-  };
-  var defaultHostOpts = {
-    options: {
-      env: {}
-    }
+    imageName: imageName,
+    imageTag: global.config.shippableReleaseVersion,
+    pull: true,
+    options: util.format('%s %s',
+      global.config.defaultTaskContainerOptions,
+      global.config.defaultTaskContainerMounts),
+    env: {}
   };
 
-  if (defaultJobRuntime.container === false)
-    defaultIsContainer = false;
+  // Default options for hosts tasks.
+  var defaultHostOpts = {
+    env: {}
+  };
 
   var lastTask;
   var taskIndex = 0;
@@ -86,50 +88,72 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
 
       var task = step.TASK;
 
+      // Normalize a string script into an array.
       if (_.isString(task.script))
         task.script = [task.script];
 
       task.runtime = task.runtime || {};
+
+      // Use the default task runtime if it is not specified.
       if (_.isUndefined(task.runtime.container))
         task.runtime.container = defaultIsContainer;
 
       if (task.runtime.container) {
-        if (_.isEmpty(task.runtime.options))
-          task.runtime.options = _.clone(defaultContainerOpts.options);
-        if (_.isEmpty(task.runtime.options.imageName) ||
-          _.isEmpty(task.runtime.options.imageTag)) {
+        if (_.isUndefined(task.runtime.options))
+          task.runtime.options = {};
+
+        // If an imageName is not specified, set both imageName and imageTag.
+        // We cannot rely on the the imageTag given in the YML if we use
+        // the default image.
+        if (_.isEmpty(task.runtime.options.imageName)) {
           task.runtime.options.imageName = defaultContainerOpts.imageName;
           task.runtime.options.imageTag = defaultContainerOpts.imageTag;
         }
+
+        if (_.isEmpty(task.runtime.options.imageTag))
+          task.runtime.options.imageTag = 'latest';
+
         if (!_.isBoolean(task.runtime.options.pull))
           task.runtime.options.pull = defaultContainerOpts.pull;
+
         if (_.isEmpty(task.runtime.options.options))
           task.runtime.options.options = '';
-        if (_.isEmpty(task.runtime.options.env))
-          task.runtime.options.env = _.clone(defaultContainerOpts.options.env);
+        // Apply the container opts _after_ the user defined ones, so our
+        // options do not get overwritten.
         task.runtime.options.options = util.format('%s %s',
-          defaultContainerOpts.options.options, task.runtime.options.options);
+           task.runtime.options.options,
+           defaultContainerOpts.options).trim();
+
+        if (_.isEmpty(task.runtime.options.env))
+          task.runtime.options.env = _.clone(defaultContainerOpts.env);
       } else {
         if (_.isEmpty(task.runtime.options))
-          task.runtime.options = _.clone(defaultHostOpts.options);
+          task.runtime.options = _.clone(defaultHostOpts);
         if (_.isEmpty(task.runtime.options.env))
-          task.runtime.options.env = _.clone(defaultHostOpts.options.env);
+          task.runtime.options.env = _.clone(defaultHostOpts.env);
       }
 
+      // Add a name if its not specified.
       if (_.isUndefined(task.name))
         task.name = 'Task ' + taskIndex;
+      task.taskIndex = taskIndex;
+      taskIndex += 1;
 
+      // Always add always and onFailure sections to tasks as they need
+      // to run if the task fails.
       task.always = always;
       task.onFailure = onFailure;
 
-      task.taskIndex = taskIndex;
       __generateRuntimeInfo(task, buildJobId, buildScriptsDir, buildStatusDir,
         group);
       task.runtime.options.env = __normalizeEnvs(task.runtime.options.env);
+
+      // Keep track of the lastTask for adding onSuccess.
       lastTask = task;
-      taskIndex += 1;
     }
   );
+
+  // onSuccess can only happen in the last task
   lastTask.onSuccess = onSuccess;
 
   return clonedSteps;
