@@ -54,7 +54,7 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   // Assume the default is container first. Override based on priority next.
   var defaultIsContainer = true;
   if (_.isBoolean(defaultJobRuntime.container))
-    defaultIsContainer = defaultIsContainer.container;
+    defaultIsContainer = defaultJobRuntime.container;
   else if (global.config.shippableNodeOperatingSystem === 'macOS_10.12')
     defaultIsContainer = false;
 
