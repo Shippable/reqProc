@@ -1,7 +1,7 @@
 #!/bin/bash -e
 exec_cmd() {
   cmd=$@
-  cmd_uuid=$(cat /proc/sys/kernel/random/uuid)
+  cmd_uuid=$(uuidgen | awk '{print tolower($0)}')
   cmd_start_timestamp=`date +"%s"`
   echo "__SH__CMD__START__|{\"type\":\"cmd\",\"sequenceNumber\":\"$cmd_start_timestamp\",\"id\":\"$cmd_uuid\"}|$cmd"
   eval "$cmd"
