@@ -3,7 +3,7 @@ var self = inStep;
 module.exports = self;
 
 var path = require('path');
-var executeDependencyScript = require('../../executeDependencyScript.js');
+var executeDependencyScript = require('../../../executeDependencyScript.js');
 
 function inStep(params, callback) {
 //function inStep(externalBag, dependency, buildInDir, callback) {

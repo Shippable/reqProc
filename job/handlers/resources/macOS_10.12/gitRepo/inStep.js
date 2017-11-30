@@ -3,8 +3,7 @@ var self = inStep;
 module.exports = self;
 
 var path = require('path');
-var executeDependencyScript =
-  require('../../_common/executeDependencyScript.js');
+var executeDependencyScript = require('../../../executeDependencyScript.js');
 
 function inStep(params, callback) {
 //function inStep(externalBag, dependency, buildInDir, callback) {
@@ -19,7 +18,7 @@ function inStep(params, callback) {
     consoleAdapter: params.consoleAdapter
   };
 
-  bag.who = util.format('%s|job|handlers|resources|syncRepo|%s',
+  bag.who = util.format('%s|job|handlers|resources|gitRepo|%s',
     msName, self.name);
   logger.verbose(bag.who, 'Starting');
 
@@ -76,14 +75,21 @@ function _injectDependencies(bag, next) {
   bag.dependency.isPrivate =
     bag.dependency.propertyBag.normalizedRepo.isPrivateRepository;
 
-  if (bag.dependency.isPrivate)
+  if (!_.isEmpty(bag.dependency.propertyBag.yml) &&
+    !_.isEmpty(bag.dependency.propertyBag.yml.pointer) &&
+    !_.isEmpty(bag.dependency.propertyBag.yml.pointer.sourceUrl)) {
     bag.dependency.projectUrl =
-      bag.dependency.propertyBag.normalizedRepo.repositorySshUrl;
-  else
-    bag.dependency.projectUrl =
-      bag.dependency.propertyBag.normalizedRepo.repositoryHttpsUrl;
+      bag.dependency.propertyBag.yml.pointer.sourceUrl;
+  } else {
+    if (bag.dependency.isPrivate)
+      bag.dependency.projectUrl =
+        bag.dependency.propertyBag.normalizedRepo.repositorySshUrl;
+    else
+      bag.dependency.projectUrl =
+        bag.dependency.propertyBag.normalizedRepo.repositoryHttpsUrl;
+  }
 
-  bag.dependency.cloneLocation = util.format('%s/%s/%s', bag.buildInDir,
+  bag.dependency.cloneLocation = path.join(bag.buildInDir,
     bag.dependency.name, bag.dependency.type);
   bag.dependency.commitSha = bag.dependency.version.versionName;
   bag.dependency.shaData = bag.dependency.version.propertyBag.shaData;
@@ -102,7 +108,7 @@ function _executeScript(bag, next) {
     dependency: bag.dependency,
     templatePath: bag.templatePath,
     scriptPath: bag.scriptPath,
-    parentGroupDescription: 'IN Sync Repo',
+    parentGroupDescription: 'IN Git Repo',
     builderApiAdapter: bag.builderApiAdapter,
     consoleAdapter: bag.consoleAdapter
   };
