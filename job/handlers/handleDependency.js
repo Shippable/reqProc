@@ -4,8 +4,13 @@ var self = handleDependency;
 module.exports = self;
 
 var pathPlaceholder = '{{TYPE}}';
-var inStepPath = './resources/' + pathPlaceholder + '/inStep.js';
-var outStepPath = './resources/' + pathPlaceholder + '/outStep.js';
+var osType = global.config.shippableNodeOperatingSystem;
+var inStepPath = './resources/_common/' + pathPlaceholder + '/inStep.js';
+var outStepPath = './resources/_common/' + pathPlaceholder + '/outStep.js';
+var inStepOSPath =
+  './resources/' + osType + '/' + pathPlaceholder + '/inStep.js';
+var outStepOSPath =
+  './resources/' + osType + '/' + pathPlaceholder + '/outStep.js';
 
 function handleDependency(externalBag, dependency, callback) {
   var bag = {
@@ -72,19 +77,37 @@ function _handleDependency(bag, dependency, next) {
   var dependencyHandler;
   var dependencyHandlerPath = '';
   var rootDir;
+
   if (dependency.operation === bag.operation.IN) {
     dependencyHandlerPath =
-      inStepPath.replace(pathPlaceholder, dependency.type);
+      inStepOSPath.replace(pathPlaceholder, dependency.type);
     rootDir = bag.buildInDir;
   } else if (dependency.operation === bag.operation.OUT) {
     dependencyHandlerPath =
-      outStepPath.replace(pathPlaceholder, dependency.type);
+      outStepOSPath.replace(pathPlaceholder, dependency.type);
     rootDir = bag.buildOutDir;
   }
   try {
     dependencyHandler = require(dependencyHandlerPath);
   } catch (e) {
     logger.debug(util.inspect(e));
+  }
+
+  if (!dependencyHandler) {
+    if (dependency.operation === bag.operation.IN) {
+      dependencyHandlerPath =
+        inStepPath.replace(pathPlaceholder, dependency.type);
+      rootDir = bag.buildInDir;
+    } else if (dependency.operation === bag.operation.OUT) {
+      dependencyHandlerPath =
+        outStepPath.replace(pathPlaceholder, dependency.type);
+      rootDir = bag.buildOutDir;
+    }
+    try {
+      dependencyHandler = require(dependencyHandlerPath);
+    } catch (e) {
+      logger.debug(util.inspect(e));
+    }
   }
 
   if (!dependencyHandler) {
