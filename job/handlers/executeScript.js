@@ -33,7 +33,7 @@ function _checkInputParams(bag, next) {
 
   bag.consoleAdapter.openCmd('Validating script dependencies');
   var consoleErrors = [];
-  bag.consoleAdapter.publishMsg('the path is: ' + bag.scriptPath);
+  bag.consoleAdapter.publishMsg('The path is: ' + bag.scriptPath);
 
   if (!bag.scriptPath)
     consoleErrors.push(util.format('%s is missing: scriptPath', who));
