@@ -25,6 +25,7 @@ var saveStepState = require('../job/saveStepState.js');
 var postVersion = require('../job/postVersion');
 var cleanup = require('../job/cleanup.js');
 var updateStatus = require('../job/updateStatus.js');
+var publishJobNodeInfo = require('../job/generateNodeInfoSteps.js');
 
 function runSh(externalBag, callback) {
   // At this point we have started processing the runSh and we do not want
@@ -77,6 +78,7 @@ function runSh(externalBag, callback) {
       _getSecrets.bind(null, bag),
       _setupDependencies.bind(null, bag),
       _notifyOnStart.bind(null, bag),
+      _publishJobNodeInfo.bind(null, bag),
       _processINs.bind(null, bag),
       _generateSteps.bind(null, bag),
       _handOffAndPoll.bind(null, bag),
@@ -280,6 +282,23 @@ function _notifyOnStart(bag, next) {
         bag.consoleAdapter.closeGrp(true);
       }
 
+      return next();
+    }
+  );
+}
+
+function _publishJobNodeInfo(bag, next) {
+  var who = bag.who + '|' + _publishJobNodeInfo.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openGrp('Job node info');
+
+  publishJobNodeInfo(bag,
+    function (err) {
+      if (err)
+        bag.consoleAdapter.closeGrp(false);
+      else
+        bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
