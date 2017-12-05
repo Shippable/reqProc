@@ -45,7 +45,26 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  return next();
+  var expectedParams = [
+    'buildScriptsDir',
+    'consoleAdapter'
+  ];
+
+  var paramErrors = [];
+  _.each(expectedParams,
+    function (expectedParam) {
+      if (_.isNull(bag[expectedParam]) || _.isUndefined(bag[expectedParam]))
+        paramErrors.push(
+          util.format('%s: missing param :%s', who, expectedParam)
+        );
+    }
+  );
+
+  var hasErrors = !_.isEmpty(paramErrors);
+  if (hasErrors)
+    logger.error(paramErrors.join('\n'));
+
+  return next(hasErrors);
 }
 
 function _getScriptHeader(bag, next) {
@@ -53,7 +72,7 @@ function _getScriptHeader(bag, next) {
   logger.verbose(who, 'Inside');
 
   var headerFile = path.join(global.config.execTemplatesDir, 'job',
-  bag.scriptHeaderFileName);
+    bag.scriptHeaderFileName);
 
   fs.readFile(headerFile, 'utf8',
     function (err, header) {
@@ -77,7 +96,7 @@ function _getScriptNodeInfo(bag, next) {
   logger.verbose(who, 'Inside');
 
   var nodeInfoFile = path.join(global.config.execTemplatesDir, 'job',
-  bag.nodeInfoFileName);
+    bag.nodeInfoFileName);
 
   fs.readFile(nodeInfoFile, 'utf8',
     function (err, nodeInfo) {
@@ -112,9 +131,7 @@ function _createNodeInfoScript(bag, next) {
         bag.consoleAdapter.closeCmd(true);
         return next(err);
       }
-      else {
-        return next();
-      }
+      return next();
     }
   );
 }
