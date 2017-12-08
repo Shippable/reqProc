@@ -24,6 +24,11 @@ RUN mkdir -p $IMAGE_REQEXEC_DIR/x86_64/Ubuntu_16.04 && \
     tar -xzvf /tmp/reqExec.tar.gz -C $IMAGE_REQEXEC_DIR/x86_64/Ubuntu_16.04 && \
     rm /tmp/reqExec.tar.gz
 
+RUN mkdir -p $IMAGE_REQEXEC_DIR/x86_64/CentOS_7 && \
+    wget https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-x86_64-CentOS_7.tar.gz -O /tmp/reqExec.tar.gz && \
+    tar -xzvf /tmp/reqExec.tar.gz -C $IMAGE_REQEXEC_DIR/x86_64/CentOS_7 && \
+    rm /tmp/reqExec.tar.gz
+
 RUN mkdir -p $IMAGE_REQEXEC_DIR/x86_64/macOS_10.12 && \
     wget https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-x86_64-macOS_10.12.tar.gz -O /tmp/reqExec.tar.gz && \
     tar -xzvf /tmp/reqExec.tar.gz -C $IMAGE_REQEXEC_DIR/x86_64/macOS_10.12 && \
