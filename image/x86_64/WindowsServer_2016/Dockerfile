@@ -15,6 +15,8 @@ ENV IMAGE_EXEC_TEMPLATES_DIR C:/Users/ContainerAdministrator/Shippable/execTempl
 RUN mkdir $Env:IMAGE_EXEC_TEMPLATES_DIR; \
     Invoke-WebRequest https://github.com/Shippable/execTemplates/archive/master.zip -OutFile $env:TEMP\execTemplates.zip; \
     Expand-Archive $env:TEMP\execTemplates.zip -DestinationPath $env:IMAGE_EXEC_TEMPLATES_DIR; \
+    Move-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-master\*  $env:IMAGE_EXEC_TEMPLATES_DIR \
+    Remove-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-master \
     Remove-Item $env:TEMP\execTemplates.zip;
 
 # reqExec
