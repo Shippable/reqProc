@@ -59,7 +59,7 @@ function _executeTask(bag, next) {
 
   var exec;
   if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016') {
-    exec = spawn('powershell', [bag.scriptPath], bag.options);
+    exec = spawn('powershell', [bag.scriptPath + ' 2>&1'], bag.options);
   } else {
     exec = spawn('/bin/bash', ['-c', bag.scriptPath + ' 2>&1'], bag.options);
   }

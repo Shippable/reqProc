@@ -8,6 +8,10 @@ var fs = require('fs-extra');
 
 function generateNodeInfoScript(externalBag, callback) {
   var bag = {
+    scriptHeaderFileName: util.format('header.%s',
+      global.config.scriptExtension),
+    nodeInfoFileName: util.format('node_info.%s',
+      global.config.scriptExtension),
     buildScriptsDir: externalBag.buildScriptsDir,
     consoleAdapter: externalBag.consoleAdapter,
     nodeInfoScript: '',
@@ -16,14 +20,6 @@ function generateNodeInfoScript(externalBag, callback) {
 
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
-
-  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016') {
-    bag.scriptHeaderFileName = 'header.ps1';
-    bag.nodeInfoFileName = 'node_info.ps1';
-  } else {
-    bag.scriptHeaderFileName = 'header.sh';
-    bag.nodeInfoFileName = 'node_info.sh';
-  }
 
   async.series([
       _checkInputParams.bind(null, bag),

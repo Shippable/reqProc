@@ -18,6 +18,11 @@ function generateScript(externalBag, callback) {
     taskScriptFileName: externalBag.taskScriptFileName,
     bootScriptFileName: externalBag.bootScriptFileName,
     name: externalBag.name,
+    taskTemplateFileName: util.format('task.%s', global.config.scriptExtension),
+    scriptHeaderFileName: util.format('header.%s',
+      global.config.scriptExtension),
+    bootTemplateFileName: util.format('boot.%s', global.config.scriptExtension),
+    envTemplateFileName: util.format('envs.%s', global.config.scriptExtension),
     runtime: externalBag.runtime,
     buildScriptsDir: externalBag.buildScriptsDir,
     taskScript: '',
@@ -36,18 +41,6 @@ function generateScript(externalBag, callback) {
 
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
-
-  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016') {
-    bag.taskTemplateFileName = 'task.ps1';
-    bag.scriptHeaderFileName = 'header.ps1';
-    bag.bootTemplateFileName = 'boot.ps1';
-    bag.envTemplateFileName = 'envs.ps1';
-  } else {
-    bag.taskTemplateFileName = 'task.sh';
-    bag.scriptHeaderFileName = 'header.sh';
-    bag.bootTemplateFileName = 'boot.sh';
-    bag.envTemplateFileName = 'envs.sh';
-  }
 
   async.series([
       _checkInputParams.bind(null, bag),
