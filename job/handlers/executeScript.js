@@ -58,11 +58,10 @@ function _executeTask(bag, next) {
   logger.debug(who, 'Inside');
 
   var exec;
-  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016') {
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
     exec = spawn('powershell', [bag.scriptPath + ' 2>&1'], bag.options);
-  } else {
+  else
     exec = spawn('/bin/bash', ['-c', bag.scriptPath + ' 2>&1'], bag.options);
-  }
 
   exec.stdout.on('data',
     function (data)  {
