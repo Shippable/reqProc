@@ -57,7 +57,12 @@ function _executeTask(bag, next) {
   var who = bag.who + '|' + _executeTask.name;
   logger.debug(who, 'Inside');
 
-  var exec = spawn('/bin/bash', ['-c', bag.scriptPath + ' 2>&1'], bag.options);
+  var exec;
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
+    exec = spawn('powershell', [bag.scriptPath + ' 2>&1'], bag.options);
+  else
+    exec = spawn('/bin/bash', ['-c', bag.scriptPath + ' 2>&1'], bag.options);
+
   exec.stdout.on('data',
     function (data)  {
       _.each(data.toString().split('\n'),

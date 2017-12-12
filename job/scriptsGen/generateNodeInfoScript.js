@@ -8,8 +8,10 @@ var fs = require('fs-extra');
 
 function generateNodeInfoScript(externalBag, callback) {
   var bag = {
-    scriptHeaderFileName: 'header.sh',
-    nodeInfoFileName: 'node_info.sh',
+    scriptHeaderFileName: util.format('header.%s',
+      global.config.scriptExtension),
+    nodeInfoFileName: util.format('node_info.%s',
+      global.config.scriptExtension),
     buildScriptsDir: externalBag.buildScriptsDir,
     consoleAdapter: externalBag.consoleAdapter,
     nodeInfoScript: '',
