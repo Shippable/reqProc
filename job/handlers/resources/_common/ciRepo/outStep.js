@@ -129,7 +129,9 @@ function _generateNewVersion(bag, next) {
     function (dependency) {
       var isInOperation = dependency.operation === 'IN';
       var isGitRepo = dependency.type === 'gitRepo';
-      var isSourceNameEqual = dependency.sourceName ===
+      var isSourceNameEqual = (dependency.version &&
+        dependency.version.propertyBag &&
+        dependency.version.propertyBag.sourceName) ===
         bag.dependency.sourceName;
       var isProviderEqual =
         dependency.propertyBag.normalizedRepo &&

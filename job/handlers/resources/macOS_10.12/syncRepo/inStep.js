@@ -49,6 +49,12 @@ function _checkInputParams(bag, next) {
     consoleErrors.push(who +
       ' Missing parameter: dependency.propertyBag.normalizedRepo');
 
+  if (!bag.dependency.version ||
+    _.isEmpty(bag.dependency.version.propertyBag) ||
+    _.isEmpty(bag.dependency.version.propertyBag.shaData))
+    consoleErrors.push(who +
+      ' Missing parameter: dependency.version.propertyBag.shaData');
+
   if (consoleErrors.length > 0) {
     _.each(consoleErrors,
       function (e) {
