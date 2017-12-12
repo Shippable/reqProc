@@ -170,7 +170,13 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
     taskName: task.name || util.format('task_%s', task.taskIndex),
     isTaskInContainer: task.runtime.container
   });
-  task.taskScriptFileName = util.format('%s_task_%s.sh', group, task.taskIndex);
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016') {
+    task.taskScriptFileName = util.format('%s_task_%s.ps1', group,
+      task.taskIndex);
+  } else {
+    task.taskScriptFileName = util.format('%s_task_%s.sh', group,
+      task.taskIndex);
+  }
   if (task.runtime.container) {
     var containerName =  util.format('reqExec.%s.%s', buildJobId,
       task.taskIndex);
