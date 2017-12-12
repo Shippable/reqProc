@@ -171,7 +171,7 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
     isTaskInContainer: task.runtime.container
   });
   task.taskScriptFileName = util.format('%s_task_%s.%s', group,
-      task.taskIndex, global.config.scriptExtension);
+    task.taskIndex, global.config.scriptExtension);
   if (task.runtime.container) {
     var containerName =  util.format('reqExec.%s.%s', buildJobId,
       task.taskIndex);
