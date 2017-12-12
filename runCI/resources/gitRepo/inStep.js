@@ -47,6 +47,12 @@ function _checkInputParams(bag, next) {
     consoleErrors.push(who +
       ' Missing parameter: dependency.propertyBag.normalizedRepo');
 
+  if (!bag.dependency.version ||
+    _.isEmpty(bag.dependency.version.propertyBag) ||
+    _.isEmpty(bag.dependency.version.propertyBag.shaData))
+    consoleErrors.push(who +
+      ' Missing parameter: dependency.version.propertyBag.shaData');
+
   if (consoleErrors.length > 0) {
     _.each(consoleErrors,
       function (e) {
@@ -74,11 +80,8 @@ function _injectDependencies(bag, next) {
   bag.dependency.isPrivate =
     bag.dependency.propertyBag.normalizedRepo.isPrivateRepository;
 
-  if (!_.isEmpty(bag.dependency.propertyBag.yml) &&
-    !_.isEmpty(bag.dependency.propertyBag.yml.pointer) &&
-    !_.isEmpty(bag.dependency.propertyBag.yml.pointer.sourceUrl)) {
-    bag.dependency.projectUrl =
-      bag.dependency.propertyBag.yml.pointer.sourceUrl;
+  if (!_.isEmpty(bag.dependency.version.propertyBag.sourceUrl)) {
+    bag.dependency.projectUrl = bag.dependency.version.propertyBag.sourceUrl;
   } else {
     if (bag.dependency.isPrivate)
       bag.dependency.projectUrl =
