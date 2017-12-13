@@ -2314,7 +2314,20 @@ function __readReplicatedVersionJson(bag, next) {
       }
 
       bag.versionJson.versionName = resource.version.versionName;
-      bag.versionJson.propertyBag = resource.version.propertyBag || {};
+
+      if (bag.dependency.type === 'gitRepo' ||
+        bag.dependency.type === 'syncRepo' ||
+        bag.dependency.type === 'ciRepo') {
+        var propertyBag = resource.version.propertyBag || {};
+        bag.versionJson.propertyBag = {
+          shaData: propertyBag.shaData,
+          webhookRequestHeaders: propertyBag.webhookRequestHeaders,
+          webhookRequestBody: propertyBag.webhookRequestBody
+        };
+     } else {
+       bag.versionJson.propertyBag = resource.version.propertyBag || {};
+     }
+
 
       bag.consoleAdapter.publishMsg(
         'Successfully read replicated metadata file');
