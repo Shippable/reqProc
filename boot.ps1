@@ -14,6 +14,6 @@ if (-not ($env:REQEXEC_DIR)) {
   exit 1
 }
 
-Copy-Item $env:IMAGE_REQEXEC_DIR\* -Recurse -Destination $env:REQEXEC_DIR
+Copy-Item $env:IMAGE_REQEXEC_DIR\* -Recurse -Force -Destination $env:REQEXEC_DIR
 
 node app.js
