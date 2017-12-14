@@ -1080,10 +1080,9 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
   if (dependency.propertyBag.yml) {
     var pointer = dependency.propertyBag.yml.pointer;
 
-    if (pointer) {
+    if (pointer)
       ___createEnvironmentVariablesFromObject(bag.commonEnvs,
         util.format('%s_POINTER', sanitizedDependencyName), pointer);
-    }
 
     var seed = dependency.propertyBag.yml.seed;
 
@@ -1091,7 +1090,6 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
       ___createEnvironmentVariablesFromObject(bag.commonEnvs,
         util.format('%s_SEED', sanitizedDependencyName), seed);
   }
-
 
   bag.consoleAdapter.publishMsg('Successfully added environment variables ' +
     'for ' + dependency.name);
