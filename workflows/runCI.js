@@ -1069,16 +1069,18 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
     ));
   }
 
+  if (dependency.version && dependency.version.propertyBag) {
+    if (dependency.version.propertyBag.sourceName)
+      bag.commonEnvs.push(util.format('%s_SOURCENAME="%s"',
+        sanitizedDependencyName,
+        ___escapeEnvironmentVariable(dependency.version.propertyBag.sourceName)
+      ));
+  }
+
   if (dependency.propertyBag.yml) {
     var pointer = dependency.propertyBag.yml.pointer;
 
     if (pointer) {
-      if (pointer.sourceName)
-        bag.commonEnvs.push(util.format('%s_SOURCENAME="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(pointer.sourceName)
-        ));
-
       ___createEnvironmentVariablesFromObject(bag.commonEnvs,
         util.format('%s_POINTER', sanitizedDependencyName), pointer);
     }
@@ -1089,6 +1091,7 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
       ___createEnvironmentVariablesFromObject(bag.commonEnvs,
         util.format('%s_SEED', sanitizedDependencyName), seed);
   }
+
 
   bag.consoleAdapter.publishMsg('Successfully added environment variables ' +
     'for ' + dependency.name);
@@ -1531,7 +1534,8 @@ function _saveTaskMessage(bag, next) {
         type: dep.type,
         path: depPath,
         propertyBag: dep.propertyBag,
-        sourceName: dep.sourceName
+        sourceName: dep.version && dep.version.propertyBag &&
+          dep.version.propertyBag.sourceName
       };
       if (!_.isEmpty(dep.version)) {
         taskMessageDependency.version = {
