@@ -40,9 +40,14 @@ function _checkInputParams(bag, next) {
   bag.replicate = bag.dependency.versionDependencyPropertyBag &&
     bag.dependency.versionDependencyPropertyBag.replicate;
 
-  if (!bag.replicate && !bag.dependency.sourceName)
+  bag.sourceName = bag.dependency.version &&
+    bag.dependency.version.propertyBag &&
+    bag.dependency.version.propertyBag.sourceName;
+
+  if (!bag.replicate && !bag.sourceName)
     consoleErrors.push(
-      util.format('%s is missing: dependency.sourceName', who)
+      util.format('%s is missing: dependency.version.propertyBag.sourceName',
+        who)
     );
 
   if (!bag.replicate && !bag.dependency.version.versionName)
@@ -131,7 +136,7 @@ function _generateNewVersion(bag, next) {
       var isSourceNameEqual = (dependency.version &&
         dependency.version.propertyBag &&
         dependency.version.propertyBag.sourceName) ===
-        bag.dependency.sourceName;
+        bag.sourceName;
       var isProviderEqual =
         dependency.propertyBag.normalizedRepo &&
         (dependency.propertyBag.normalizedRepo.repositoryProvider ===
