@@ -109,39 +109,110 @@ function _setUpDependencies(bag, next) {
   var jobName = bag.inPayload.name.replace(/[^A-Za-z0-9_]/g, '').toUpperCase();
 
   bag.commonEnvs = [
-    util.format('RESOURCE_ID=%s', bag.resourceId),
-    util.format('BUILD_ID=%s', bag.buildId),
-    util.format('BUILD_NUMBER=%s', bag.buildNumber),
-    util.format('BUILD_JOB_ID=%s', bag.buildJobId),
-    util.format('BUILD_JOB_NUMBER=%s', 1),
-    util.format('SUBSCRIPTION_ID=%s', bag.inPayload.subscriptionId),
-    util.format('JOB_NAME=%s', bag.inPayload.name),
-    util.format('JOB_TYPE=%s', bag.inPayload.type),
-    util.format('JOB_PATH="%s"', bag.buildRootDir),
-    util.format('JOB_STATE="%s"', bag.buildStateDir),
-    util.format('JOB_PREVIOUS_STATE="%s"', bag.buildPreviousStateDir),
-    util.format('JOB_MESSAGE="%s"', bag.messageFilePath),
-    util.format('%s_NAME=%s', jobName, bag.inPayload.name),
-    util.format('%s_TYPE=%s', jobName, bag.inPayload.type),
-    util.format('%s_PATH="%s"', jobName, bag.buildRootDir),
-    util.format('%s_STATE="%s"', jobName, bag.buildStateDir),
-    util.format('%s_PREVIOUS_STATE="%s"', jobName, bag.buildPreviousStateDir),
-    util.format('%s_MESSAGE="%s"', jobName, bag.messageFilePath),
-    util.format('JOB_TRIGGERED_BY_NAME=%s',
-      bag.inPayload.triggeredByName),
-    util.format('JOB_TRIGGERED_BY_ID=%s',
-      bag.inPayload.triggeredById),
-    util.format('SHARED_DIR=%s', bag.buildSharedDir),
-    util.format('BUILD_DIR=%s', bag.buildRootDir),
-    util.format('SUBSCRIPTION_PRIVATE_KEY=%s', bag.subPrivateKeyPath)
+    {
+      key: 'RESOURCE_ID',
+      value: bag.resourceId
+    },
+    {
+      key: 'BUILD_ID',
+      value: bag.buildId
+    },
+    {
+      key: 'BUILD_NUMBER',
+      value: bag.buildNumber
+    },
+    {
+      key: 'BUILD_JOB_ID',
+      value: bag.buildJobId
+    },
+    {
+      key: 'BUILD_JOB_NUMBER',
+      value: 1
+    },
+    {
+      key: 'SUBSCRIPTION_ID',
+      value: bag.inPayload.subscriptionId
+    },
+    {
+      key: 'JOB_NAME',
+      value: bag.inPayload.name
+    },
+    {
+      key: 'JOB_TYPE',
+      value: bag.inPayload.type
+    },
+    {
+      key: 'JOB_PATH',
+      value: bag.buildRootDir
+    },
+    {
+      key: 'JOB_STATE',
+      value: bag.buildStateDir
+    },
+    {
+      key: 'JOB_PREVIOUS_STATE',
+      value: bag.buildPreviousStateDir
+    },
+    {
+      key: 'JOB_MESSAGE',
+      value: bag.messageFilePath
+    },
+    {
+      key: util.format('%s_NAME', jobName),
+      value: bag.inPayload.name
+    },
+    {
+      key: util.format('%s_TYPE', jobName),
+      value: bag.inPayload.type
+    },
+    {
+      key: util.format('%s_PATH', jobName),
+      value: bag.buildRootDir
+    },
+    {
+      key: util.format('%s_STATE', jobName),
+      value: bag.buildStateDir
+    },
+    {
+      key: util.format('%s_PREVIOUS_STATE', jobName),
+      value: bag.buildPreviousStateDir
+    },
+    {
+      key: util.format('%s_MESSAGE', jobName),
+      value: bag.messageFilePath
+    },
+    {
+      key: 'JOB_TRIGGERED_BY_NAME',
+      value: bag.inPayload.triggeredByName
+    },
+    {
+      key: 'JOB_TRIGGERED_BY_ID',
+      value: bag.inPayload.triggeredById
+    },
+    {
+      key: 'SHARED_DIR',
+      value: bag.buildSharedDir
+    },
+    {
+      key: 'BUILD_DIR',
+      value: 'bag.buildRootDir'
+    },
+    {
+      key: 'SUBSCRIPTION_PRIVATE_KEY',
+      value: bag.subPrivateKeyPath
+    }
   ];
   bag.paramEnvs = [];
 
   if (bag.inPayload.injectedGlobalEnv) {
     _.each(bag.inPayload.injectedGlobalEnv,
       function (value, key) {
-        var globalEnv = util.format('%s=%s', key, value);
-        bag.commonEnvs.push(globalEnv);
+        bag.commonEnvs.push(
+          {
+            key: key,
+            value: value
+          }
+        );
       }
     );
   }
@@ -263,35 +334,40 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
   var dependencyPath = path.join(bag.buildRootDir, dependency.operation,
     dependency.name);
 
-  bag.commonEnvs.push(
-    util.format('%s_PATH="%s"', sanitizedDependencyName, dependencyPath)
-  );
+  bag.commonEnvs.push({
+    key: util.format('%s_PATH', sanitizedDependencyName),
+    value: dependencyPath
+  });
 
-  bag.commonEnvs.push(
-    util.format('%s_STATE="%s"',
-      sanitizedDependencyName, path.join(dependencyPath, dependency.type))
-  );
+  bag.commonEnvs.push({
+    key: util.format('%s_STATE', sanitizedDependencyName),
+    value: path.join(dependencyPath, dependency.type)
+  });
 
-  bag.commonEnvs.push(
-    util.format('%s_META="%s"', sanitizedDependencyName, dependencyPath)
-  );
+  bag.commonEnvs.push({
+    key: util.format('%s_META', sanitizedDependencyName),
+    value: dependencyPath
+  });
 
-  bag.commonEnvs.push(
-    util.format('%s_NAME="%s"', sanitizedDependencyName, dependency.name)
-  );
+  bag.commonEnvs.push({
+    key: util.format('%s_NAME', sanitizedDependencyName),
+    value: dependency.name
+  });
 
-  bag.commonEnvs.push(
-    util.format('%s_TYPE="%s"', sanitizedDependencyName, dependency.type)
-  );
+  bag.commonEnvs.push({
+    key: util.format('%s_TYPE', sanitizedDependencyName),
+    value: dependency.type
+  });
 
-  bag.commonEnvs.push(
-    util.format('%s_OPERATION="%s"',
-      sanitizedDependencyName, dependency.operation)
-  );
+  bag.commonEnvs.push({
+    key: util.format('%s_OPERATION', sanitizedDependencyName),
+    value: dependency.operation
+  });
 
-  bag.commonEnvs.push(
-    util.format('%s_ID="%s"', sanitizedDependencyName, dependency.resourceId)
-  );
+  bag.commonEnvs.push({
+    key: util.format('%s_ID', sanitizedDependencyName),
+    value: dependency.resourceId
+  });
 
   if (dependency.version) {
     if (dependency.type === 'params') {
@@ -303,15 +379,17 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
             value = value.replace(/ /g, '\\ ');
             value = ___escapeEnvironmentVariable(value);
 
-            bag.commonEnvs.push(util.format('%s_PARAMS_%s="%s"',
-              sanitizedDependencyName,
-              key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase(),
-              value
-            ));
-            bag.paramEnvs.push(util.format('%s="%s"',
-              key.replace(/[^A-Za-z0-9_]/g, ''),
-              value
-            ));
+            bag.commonEnvs.push({
+              key: util.format('%s_PARAMS_%s',
+                sanitizedDependencyName,
+                key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase()),
+              value: value
+            });
+
+            bag.paramEnvs.push({
+              key: key.replace(/[^A-Za-z0-9_]/g, ''),
+              value: value
+            });
           } else if (key === 'secure') {
             var secureEnvs = value;
             var index;
@@ -341,28 +419,30 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
 
                 secureValue = ___escapeEnvironmentVariable(secureValue);
 
-                bag.commonEnvs.push(util.format('%s_PARAMS_%s="%s"',
-                  sanitizedDependencyName,
-                  secureKey.replace(/[^A-Za-z0-9_]/g, '').toUpperCase(),
-                  secureValue
-                ));
-                bag.paramEnvs.push(util.format('%s="%s"',
-                  secureKey.replace(/[^A-Za-z0-9_]/g, ''),
-                  secureValue
-                ));
+                bag.commonEnvs.push({
+                  key: util.format('%s_PARAMS_%s',
+                    sanitizedDependencyName,
+                    secureKey.replace(/[^A-Za-z0-9_]/g, '').toUpperCase()),
+                  value: secureValue
+                });
+                bag.paramEnvs.push({
+                  key: secureKey.replace(/[^A-Za-z0-9_]/g, ''),
+                  value: secureValue
+                });
               }
             }
           } else {
             value = ___escapeEnvironmentVariable(value);
-            bag.commonEnvs.push(util.format('%s_PARAMS_%s="%s"',
-              sanitizedDependencyName,
-              key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase(),
-              value
-            ));
-            bag.paramEnvs.push(util.format('%s="%s"',
-              key.replace(/[^A-Za-z0-9_]/g, ''),
-              value
-            ));
+            bag.commonEnvs.push({
+              key: util.format('%s_PARAMS_%s',
+                sanitizedDependencyName,
+                key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase()),
+              value: value
+            });
+            bag.paramEnvs.push({
+              key: key.replace(/[^A-Za-z0-9_]/g, ''),
+              value: value
+            });
           }
         }
       );
@@ -371,111 +451,118 @@ function __addDependencyEnvironmentVariables(bag, dependency, next) {
         dependency.version.propertyBag.shaData) {
         var shaData = dependency.version.propertyBag.shaData;
 
-        bag.commonEnvs.push(util.format('%s_BRANCH="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.branchName)
-        ));
-        bag.commonEnvs.push(util.format('%s_BASE_BRANCH="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.baseCommitRef)
-        ));
-        bag.commonEnvs.push(util.format('%s_HEAD_BRANCH="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.headCommitRef || '')
-        ));
-        bag.commonEnvs.push(util.format('%s_PULL_REQUEST=%s',
-          sanitizedDependencyName, shaData.pullRequestNumber || false
-        ));
-        bag.commonEnvs.push(util.format('%s_COMMIT=%s',
-          sanitizedDependencyName, shaData.commitSha
-        ));
-        bag.commonEnvs.push(util.format('%s_COMMITTER="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.committer &&
+        bag.commonEnvs.push({
+          key: util.format('%s_BRANCH', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.branchName)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_BASE_BRANCH', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.baseCommitRef)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_HEAD_BRANCH', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.headCommitRef || '')
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_PULL_REQUEST', sanitizedDependencyName),
+          value: shaData.pullRequestNumber || false
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_COMMIT', sanitizedDependencyName),
+          value: shaData.commitSha
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_COMMITTER', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.committer &&
             shaData.committer.displayName)
-        ));
-        bag.commonEnvs.push(util.format('%s_COMMIT_MESSAGE="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.commitMessage)
-        ));
-        bag.commonEnvs.push(util.format('%s_IS_GIT_TAG=%s',
-          sanitizedDependencyName, shaData.isGitTag
-        ));
-        bag.commonEnvs.push(util.format('%s_GIT_TAG_NAME="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.gitTagName)
-        ));
-        bag.commonEnvs.push(util.format('%s_IS_RELEASE=%s',
-          sanitizedDependencyName, shaData.isRelease
-        ));
-        bag.commonEnvs.push(util.format('%s_RELEASE_NAME="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.releaseName)
-        ));
-        bag.commonEnvs.push(util.format('%s_RELEASED_AT="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.releasedAt)
-        ));
-        bag.commonEnvs.push(util.format('%s_KEYPATH="%s"',
-          sanitizedDependencyName, '/tmp/' + dependency.name + '_key.pem'
-        ));
-        bag.commonEnvs.push(util.format('%s_IS_PULL_REQUEST="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.isPullRequest)
-        ));
-        bag.commonEnvs.push(util.format('%s_IS_PULL_REQUEST_CLOSE="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(shaData.isPullRequestClose)
-        ));
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_COMMIT_MESSAGE', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.commitMessage)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_IS_GIT_TAG', sanitizedDependencyName),
+          value: shaData.isGitTag
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_GIT_TAG_NAME', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.gitTagName)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_IS_RELEASE', sanitizedDependencyName),
+          value: shaData.isRelease
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_RELEASE_NAME', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.releaseName)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_RELEASED_AT', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.releasedAt)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_KEYPATH', sanitizedDependencyName),
+          value: '/tmp/' + dependency.name + '_key.pem'
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_IS_PULL_REQUEST', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.isPullRequest)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_IS_PULL_REQUEST_CLOSE', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(shaData.isPullRequestClose)
+        });
         var pullRequestRepoFullName = shaData.pullRequestRepoFullName || '';
-        bag.commonEnvs.push(util.format('%s_PULL_REQUEST_REPO_FULL_NAME="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(pullRequestRepoFullName)
-        ));
+        bag.commonEnvs.push({
+          key: util.format('%s_PULL_REQUEST_REPO_FULL_NAME',
+            sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(pullRequestRepoFullName)
+        });
       }
       if (dependency.propertyBag.normalizedRepo) {
         var normalizedRepo = dependency.propertyBag.normalizedRepo;
-        bag.commonEnvs.push(util.format('%s_SSH_URL="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(normalizedRepo.repositorySshUrl)
-        ));
-        bag.commonEnvs.push(util.format('%s_HTTPS_URL="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(normalizedRepo.repositoryHttpsUrl)
-        ));
-        bag.commonEnvs.push(util.format('%s_IS_FORK="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(normalizedRepo.isFork)
-        ));
-        bag.commonEnvs.push(util.format('%s_REPO_FULL_NAME="%s"',
-          sanitizedDependencyName,
-          ___escapeEnvironmentVariable(normalizedRepo.fullName)
-        ));
+        bag.commonEnvs.push({
+          key: util.format('%s_SSH_URL', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(normalizedRepo.repositorySshUrl)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_HTTPS_URL', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(normalizedRepo.repositoryHttpsUrl)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_IS_FORK', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(normalizedRepo.isFork)
+        });
+        bag.commonEnvs.push({
+          key: util.format('%s_REPO_FULL_NAME', sanitizedDependencyName),
+          value: ___escapeEnvironmentVariable(normalizedRepo.fullName)
+        });
       }
     }
 
     var versionName = dependency.version.versionName || '';
     versionName = ___escapeEnvironmentVariable(versionName);
-    bag.commonEnvs.push(util.format('%s_VERSIONNAME="%s"',
-      sanitizedDependencyName,
-      versionName
-    ));
-    bag.commonEnvs.push(util.format('%s_VERSIONNUMBER="%s"',
-      sanitizedDependencyName,
-      dependency.version.versionNumber
-    ));
-    bag.commonEnvs.push(util.format('%s_VERSIONID="%s"',
-      sanitizedDependencyName,
-      dependency.version.versionId
-    ));
+    bag.commonEnvs.push({
+      key: util.format('%s_VERSIONNAME', sanitizedDependencyName),
+      value: versionName
+    });
+    bag.commonEnvs.push({
+      key: util.format('%s_VERSIONNUMBER', sanitizedDependencyName),
+      value: dependency.version.versionNumber
+    });
+    bag.commonEnvs.push({
+      key: util.format('%s_VERSIONID', sanitizedDependencyName),
+      value: dependency.version.versionId
+    });
   }
 
   if (dependency.version && dependency.version.propertyBag) {
     if (dependency.version.propertyBag.sourceName)
-      bag.commonEnvs.push(util.format('%s_SOURCENAME="%s"',
-        sanitizedDependencyName,
-        ___escapeEnvironmentVariable(dependency.version.propertyBag.sourceName)
-      ));
+      bag.commonEnvs.push({
+        key: util.format('%s_SOURCENAME', sanitizedDependencyName),
+        value: ___escapeEnvironmentVariable(
+          dependency.version.propertyBag.sourceName)
+      });
   }
 
   if (dependency.propertyBag.yml) {
@@ -609,17 +696,22 @@ function __getDependencyIntegrations(bag, dependency, next) {
       _.each(stringAndArrayData,
         function (value, key) {
           value = ___escapeEnvironmentVariable(value);
-          bag.commonEnvs.push(util.format('%s_INTEGRATION_%s="%s"',
-            sanitizedDependencyName,
-            key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase(),
-            value
-          ));
+          bag.commonEnvs.push({
+            key: util.format('%s_INTEGRATION_%s',
+              sanitizedDependencyName,
+              key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase()),
+            value: value
+          });
         }
       );
       _.each(objectData,
         function (value, key) {
           value  = ___replaceSingleQuotes(value);
-          bag.commonEnvs.push(util.format('%s=\'%s\'', key, value));
+          // TODO: check if something breaks because of removing \' in value
+          bag.commonEnvs.push({
+            key: key,
+            value: value
+          });
         }
       );
 
@@ -661,23 +753,27 @@ function __getDependencyIntegrations(bag, dependency, next) {
         innerBagKey.fileName = dependency.name + '_key';
         innerBagKey.object = accountIntegration.privateKey;
         innerBagKey.hasKey = true;
-        bag.commonEnvs.push(util.format('%s_PRIVATE_KEY_PATH="%s"',
-          sanitizedDependencyName, path.join(dependencyPath,
-          innerBagKey.fileName)));
+        bag.commonEnvs.push({
+          key: util.format('%s_PRIVATE_KEY_PATH', sanitizedDependencyName),
+          value: path.join(dependencyPath, innerBagKey.fileName)
+        });
 
         // public key
         innerBagSshPublicKey.fileName = dependency.name + '_key.pub';
         innerBagSshPublicKey.object = accountIntegration.publicKey;
         innerBagSshPublicKey.hasKey = true;
-        bag.commonEnvs.push(util.format('%s_PUBLIC_KEY_PATH="%s"',
-          sanitizedDependencyName, path.join(dependencyPath,
-          innerBagSshPublicKey.fileName)));
+        bag.commonEnvs.push({
+          key: util.format('%s_PUBLIC_KEY_PATH',
+          sanitizedDependencyName),
+          value: path.join(dependencyPath, innerBagSshPublicKey.fileName)
+        });
       }
 
       if (innerBagKey.hasKey)
-        bag.commonEnvs.push(util.format('%s_KEYPATH="%s"',
-          sanitizedDependencyName, path.join(dependencyPath,
-          innerBagKey.fileName)));
+        bag.commonEnvs.push({
+          key: util.format('%s_KEYPATH', sanitizedDependencyName),
+          value: path.join(dependencyPath, innerBagKey.fileName)
+        });
       else
         innerBagKey = {};
 
@@ -1015,9 +1111,10 @@ function _saveTaskMessage(bag, next) {
 
 function ___createEnvironmentVariablesFromObject(commonEnvs, name, value) {
   if (!_.isObject(value)) {
-    commonEnvs.push(util.format('%s="%s"',
-      name, ___escapeEnvironmentVariable(value)
-    ));
+    commonEnvs.push({
+      key: name,
+      value: ___escapeEnvironmentVariable(value)
+    });
     return;
   }
 
