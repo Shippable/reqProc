@@ -245,15 +245,15 @@ function __normalizeEnvs(envs) {
     function (value, key) {
       if (typeof value === 'string') {
         value = ___escapeEnvironmentVariable(value);
-        escapedEnvs.push(util.format('%s="%s"',
-          key.replace(/[^A-Za-z0-9_]/g, ''),
-          value
-        ));
+        escapedEnvs.push({
+          key: key.replace(/[^A-Za-z0-9_]/g, ''),
+          value: value
+        });
       } else {
-        escapedEnvs.push(util.format('%s=%s',
-          key.replace(/[^A-Za-z0-9_]/g, ''),
-          value
-        ));
+        escapedEnvs.push({
+          key: key.replace(/[^A-Za-z0-9_]/g, ''),
+          value: value
+        });
       }
     }
   );
