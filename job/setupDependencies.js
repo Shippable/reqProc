@@ -707,7 +707,6 @@ function __getDependencyIntegrations(bag, dependency, next) {
       _.each(objectData,
         function (value, key) {
           value  = ___replaceSingleQuotes(value);
-          // TODO: check if something breaks because of removing \' in value
           bag.commonEnvs.push({
             key: key,
             value: value
