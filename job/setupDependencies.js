@@ -1129,6 +1129,9 @@ function ___createEnvironmentVariablesFromObject(commonEnvs, name, value) {
 }
 
 function ___escapeEnvironmentVariable(value) {
+  // TODO: move escaping logic to respective execTemplates
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
+    return value;
   if (!value || !_.isString(value)) return value;
 
   var specialCharacters = ['\\\\', '\\\"', '\\\`', '\\\$'];
@@ -1144,6 +1147,9 @@ function ___escapeEnvironmentVariable(value) {
 }
 
 function ___replaceSingleQuotes(value) {
+  // TODO: move escaping logic to respective execTemplates
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
+    return value;
   if (_.isEmpty(value) || !_.isString(value))
     return value;
   return value.replace(/'/g, '\'"\'"\'');

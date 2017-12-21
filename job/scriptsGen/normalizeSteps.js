@@ -243,24 +243,20 @@ function __normalizeEnvs(envs) {
   }
   _.each(clonedEnvs,
     function (value, key) {
-      if (typeof value === 'string') {
-        value = ___escapeEnvironmentVariable(value);
-        escapedEnvs.push({
-          key: key.replace(/[^A-Za-z0-9_]/g, ''),
-          value: value
-        });
-      } else {
-        escapedEnvs.push({
-          key: key.replace(/[^A-Za-z0-9_]/g, ''),
-          value: value
-        });
-      }
+      value = ___escapeEnvironmentVariable(value);
+      escapedEnvs.push({
+        key: key.replace(/[^A-Za-z0-9_]/g, ''),
+        value: value
+      });
     }
   );
   return escapedEnvs;
 }
 
 function ___escapeEnvironmentVariable(value) {
+  // TODO: move escaping logic to respective execTemplates
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
+    return value;
   if (!value || !_.isString(value)) return value;
 
   var specialCharacters = ['\\\\', '\\\"', '\\\`', '\\\$'];
