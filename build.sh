@@ -6,7 +6,6 @@ export HUB_ORG="$3"
 export IMAGE_NAME="$4"
 export TAG="master"
 export HUB_IMAGE="$HUB_ORG/$IMAGE_NAME:$TAG"
-export REQPROC_REPO_PATH="./IN/reqProc_repo/gitRepo"
 
 check_input() {
   if [ -z "$ARCHITECTURE" ]; then
@@ -48,12 +47,10 @@ push_images() {
 }
 
 main() {
-  pushd $REQPROC_REPO_PATH
-    check_input
-    set_build_context
-    build_and_tag_image
-    push_images
-  popd
+  check_input
+  set_build_context
+  build_and_tag_image
+  push_images
 }
 
 main
