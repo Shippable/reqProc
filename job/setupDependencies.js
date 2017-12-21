@@ -709,7 +709,8 @@ function __getDependencyIntegrations(bag, dependency, next) {
           value  = ___replaceSingleQuotes(value);
           bag.commonEnvs.push({
             key: key,
-            value: value
+            value: value,
+            surroundWithSingleQuotes: true
           });
         }
       );
