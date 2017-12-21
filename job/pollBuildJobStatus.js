@@ -58,8 +58,7 @@ function _pollBuildJobStatus(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Starting job status poll');
-  var isCancelled = false;
-  var isTimedout = false;
+  var isTerminated = false;
   var cancelledStatusCode = getStatusCodeByName('cancelled');
   var timeoutStatusCode = getStatusCodeByName('timeout');
   var statusPath = path.join(bag.buildStatusDir, 'job.status');
@@ -69,31 +68,25 @@ function _pollBuildJobStatus(bag, next) {
         if (err) {
           logger.warn(util.format('%s, Failed to get buildJob' +
             ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err));
-        } else if (buildJob.statusCode === cancelledStatusCode) {
-          isCancelled = true;
+          return;
+        }
+        var statusName = _.findWhere(global.systemCodes,
+          { code: buildJob.statusCode}).name;
+        if (buildJob.statusCode === cancelledStatusCode ||
+          buildJob.statusCode === timeoutStatusCode) {
+          isTerminated = true;
           try {
-            fs.writeFileSync(statusPath, 'cancelled\n');
+            fs.writeFileSync(statusPath, util.format('%s\n', statusName));
           } catch (e) {
             logger.warn(who,
               'Failed to write status to status path with error: ', e
             );
             // Reset this so we can try again in the next poll.
-            isCancelled = false;
-          }
-        } else if (buildJob.statusCode === timeoutStatusCode) {
-          isTimedout = true;
-          try {
-            fs.writeFileSync(statusPath, 'timedout\n');
-          } catch (e) {
-            logger.warn(who,
-              'Failed to write status to status path with error: ', e
-            );
-            // Reset this so we can try again in the next poll.
-            isTimedout = false;
+            isTerminated = false;
           }
         }
 
-        if (!isCancelled && !isTimedout)
+        if (!isTerminated)
           setTimeout(
             function () {
               poll(bag);
