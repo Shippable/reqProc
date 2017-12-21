@@ -59,7 +59,10 @@ function _pollBuildJobStatus(bag, next) {
 
   bag.consoleAdapter.openCmd('Starting job status poll');
   var isCancelled = false;
+  var isTimedout = false;
   var cancelledStatusCode = getStatusCodeByName('cancelled');
+  var timeoutStatusCode = getStatusCodeByName('timeout');
+  var statusPath = path.join(bag.buildStatusDir, 'job.status');
   function poll(bag) {
     bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
       function (err, buildJob) {
@@ -68,7 +71,6 @@ function _pollBuildJobStatus(bag, next) {
             ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err));
         } else if (buildJob.statusCode === cancelledStatusCode) {
           isCancelled = true;
-          var statusPath = path.join(bag.buildStatusDir, 'job.status');
           try {
             fs.writeFileSync(statusPath, 'cancelled\n');
           } catch (e) {
@@ -78,9 +80,20 @@ function _pollBuildJobStatus(bag, next) {
             // Reset this so we can try again in the next poll.
             isCancelled = false;
           }
+        } else if (buildJob.statusCode === timeoutStatusCode) {
+          isTimedout = true;
+          try {
+            fs.writeFileSync(statusPath, 'timedout\n');
+          } catch (e) {
+            logger.warn(who,
+              'Failed to write status to status path with error: ', e
+            );
+            // Reset this so we can try again in the next poll.
+            isTimedout = false;
+          }
         }
 
-        if (!isCancelled)
+        if (!isCancelled && !isTimedout)
           setTimeout(
             function () {
               poll(bag);
