@@ -62,6 +62,7 @@ function _pollBuildJobStatus(bag, next) {
   var isTimedout = false;
   var cancelledStatusCode = getStatusCodeByName('cancelled');
   var timeoutStatusCode = getStatusCodeByName('timeout');
+  var statusPath = path.join(bag.buildStatusDir, 'job.status');
   function poll(bag) {
     bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
       function (err, buildJob) {
@@ -70,7 +71,6 @@ function _pollBuildJobStatus(bag, next) {
             ' for buildJobId:%s, with err: %s', who, bag.buildJobId, err));
         } else if (buildJob.statusCode === cancelledStatusCode) {
           isCancelled = true;
-          var statusPath = path.join(bag.buildStatusDir, 'job.status');
           try {
             fs.writeFileSync(statusPath, 'cancelled\n');
           } catch (e) {
@@ -82,7 +82,6 @@ function _pollBuildJobStatus(bag, next) {
           }
         } else if (buildJob.statusCode === timeoutStatusCode) {
           isTimedout = true;
-          var statusPath = path.join(bag.buildStatusDir, 'job.status');
           try {
             fs.writeFileSync(statusPath, 'timedout\n');
           } catch (e) {
