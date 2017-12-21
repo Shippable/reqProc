@@ -218,6 +218,12 @@ function __convertOldFormatTerminalGroupToNew(terminalGroup) {
   else if (_.isObject(terminalGroup))
     if (_.isString(clonedTerminalGroup.script))
       newTerminalGroup.script.push(clonedTerminalGroup.script);
+    else if(_.isArray(clonedTerminalGroup.script))
+      _.each(clonedTerminalGroup.script,
+        function (script) {
+          newTerminalGroup.script.push(script);
+        }
+      );
 
   return newTerminalGroup;
 }
