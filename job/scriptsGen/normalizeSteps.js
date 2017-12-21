@@ -203,6 +203,8 @@ function __convertOldFormatTerminalGroupToNew(terminalGroup) {
     script: []
   };
 
+  logger.error('MYLOG clonedTerminalGroup:- ', JSON.stringify(clonedTerminalGroup));
+
   // If the group is not defined, return the default group.
   if (_.isEmpty(clonedTerminalGroup))
     return newTerminalGroup;
@@ -210,6 +212,7 @@ function __convertOldFormatTerminalGroupToNew(terminalGroup) {
   else if (_.isArray(clonedTerminalGroup))
     _.each(clonedTerminalGroup,
       function (section) {
+        logger.error('MYLOG section: ', JSON.stringify(section));
         if (section.script)
           newTerminalGroup.script.push(section.script);
       }
