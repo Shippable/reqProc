@@ -137,6 +137,7 @@ function _initialBuildDirectoryCleanup(bag, next) {
 function _setupDirectories(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _setupDirectories.name;
   logger.verbose(who, 'Inside');
@@ -155,6 +156,7 @@ function _setupDirectories(bag, next) {
 function _pollBuildJobStatus(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _pollBuildJobStatus.name;
   logger.verbose(who, 'Inside');
@@ -173,6 +175,7 @@ function _pollBuildJobStatus(bag, next) {
 function _setExecutorAsReqProc(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _setExecutorAsReqProc.name;
   logger.verbose(who, 'Inside');
@@ -204,6 +207,7 @@ function _setExecutorAsReqProc(bag, next) {
 function _getPreviousState(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _getPreviousState.name;
   logger.verbose(who, 'Inside');
@@ -222,6 +226,7 @@ function _getPreviousState(bag, next) {
 function _getSecrets(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _getSecrets.name;
   logger.verbose(who, 'Inside');
@@ -242,6 +247,7 @@ function _getSecrets(bag, next) {
 function _setupDependencies(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _setupDependencies.name;
   logger.verbose(who, 'Inside');
@@ -262,6 +268,7 @@ function _setupDependencies(bag, next) {
 function _notifyOnStart(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _notifyOnStart.name;
   logger.verbose(who, 'Inside');
@@ -307,6 +314,7 @@ function _publishJobNodeInfo(bag, next) {
 function _processINs(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _processINs.name;
   logger.verbose(who, 'Inside');
@@ -323,6 +331,7 @@ function _processINs(bag, next) {
 function _generateSteps(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _generateSteps.name;
   logger.verbose(who, 'Inside');
@@ -346,6 +355,7 @@ function _generateSteps(bag, next) {
 function _handOffAndPoll(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _handOffAndPoll.name;
   logger.verbose(who, 'Inside');
@@ -367,6 +377,7 @@ function _handOffAndPoll(bag, next) {
 function _readJobStatus(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _readJobStatus.name;
   logger.verbose(who, 'Inside');
@@ -390,6 +401,7 @@ function _readJobStatus(bag, next) {
 function _processOUTs(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _processOUTs.name;
   logger.verbose(who, 'Inside');
@@ -406,6 +418,7 @@ function _processOUTs(bag, next) {
 function _createTrace(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _createTrace.name;
   logger.verbose(who, 'Inside');
@@ -450,6 +463,7 @@ function _persistPreviousState(bag, next) {
 function _saveStepState(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _saveStepState.name;
   logger.verbose(who, 'Inside');
@@ -472,6 +486,7 @@ function _saveStepState(bag, next) {
 function _postVersion(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _postVersion.name;
   logger.verbose(who, 'Inside');
@@ -491,6 +506,7 @@ function _postVersion(bag, next) {
 
 function _updateBuildJobStatus(bag, next) {
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
 
   var who = bag.who + '|' + _updateBuildJobStatus.name;
   logger.verbose(who, 'Inside');
