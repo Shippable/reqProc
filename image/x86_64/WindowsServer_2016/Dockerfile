@@ -35,5 +35,8 @@ RUN Invoke-WebRequest https://download.docker.com/win/static/stable/x86_64/docke
     Remove-Item .\docker-17.06.2-ce.zip; \
     Remove-Item -recur -force $env:TEMP\docker;
 
+# Install git
+RUN choco install -y git
+
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqProc
 CMD C:\Users\ContainerAdministrator\Shippable\reqProc\boot.ps1
