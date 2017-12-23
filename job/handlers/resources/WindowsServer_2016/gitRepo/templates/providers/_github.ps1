@@ -1,8 +1,7 @@
 Function exec_cmd([string]$cmd) {
   $cmd_uuid = [guid]::NewGuid().Guid
-  $DateTime = (Get-Date).ToUniversalTime()
-  $cmd_start_timestamp = [System.Math]::Truncate((Get-Date -Date $DateTime -UFormat %s))
-  #$cmd_start_timestamp = Get-Date -format "%s"
+  $date_time = (Get-Date).ToUniversalTime()
+  $cmd_start_timestamp = [System.Math]::Truncate((Get-Date -Date $date_time -UFormat %s))
   Write-Output "__SH__CMD__START__|{`"type`":`"cmd`",`"sequenceNumber`":`"$cmd_start_timestamp`",`"id`":`"$cmd_uuid`"}|$cmd"
 
   $cmd_status = 0
@@ -24,9 +23,8 @@ Function exec_cmd([string]$cmd) {
   }
   Finally
   {
-    $DateTime = (Get-Date).ToUniversalTime()
-    $cmd_end_timestamp = [System.Math]::Truncate((Get-Date -Date $DateTime -UFormat %s))
-    #$cmd_end_timestamp = Get-Date -format "%s"
+    $date_time = (Get-Date).ToUniversalTime()
+    $cmd_end_timestamp = [System.Math]::Truncate((Get-Date -Date $date_time -UFormat %s))
     Write-Output ""
     Write-Output "__SH__CMD__END__|{`"type`":`"cmd`",`"sequenceNumber`":`"$cmd_end_timestamp`",`"id`":`"$cmd_uuid`",`"exitcode`":`"$cmd_status`"}|$cmd"
   }
@@ -58,7 +56,7 @@ $PROJECT = @'
 
 
 Function git_sync() {
-  $temp_clone_path = "C:\Users\ContainerAdministrator\Shippable\gitRepo"
+  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\gitRepo"
 
   if (Test-Path $temp_clone_path) {
     echo "Removing already existing gitRepo"
