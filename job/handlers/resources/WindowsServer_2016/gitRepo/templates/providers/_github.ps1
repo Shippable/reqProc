@@ -32,15 +32,30 @@ Function exec_cmd([string]$cmd) {
   }
 }
 
-$PRIVATE_KEY = "<%=privateKey%>"
-$PROJECT_CLONE_URL = "<%=projectUrl%>"
-$PROJECT_CLONE_LOCATION = "<%=cloneLocation%>"
-$COMMIT_SHA = "<%=commitSha%>"
+$PRIVATE_KEY = @'
+<%=privateKey%>
+'@
+$PROJECT_CLONE_URL = @'
+<%=projectUrl%>
+'@
+$PROJECT_CLONE_LOCATION = @'
+<%=cloneLocation%>
+'@
+$COMMIT_SHA = @'
+<%=commitSha%>
+'@
 $IS_PULL_REQUEST = <%= shaData.isPullRequest ? "$TRUE" : "$FALSE" %>
 $IS_PULL_REQUEST_CLOSE = <%= shaData.isPullRequestClose ? "$TRUE" : "$FALSE" %>
-$PULL_REQUEST = "<%=shaData.pullRequestNumber%>"
-$PULL_REQUEST_BASE_BRANCH = "<%=shaData.pullRequestBaseBranch%>"
-$PROJECT = "<%=name%>"
+$PULL_REQUEST = @'
+<%=shaData.pullRequestNumber%>
+'@
+$PULL_REQUEST_BASE_BRANCH = @'
+<%=shaData.pullRequestBaseBranch%>
+'@
+$PROJECT = @'
+<%=name%>
+'@
+
 
 Function git_sync() {
   $temp_clone_path = "C:\Users\ContainerAdministrator\Shippable\gitRepo"
