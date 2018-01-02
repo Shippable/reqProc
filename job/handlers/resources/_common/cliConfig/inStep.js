@@ -71,6 +71,10 @@ function _copyIntegrationInitScript(bag, next) {
   var scopes = ['configure'];
   bag.scopes = _.uniq(_.compact(scopes.concat(bag.dependency.step.scopes)));
 
+  // escaping space for integration names with spaces. eg: Private Docker
+  // Registry
+  // TODO: fix spaces in filename in Windows
+  destinationInitFilePath = destinationInitFilePath.replace(/ /g, '\\\ ');
   bag.integrationInitScriptCommand = util.format('%s %s %s',
   destinationInitFilePath, bag.dependency.name, bag.scopes.join(','));
 
@@ -95,6 +99,10 @@ function _copyIntegrationCleanupScript(bag, next) {
   } catch (e) {
     return next(e);
   }
+  // escaping space for integration names with spaces. eg: Private Docker
+  // Registry
+  // TODO: fix spaces in filename in Windows
+  destinationCleanupFilePath = destinationCleanupFilePath.replace(/ /g, '\\\ ');
 
   bag.integrationCleanupScriptCommand = util.format('%s %s %s',
     destinationCleanupFilePath, bag.dependency.name, bag.scopes.join(','));
