@@ -38,5 +38,10 @@ RUN Invoke-WebRequest https://download.docker.com/win/static/stable/x86_64/docke
 # Install git
 RUN choco install -y git
 
+# shipctl
+RUN Invoke-WebRequest https://github.com/Shippable/node/archive/master.zip -OutFile $env:TEMP\node.zip; \
+    Expand-Archive $env:TEMP\node.zip -DestinationPath $env:TEMP\node; \
+    & $env:TEMP\node\node-master\shipctl\x86_64\WindowsServer_2016\install.ps1;
+
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqProc
 CMD C:\Users\ContainerAdministrator\Shippable\reqProc\boot.ps1
