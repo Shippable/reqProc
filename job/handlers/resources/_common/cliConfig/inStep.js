@@ -10,9 +10,11 @@ function inStep(params, callback) {
     dependency: params.dependency,
     consoleAdapter: params.consoleAdapter,
     inDependencyInitTemplateFileNamePattern:
-      path.join('{{masterName}}', 'init.sh'),
+      path.join('{{masterName}}',
+        util.format('init.%s', global.config.scriptExtension)),
     inDependencyCleanupTemplateFileNamePattern:
-      path.join('{{masterName}}', 'cleanup.sh'),
+      path.join('{{masterName}}',
+        util.format('cleanup.%s', global.config.scriptExtension)),
     buildScriptsDir: params.buildScriptsDir,
     scopes: []
   };
@@ -59,7 +61,7 @@ function _copyIntegrationInitScript(bag, next) {
     'resources', 'common');
   var destinationInitFilePath = path.join(bag.buildScriptsDir, 'resources',
     bag.dependency.type, bag.dependency.accountIntegration.masterName,
-    'init.sh');
+    util.format('init.%s', global.config.scriptExtension));
 
   try {
     fs.copySync(templatesCommonFolderPath, path.join(bag.buildScriptsDir,
@@ -88,7 +90,7 @@ function _copyIntegrationCleanupScript(bag, next) {
     bag.dependency.accountIntegration.masterName));
   var destinationCleanupFilePath = path.join(bag.buildScriptsDir, 'resources',
     bag.dependency.type, bag.dependency.accountIntegration.masterName,
-    'cleanup.sh');
+    util.format('cleanup.%s', global.config.scriptExtension));
 
   try {
     fs.copySync(integrationScriptTemplate, destinationCleanupFilePath);
