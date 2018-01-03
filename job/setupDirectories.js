@@ -135,7 +135,8 @@ function _setupFiles(bag, next) {
     path.join(bag.reqProcDir, 'status'),
     path.join(bag.reqKickDir, 'version'),
     path.join(bag.reqKickDir, 'status'),
-    path.join(bag.reqExecDir, 'version')
+    path.join(bag.reqExecDir, 'version'),
+    path.join(bag.buildScriptsDir, 'integration_envs.env')
   ];
 
   var fileList = _.map(bag.inPayload.dependencies,

@@ -26,7 +26,8 @@ function setupDependencies(externalBag, callback) {
     secrets: externalBag.secrets,
     stepMessageFilename: externalBag.stepMessageFilename,
     buildSharedDir: externalBag.buildSharedDir,
-    subPrivateKeyPath: externalBag.subPrivateKeyPath
+    subPrivateKeyPath: externalBag.subPrivateKeyPath,
+    buildScriptsDir: externalBag.buildScriptsDir
   };
 
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -197,11 +198,15 @@ function _setUpDependencies(bag, next) {
     },
     {
       key: 'BUILD_DIR',
-      value: 'bag.buildRootDir'
+      value: bag.buildRootDir
     },
     {
       key: 'SUBSCRIPTION_PRIVATE_KEY',
       value: bag.subPrivateKeyPath
+    },
+    {
+      key: 'SHIPPABLE_INTEGRATION_ENVS_PATH',
+      value: path.join(bag.buildScriptsDir, 'integration_envs.env')
     }
   ];
   bag.paramEnvs = [];
