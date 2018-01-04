@@ -69,7 +69,7 @@ $PROJECT = @'
 '@
 
 Function git_sync() {
-  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\gitRepo"
+  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\syncRepo"
 
   if (Test-Path $temp_clone_path) {
     echo "----> Removing already existing gitRepo"

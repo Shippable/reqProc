@@ -69,7 +69,7 @@ $PROJECT = @'
 '@
 
 Function git_sync() {
-  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\gitRepo"
+  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\syncRepo"
 
   if (Test-Path $temp_clone_path) {
     echo "----> Removing already existing gitRepo"
@@ -96,7 +96,7 @@ Function git_sync() {
 
   echo "----> Checking out commit SHA"
   if ($IS_PULL_REQUEST) {
-    exec_exe "git fetch origin pull/$PULL_REQUEST/head"
+    exec_exe "git fetch origin merge-requests/$PULL_REQUEST/head"
     exec_exe "git checkout -f FETCH_HEAD"
     exec_exe "git merge origin/$PULL_REQUEST_BASE_BRANCH"
   } else {

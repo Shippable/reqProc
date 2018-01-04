@@ -58,8 +58,8 @@ $COMMIT_SHA = @'
 '@
 $IS_PULL_REQUEST = <%= shaData.isPullRequest ? "$TRUE" : "$FALSE" %>
 $IS_PULL_REQUEST_CLOSE = <%= shaData.isPullRequestClose ? "$TRUE" : "$FALSE" %>
-$PULL_REQUEST = @'
-<%=shaData.pullRequestNumber%>
+$PULL_REQUEST_SOURCE_URL = @'
+<%=shaData.pullRequestSourceUrl%>
 '@
 $PULL_REQUEST_BASE_BRANCH = @'
 <%=shaData.pullRequestBaseBranch%>
@@ -67,9 +67,12 @@ $PULL_REQUEST_BASE_BRANCH = @'
 $PROJECT = @'
 <%=name%>
 '@
+$SUBSCRIPTION_PRIVATE_KEY_PATH = @'
+<%=subPrivateKeyPath%>
+'@
 
 Function git_sync() {
-  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\gitRepo"
+  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\syncRepo"
 
   if (Test-Path $temp_clone_path) {
     echo "----> Removing already existing gitRepo"
@@ -96,8 +99,11 @@ Function git_sync() {
 
   echo "----> Checking out commit SHA"
   if ($IS_PULL_REQUEST) {
-    exec_exe "git fetch origin pull/$PULL_REQUEST/head"
-    exec_exe "git checkout -f FETCH_HEAD"
+    if ([string]::Compare($PROJECT_CLONE_URL, $PULL_REQUEST_SOURCE_URL, $TRUE) -ne 0) {
+      exec_exe "git remote add PR $PULL_REQUEST_SOURCE_URL"
+      exec_exe "git fetch PR"
+    }
+    exec_exe "git reset --hard $COMMIT_SHA"
     exec_exe "git merge origin/$PULL_REQUEST_BASE_BRANCH"
   } else {
     exec_exe "git checkout $COMMIT_SHA"
