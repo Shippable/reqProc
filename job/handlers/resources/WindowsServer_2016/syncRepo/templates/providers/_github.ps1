@@ -105,8 +105,8 @@ Function git_sync() {
 
   popd
 
-  echo "----> Moving to $PROJECT_CLONE_LOCATION"
-  Get-ChildItem -Path $temp_clone_path -Recurse | Move-Item -Destination $PROJECT_CLONE_LOCATION -Force
+  echo "----> Copying to $PROJECT_CLONE_LOCATION"
+  Copy-Item $temp_clone_path -Destination $PROJECT_CLONE_LOCATION -Recurse
 }
 
 exec_cmd git_sync
