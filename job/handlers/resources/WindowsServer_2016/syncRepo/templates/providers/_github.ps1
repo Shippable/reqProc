@@ -69,7 +69,7 @@ $PROJECT = @'
 '@
 
 Function git_sync() {
-  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\gitRepo"
+  $temp_clone_path = Join-Path "$env:TEMP" "Shippable\syncRepo"
 
   if (Test-Path $temp_clone_path) {
     echo "----> Removing already existing gitRepo"
@@ -107,6 +107,9 @@ Function git_sync() {
 
   echo "----> Copying to $PROJECT_CLONE_LOCATION"
   Copy-Item $temp_clone_path -Destination $PROJECT_CLONE_LOCATION -Recurse
+
+  echo "----> Removing temporary data"
+  Remove-Item -Recurse -Force $temp_clone_path
 }
 
 exec_cmd git_sync
