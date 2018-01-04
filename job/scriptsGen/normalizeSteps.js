@@ -177,10 +177,10 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
       task.taskIndex);
     task.runtime.options.options = util.format('%s --name %s',
       task.runtime.options.options, containerName);
-    task.bootScriptFileName = util.format('%s_boot_%s.sh', group,
-      task.taskIndex);
-    task.killContainerScriptFileName = util.format('%s_kill_%s.sh', group,
-      task.taskIndex);
+    task.bootScriptFileName = util.format('%s_boot_%s.%s', group,
+      task.taskIndex, global.config.scriptExtension);
+    task.killContainerScriptFileName = util.format('%s_kill_%s.%s', group,
+      task.taskIndex, global.config.scriptExtension);
     // sets container task envs
     var taskContainerEnvs = {
       taskContainerOptions: task.runtime.options.options,
