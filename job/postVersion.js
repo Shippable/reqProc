@@ -133,6 +133,9 @@ function _extendOutputVersionWithEnvs(bag, next) {
   var propertyBag = {};
   try {
     var envFile = fs.readFileSync(envFilePath).toString();
+    // Remove BOM characters which get added in case of Windows
+    // Refer https://github.com/nodejs/node-v0.x-archive/issues/1918
+    envFile = envFile.replace(/^\uFEFF/, '');
     var lines = envFile.split('\n');
     bag.consoleAdapter.publishMsg(
       util.format('Found file %s. Checking for additional properties.',
@@ -448,6 +451,9 @@ function __readVersionEnv(bag, next) {
     bag.dependency.name));
   try {
     var envFile = fs.readFileSync(envFilePath).toString();
+    // Remove BOM characters which get added in case of Windows
+    // Refer https://github.com/nodejs/node-v0.x-archive/issues/1918
+    envFile = envFile.replace(/^\uFEFF/, '');
     var lines = envFile.split('\n');
 
     _.each(lines,
