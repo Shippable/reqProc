@@ -141,8 +141,12 @@ function _generateScript(bag, next) {
             logger.error(msg);
             return nextTask(err);
           }
-          bag.jobSteps[task.TASK.group].reqKick.push(
-            resultBag.scriptFileName);
+
+          var step = {
+            taskScript: resultBag.scriptFileName,
+            killScript: resultBag.killContainerScriptFileName
+          };
+          bag.jobSteps[task.TASK.group].reqKick.push(step);
           return nextTask();
         }
       );
