@@ -17,16 +17,20 @@ function generateScript(externalBag, callback) {
     taskIndex: externalBag.taskIndex,
     taskScriptFileName: externalBag.taskScriptFileName,
     bootScriptFileName: externalBag.bootScriptFileName,
+    killContainerScriptFileName: externalBag.killContainerScriptFileName,
     name: externalBag.name,
     taskTemplateFileName: util.format('task.%s', global.config.scriptExtension),
     scriptHeaderFileName: util.format('header.%s',
       global.config.scriptExtension),
     bootTemplateFileName: util.format('boot.%s', global.config.scriptExtension),
     envTemplateFileName: util.format('envs.%s', global.config.scriptExtension),
+    killContainerTemplateFileName: util.format('kill_container.%s',
+      global.config.scriptExtension),
     runtime: externalBag.runtime,
     buildScriptsDir: externalBag.buildScriptsDir,
     taskScript: '',
     bootScript: '',
+    killContainerScript: '',
     scriptFilePermissions: '755',
     buildRootDir: externalBag.buildRootDir,
     buildJobId: externalBag.buildJobId,
@@ -50,7 +54,9 @@ function generateScript(externalBag, callback) {
       _generateTaskScriptFromTemplate.bind(null, bag),
       _createTaskScriptFile.bind(null, bag),
       _getContainerBootScript.bind(null, bag),
-      _createBootScript.bind(null, bag)
+      _createBootScript.bind(null, bag),
+      _getKillContainerScript.bind(null, bag),
+      _createKillContainerScript.bind(null, bag)
     ],
     function (err) {
       var result;
@@ -61,10 +67,12 @@ function generateScript(externalBag, callback) {
         logger.info(bag.who, 'Successfully created script');
         result = {};
 
-        if (bag.runtime.container)
+        if (bag.runtime.container) {
           result.scriptFileName = bag.bootScriptFileName;
-        else
+          result.killContainerScriptFileName = bag.killContainerScriptFileName;
+        } else {
           result.scriptFileName = bag.taskScriptFileName;
+        }
       }
       return callback(err, result);
     }
@@ -94,6 +102,7 @@ function _getScriptHeader(bag, next) {
       }
       bag.taskScript = bag.taskScript.concat(header);
       bag.bootScript = bag.bootScript.concat(header);
+      bag.killContainerScript = bag.killContainerScript.concat(header);
       return next();
     }
   );
@@ -122,6 +131,8 @@ function _generateEnvScriptFromTemplate(bag, next) {
       }
       bag.taskScript = bag.taskScript.concat(resultBag.script);
       bag.bootScript = bag.bootScript.concat(resultBag.script);
+      bag.killContainerScript =
+        bag.killContainerScript.concat(resultBag.script);
       return next();
     }
   );
@@ -224,6 +235,51 @@ function _createBootScript(bag, next) {
   var scriptFilePath = path.join(bag.buildScriptsDir, bag.bootScriptFileName);
 
   __writeScriptFile(bag.bootScript, scriptFilePath, bag.scriptFilePermissions,
+    function (err) {
+      if (err) {
+        logger.error(util.format('%s, Failed to write file: %s ' +
+          'with err: %s', who, scriptFilePath, err));
+        return next(err);
+      }
+      return next();
+    }
+  );
+}
+
+function _getKillContainerScript(bag, next) {
+  if (!bag.runtime.container) return next();
+
+  var who = bag.who + '|' + _getKillContainerScript.name;
+  logger.verbose(who, 'Inside');
+
+  var killContainerScriptFilePath = path.join(global.config.execTemplatesDir,
+    'job', bag.killContainerTemplateFileName);
+
+  fs.readFile(killContainerScriptFilePath, 'utf8',
+    function (err, killContainerScript) {
+      if (err) {
+        logger.error(util.format('%s, Failed to read file: %s ' +
+          'with err: %s', who, killContainerScriptFilePath, err));
+        return next(err);
+      }
+      bag.killContainerScript =
+        bag.killContainerScript.concat(killContainerScript);
+      return next();
+    }
+  );
+}
+
+function _createKillContainerScript(bag, next) {
+  if (!bag.runtime.container) return next();
+
+  var who = bag.who + '|' + _createKillContainerScript.name;
+  logger.verbose(who, 'Inside');
+
+  var scriptFilePath = path.join(bag.buildScriptsDir,
+    bag.killContainerScriptFileName);
+
+  __writeScriptFile(bag.killContainerScript, scriptFilePath,
+    bag.scriptFilePermissions,
     function (err) {
       if (err) {
         logger.error(util.format('%s, Failed to write file: %s ' +
