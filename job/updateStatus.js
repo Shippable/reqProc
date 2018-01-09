@@ -3,6 +3,8 @@
 var self = updateStatus;
 module.exports = self;
 
+var getStatusByCode = require('../_common/getStatusByCode.js');
+
 function updateStatus(externalBag, callback) {
   var bag = {
     consoleAdapter: externalBag.consoleAdapter,
@@ -77,7 +79,7 @@ function _updateBuildJobStatusAndVersion(bag, next) {
       } else {
         bag.consoleAdapter.publishMsg(
           util.format('Successfully updated job with status %s and' +
-          ' versionId %s', update.statusCode, update.versionId)
+          ' versionId %s', getStatusByCode(update.statusCode), update.versionId)
         );
         bag.consoleAdapter.closeCmd(true);
       }

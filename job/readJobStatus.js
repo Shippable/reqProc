@@ -7,6 +7,7 @@ var fs = require('fs-extra');
 var path = require('path');
 
 var getStatusCodeByName = require('../_common/getStatusCodeByName.js');
+var getStatusByCode = require('../_common/getStatusByCode.js');
 
 function readJobStatus(externalBag, callback) {
   var bag = {
@@ -73,7 +74,7 @@ function _getBuildJobStatus(bag, next) {
   var who = bag.who + '|' + _getBuildJobStatus.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Obtaining latest job status code');
+  bag.consoleAdapter.openCmd('Obtaining latest job status');
   bag.builderApiAdapter.getBuildJobById(bag.buildJobId,
     function (err, buildJob) {
       if (err) {
@@ -86,8 +87,8 @@ function _getBuildJobStatus(bag, next) {
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
         bag.consoleAdapter.publishMsg(
-          util.format('Successfully obtained latest job status code: %s',
-          buildJob.statusCode));
+          util.format('Successfully obtained latest job status: %s',
+          getStatusByCode(buildJob.statusCode)));
         bag.consoleAdapter.closeCmd(true);
 
         bag.jobStatusCode = buildJob.statusCode;
@@ -131,7 +132,7 @@ function _readJobStatus(bag, next) {
 
       bag.jobStatusCode = jobStatusSystemCode.code;
       bag.consoleAdapter.publishMsg(
-        'Successfully read job status: ' + JSON.stringify(bag.jobStatusCode));
+        'Successfully read job status: ' + getStatusByCode(bag.jobStatusCode));
       bag.consoleAdapter.closeCmd(true);
       return next();
     }
