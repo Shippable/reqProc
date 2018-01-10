@@ -231,21 +231,24 @@ function _validateDependencies(bag, next) {
 
       if (!_.isObject(dependency.version) && dependency.operation !== 'OUT')
         dependencyErrors.push(
-          util.format('%s, %s dependency is missing :version',
-            who, dependency.name)
+          util.format('Dependency %s has no version. ' +
+            'A version must exist in order to use it as an input.',
+            dependency.name)
         );
 
       if (_.isObject(dependency.version) && dependency.operation !== 'OUT') {
         if (!dependency.version.versionId)
           dependencyErrors.push(
-            util.format('%s dependency is missing :version.versionId',
+            util.format('Dependency %s is missing a valid version. ' +
+              'A version must exist in order to use it as an input.',
               dependency.name)
           );
 
         if (!_.isObject(dependency.version.propertyBag))
           dependencyErrors.push(
-            util.format('%s dependency is missing :version.propertyBag',
-              dependency.name)
+            util.format('Dependency %s does not have a valid version. ' +
+              'Version %s does not have a propertyBag.',
+              dependency.name, dependency.version.versionId)
           );
       }
 
