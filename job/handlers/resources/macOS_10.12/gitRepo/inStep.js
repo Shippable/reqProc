@@ -45,14 +45,20 @@ function _checkInputParams(bag, next) {
   var consoleErrors = [];
 
   if (!bag.dependency.propertyBag.normalizedRepo)
-    consoleErrors.push(who +
-      ' Missing parameter: dependency.propertyBag.normalizedRepo');
+    consoleErrors.push(
+      util.format('%s gitRepo %s is missing required repository information.',
+        who, bag.dependency.name)
+    );
 
   if (!bag.dependency.version ||
     _.isEmpty(bag.dependency.version.propertyBag) ||
     _.isEmpty(bag.dependency.version.propertyBag.shaData))
-    consoleErrors.push(who +
-      ' Missing parameter: dependency.version.propertyBag.shaData');
+    consoleErrors.push(
+      util.format('%s gitRepo %s version %s does not have shaData. ' +
+        'Create a new version by webhook before using this resource. ',
+        who, bag.dependency.name,
+        bag.dependency.version && bag.dependency.version.versionNumber)
+    );
 
   if (consoleErrors.length > 0) {
     _.each(consoleErrors,
