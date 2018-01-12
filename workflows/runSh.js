@@ -237,6 +237,7 @@ function _getSecrets(bag, next) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
+        bag.consoleAdapter.closeGrp(true);
         bag = _.extend(bag, resultBag);
       }
       return next();
