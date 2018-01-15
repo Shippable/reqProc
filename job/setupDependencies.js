@@ -400,7 +400,8 @@ function __replacePlaceholders(bag, seriesParams, next) {
       env: {
         PATH: process.env.PATH
       }
-    }
+    },
+    ignoreCmd: true
   };
 
   executeScript(scriptBag,
