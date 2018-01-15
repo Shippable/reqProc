@@ -230,6 +230,7 @@ function _setUpDependencies(bag, next) {
     }
   );
 
+  bag.consoleAdapter.openGrp('Setting up dependencies');
   async.eachSeries(inAndOutSteps,
     function (step, nextStep) {
       logger.verbose('Executing step:', step);
@@ -242,7 +243,7 @@ function _setUpDependencies(bag, next) {
       );
       var name = step[operation];
 
-      bag.consoleAdapter.openGrp('Setting up dependency: ' + name);
+      bag.consoleAdapter.openCmd('Setting up dependency: ' + name);
 
       var dependency = _.find(bag.inPayload.dependencies,
         function (dependency) {
@@ -251,13 +252,12 @@ function _setUpDependencies(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openCmd('Errors');
+        bag.consoleAdapter.publishMsg('Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
 
         return nextStep(true);
       }
@@ -281,18 +281,20 @@ function _setUpDependencies(bag, next) {
           __setStateFilePermissions.bind(null, bag, seriesParams)
         ],
         function (err) {
-          if (err)
-            bag.consoleAdapter.closeGrp(false);
-          else
-            bag.consoleAdapter.closeGrp(true);
+          if (!err)
+            bag.consoleAdapter.closeCmd(true);
 
           return nextStep(err);
         }
       );
     },
     function (err) {
-      if (err)
+      if (err){
+        bag.consoleAdapter.closeGrp(false);
         return next(err);
+      } else {
+        bag.consoleAdapter.closeGrp(true);
+      }
 
       // adding bag.paramEnvs to the beginning of bag.commonEnvs because
       // Shippable envs should always override user envs
@@ -312,7 +314,7 @@ function __createDataFile(bag, seriesParams, next) {
   var dataFilePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name);
 
-  bag.consoleAdapter.openCmd('Creating metadata file');
+  bag.consoleAdapter.publishMsg('Creating metadata file');
 
   var innerBag = {
     who: who,
@@ -331,7 +333,6 @@ function __createDataFile(bag, seriesParams, next) {
         bag.consoleAdapter.closeCmd(false);
         return next(true);
       }
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -346,7 +347,7 @@ function __generateReplaceScript(bag, seriesParams, next) {
   var who = bag.who + '|' + __generateReplaceScript.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Generating replace script');
+  bag.consoleAdapter.publishMsg('Generating replace script');
 
   var dependencyPath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name);
@@ -371,7 +372,6 @@ function __generateReplaceScript(bag, seriesParams, next) {
       }
 
       bag.consoleAdapter.publishMsg('Successfully generated replace script');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -422,7 +422,7 @@ function __readTemplatedVersion(bag, seriesParams, next) {
   var who = bag.who + '|' + __readTemplatedVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Reading version.json');
+  bag.consoleAdapter.publishMsg('Reading version.json');
 
   var versionPath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name,
@@ -450,8 +450,6 @@ function __readTemplatedVersion(bag, seriesParams, next) {
 
       seriesParams.dependency = versionJson;
 
-      bag.consoleAdapter.closeCmd(true);
-
       return next();
     }
   );
@@ -462,7 +460,7 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
   var who = bag.who + '|' + __addDependencyEnvironmentVariables.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Generating environment variables');
+  bag.consoleAdapter.publishMsg('Generating environment variables');
 
   var dependency = seriesParams.dependency;
 
@@ -720,8 +718,6 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
   bag.consoleAdapter.publishMsg('Successfully added environment variables ' +
     'for ' + dependency.name);
 
-  bag.consoleAdapter.closeCmd(true);
-
   return next();
 }
 
@@ -731,7 +727,7 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
   var who = bag.who + '|' + __getDependencyIntegrations.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Getting integrations');
+  bag.consoleAdapter.publishMsg('Getting integrations');
 
   var dependencyPath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name);
@@ -959,7 +955,6 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
             return next(true);
           }
 
-          bag.consoleAdapter.closeCmd(true);
           return next();
         }
       );
@@ -972,7 +967,7 @@ function __createStateDirectory(bag, seriesParams, next) {
   var who = bag.who + '|' + __createStateDirectory.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Creating state directory');
+  bag.consoleAdapter.publishMsg('Creating state directory');
 
   var dependencyStatePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation,
@@ -995,7 +990,6 @@ function __createStateDirectory(bag, seriesParams, next) {
         return next(true);
       }
 
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -1012,7 +1006,7 @@ function __getStateInformation(bag, seriesParams, next) {
   var who = bag.who + '|' + __getStateInformation.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Getting state information');
+  bag.consoleAdapter.publishMsg('Getting state information');
 
   // any job should have this value
   if (!seriesParams.dependency.version.propertyBag.sha) {
@@ -1042,7 +1036,6 @@ function __getStateInformation(bag, seriesParams, next) {
       else
         msg = 'Successfully received state files for job';
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -1054,7 +1047,7 @@ function __createStateFiles(bag, seriesParams, next) {
   var who = bag.who + '|' + __createStateFiles.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Writing state files');
+  bag.consoleAdapter.publishMsg('Writing state files');
 
   var dependencyStatePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation,
@@ -1079,7 +1072,6 @@ function __createStateFiles(bag, seriesParams, next) {
       if (!err)
         bag.consoleAdapter.publishMsg(
           'Successfully created state files at path: ' + dependencyStatePath);
-      bag.consoleAdapter.closeCmd(!err);
       return next(err);
     }
   );
@@ -1090,7 +1082,7 @@ function __setStateFilePermissions(bag, seriesParams, next) {
   var who = bag.who + '|' + __setStateFilePermissions.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Setting state file permissions');
+  bag.consoleAdapter.publishMsg('Setting state file permissions');
 
   var dependencyStatePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation,
@@ -1115,7 +1107,6 @@ function __setStateFilePermissions(bag, seriesParams, next) {
       if (!err)
         bag.consoleAdapter.publishMsg(
           'Successfully set permissions for state files');
-      bag.consoleAdapter.closeCmd(!err);
       return next(err);
     }
   );

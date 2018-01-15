@@ -127,10 +127,15 @@ function _executeTask(bag, next) {
     consoleAdapter: bag.consoleAdapter
   };
 
+  bag.consoleAdapter.openCmd('Executing dependency script');
   executeScript(scriptBag,
     function (err) {
-      if (err)
+      if (err) {
+        bag.consoleAdapter.closeCmd(false);
         logger.error(who, 'Failed to execute dependency task', err);
+      } else {
+        bag.consoleAdapter.closeCmd(true);
+      }
       return next(err);
     }
   );
