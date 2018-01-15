@@ -10,7 +10,8 @@ function executeScript(externalBag, callback) {
     args: externalBag.args || [],
     options: externalBag.options || {},
     exitCode: 1,
-    consoleAdapter: externalBag.consoleAdapter
+    consoleAdapter: externalBag.consoleAdapter,
+    ignoreCmd: externalBag.ignoreCmd || false
   };
 
   bag.who = util.format('%s|job|handlers|%s', msName, self.name);
@@ -31,7 +32,11 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.publishMsg('Validating script dependencies');
+  if (!bag.ignoreCmd)
+    bag.consoleAdapter.openCmd('Validating script dependencies');
+  else
+    bag.consoleAdapter.publishMsg('Validating script dependencies');
+
   var consoleErrors = [];
   bag.consoleAdapter.publishMsg('The path is: ' + bag.scriptPath);
 
@@ -49,6 +54,8 @@ function _checkInputParams(bag, next) {
     return next(true);
   }
   bag.consoleAdapter.publishMsg('Successfully validated script dependencies');
+  if (!bag.ignoreCmd)
+    bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -97,11 +104,14 @@ function __parseLogLine(bag, line) {
 
   if (lineSplit[0] === cmdStartHeader) {
     cmdJSON = JSON.parse(lineSplit[1]);
-    bag.consoleAdapter.publishMsg(lineSplit[2]);
+    if (!bag.ignoreCmd)
+      bag.consoleAdapter.openCmd(lineSplit[2]);
+    else
+      bag.consoleAdapter.publishMsg(lineSplit[2]);
   } else if (lineSplit[0] === cmdEndHeader) {
     cmdJSON = JSON.parse(lineSplit[1]);
     var isSuccess = cmdJSON.exitcode === '0';
-    if (!isSuccess)
+    if (!bag.ignoreCmd)
       bag.consoleAdapter.closeCmd(isSuccess);
   } else {
     bag.consoleAdapter.publishMsg(line);

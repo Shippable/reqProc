@@ -124,18 +124,14 @@ function _executeTask(bag, next) {
     options: {},
     parentGroupDescription: bag.parentGroupDescription,
     builderApiAdapter: bag.builderApiAdapter,
-    consoleAdapter: bag.consoleAdapter
+    consoleAdapter: bag.consoleAdapter,
+    ignoreCmd: false
   };
 
-  bag.consoleAdapter.openCmd('Executing dependency script');
   executeScript(scriptBag,
     function (err) {
-      if (err) {
-        bag.consoleAdapter.closeCmd(false);
+      if (err)
         logger.error(who, 'Failed to execute dependency task', err);
-      } else {
-        bag.consoleAdapter.closeCmd(true);
-      }
       return next(err);
     }
   );

@@ -88,7 +88,8 @@ function _executeNodeInfoScript(bag, next) {
     scriptPath: bag.nodeInfoScriptPath,
     args: [],
     options: {},
-    consoleAdapter: bag.consoleAdapter
+    consoleAdapter: bag.consoleAdapter,
+    ignoreCmd: false
   };
 
   executeScript(scriptBag,
