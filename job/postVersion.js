@@ -661,6 +661,9 @@ function ___makeTraceTree(root, trace, parent, tree) {
 
   var children = _.filter(trace,
     function (child) {
+      // once we find the child which is same as root,
+      // we remove it from the list of children
+      // so that we do not have circular trace
       if (child.resourceId === root.resourceId)
         return false;
 
@@ -669,11 +672,10 @@ function ___makeTraceTree(root, trace, parent, tree) {
   );
 
   if (!_.isEmpty(children)) {
-    if ( parent.usedByVersionId === -1){
+    if (parent.usedByVersionId === -1)
       tree = children;
-    } else {
+    else
       parent.children = children;
-    }
 
     _.each(children,
       function (child) {
