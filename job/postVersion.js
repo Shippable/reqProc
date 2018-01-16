@@ -652,7 +652,7 @@ function __triggerJob(bag, next) {
 }
 
 
-var ___makeTraceTree = function(root, trace, parent, tree) {
+function ___makeTraceTree(root, trace, parent, tree) {
   if (_.isEmpty(tree))
     tree = [];
 
@@ -683,9 +683,9 @@ var ___makeTraceTree = function(root, trace, parent, tree) {
   }
 
   return tree;
-};
+}
 
-var ___getTraceFromTree = function (tree, trace) {
+function ___getTraceFromTree(tree, trace) {
   if (_.isEmpty(tree))
     return;
 
@@ -700,4 +700,4 @@ var ___getTraceFromTree = function (tree, trace) {
   );
 
   return trace;
-};
+}
