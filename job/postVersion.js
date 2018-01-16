@@ -574,6 +574,18 @@ function __createTrace(bag, next) {
     }
   );
 
+  var root = {
+    resourceId: bag.dependency.resourceId,
+    usedByVersionId: -1,
+    versionId: 0
+  };
+
+  // make trace tree, this will remove any circular trace
+  var tree = ___makeTraceTree(root, bag.versionJson.propertyBag.trace);
+
+  // flatten tree to get trace
+  bag.versionJson.propertyBag.trace = ___getTraceFromTree(tree);
+
   return next();
 }
 
@@ -638,3 +650,54 @@ function __triggerJob(bag, next) {
     }
   );
 }
+
+
+var ___makeTraceTree = function(root, trace, parent, tree) {
+  if (_.isEmpty(tree))
+    tree = [];
+
+  if (_.isEmpty(parent))
+    parent = root;
+
+  var children = _.filter(trace,
+    function (child) {
+      if (child.resourceId === root.resourceId)
+        return false;
+
+      return child.usedByVersionId === parent.versionId;
+    }
+  );
+
+  if (!_.isEmpty(children)) {
+    if ( parent.usedByVersionId === -1){
+      tree = children;
+    } else {
+      parent.children = children;
+    }
+
+    _.each(children,
+      function (child) {
+        ___makeTraceTree(root, trace, child, tree);
+      }
+    );
+  }
+
+  return tree;
+};
+
+var ___getTraceFromTree = function (tree, trace) {
+  if (_.isEmpty(tree))
+    return;
+
+  if (_.isEmpty(trace))
+    trace = [];
+
+  _.each(tree,
+    function (object) {
+      trace.push(_.omit(object, 'children'));
+      ___getTraceFromTree(object.children, trace);
+    }
+  );
+
+  return trace;
+};
