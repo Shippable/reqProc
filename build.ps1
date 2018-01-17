@@ -30,7 +30,7 @@ Function set_build_context() {
 }
 
 Function build_and_tag_image() {
-  docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$HUB_IMAGE" .
+  docker build --no-cache -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$HUB_IMAGE" .
 }
 
 Function push_images() {
