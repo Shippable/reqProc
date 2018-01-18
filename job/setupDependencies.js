@@ -109,7 +109,8 @@ function _setUpDependencies(bag, next) {
     return next('No yml found for job steps');
   }
 
-  var jobName = bag.inPayload.name.replace(/[^A-Za-z0-9_]/g, '').toUpperCase();
+  var jobName = bag.inPayload.name.replace(/[^A-Za-z0-9_]/g, '').
+    replace(/^[0-9]+/g, '').toUpperCase();
 
   bag.commonEnvs = [
     {
@@ -465,8 +466,8 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
 
   var dependency = seriesParams.dependency;
 
-  var sanitizedDependencyName =
-    dependency.name.replace(/[^A-Za-z0-9_]/g, '').toUpperCase();
+  var sanitizedDependencyName = dependency.name.replace(/[^A-Za-z0-9_]/g, '').
+    replace(/^[0-9]+/g, '').toUpperCase();
 
   var dependencyPath = path.join(bag.buildRootDir, dependency.operation,
     dependency.name);
@@ -827,7 +828,7 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
 
       // add integrations to environment variables
       var sanitizedDependencyName = seriesParams.dependency.name.
-        replace(/[^A-Za-z0-9_]/g, '').toUpperCase();
+        replace(/[^A-Za-z0-9_]/g, '').replace(/^[0-9]+/g, '').toUpperCase();
       var stringAndArrayData = _.extend(_.clone(stringData), arrayData);
 
       // environment variables should have objects flattened
