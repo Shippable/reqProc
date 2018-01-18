@@ -212,6 +212,9 @@ function _setJobEnvs(bag, next) {
   jobEnvs.push(util.format('RUN_MODE=%s', global.config.runMode));
   jobEnvs.push(util.format('BUILD_DIR=%s', bag.buildRootDir));
 
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
+    jobEnvs.push('REQEXEC_SHELL=powershell.exe');
+
   var envPath = path.join(bag.buildStatusDir, 'job.env');
   fs.writeFile(envPath, jobEnvs.join('\n'),
     function (err) {
