@@ -1054,7 +1054,7 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
   );
 
   if (dependency.version) {
-    if (dependency.type === 'params') {
+    if (dependency.type === 'params' && dependency.operation === 'IN') {
       _.each(dependency.version.propertyBag.params,
         function (value, key) {
           if (_.isObject(value)) {
