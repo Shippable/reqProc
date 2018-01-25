@@ -17,12 +17,15 @@ function generateScript(externalBag, callback) {
     taskIndex: externalBag.taskIndex,
     taskScriptFileName: externalBag.taskScriptFileName,
     bootScriptFileName: externalBag.bootScriptFileName,
+    buildScriptFileName: externalBag.buildScriptFileName,
     killContainerScriptFileName: externalBag.killContainerScriptFileName,
     name: externalBag.name,
     taskTemplateFileName: util.format('task.%s', global.config.scriptExtension),
     scriptHeaderFileName: util.format('header.%s',
       global.config.scriptExtension),
     bootTemplateFileName: util.format('boot.%s', global.config.scriptExtension),
+    buildTemplateFileName:
+      util.format('build.%s', global.config.scriptExtension),
     envTemplateFileName: util.format('envs.%s', global.config.scriptExtension),
     killContainerTemplateFileName: util.format('kill_container.%s',
       global.config.scriptExtension),
@@ -30,6 +33,7 @@ function generateScript(externalBag, callback) {
     buildScriptsDir: externalBag.buildScriptsDir,
     taskScript: '',
     bootScript: '',
+    buildScript: '',
     killContainerScript: '',
     scriptFilePermissions: '755',
     buildRootDir: externalBag.buildRootDir,
@@ -55,6 +59,8 @@ function generateScript(externalBag, callback) {
       _createTaskScriptFile.bind(null, bag),
       _getContainerBootScript.bind(null, bag),
       _createBootScript.bind(null, bag),
+      _generateBuildScriptFromTemplate.bind(null, bag),
+      _createBuildScript.bind(null, bag),
       _getKillContainerScript.bind(null, bag),
       _createKillContainerScript.bind(null, bag)
     ],
@@ -235,6 +241,58 @@ function _createBootScript(bag, next) {
   var scriptFilePath = path.join(bag.buildScriptsDir, bag.bootScriptFileName);
 
   __writeScriptFile(bag.bootScript, scriptFilePath, bag.scriptFilePermissions,
+    function (err) {
+      if (err) {
+        logger.error(util.format('%s, Failed to write file: %s ' +
+          'with err: %s', who, scriptFilePath, err));
+        return next(err);
+      }
+      return next();
+    }
+  );
+}
+
+function _generateBuildScriptFromTemplate(bag, next) {
+  if (!bag.runtime.container) return next();
+  // Remove these conditions when the platform supports it.
+  if (_.contains(['WindowsServer_2016', 'macOS_10.12'],
+    global.config.shippableNodeOperatingSystem)) return next();
+
+  var who = bag.who + '|' + _generateBuildScriptFromTemplate.name;
+  logger.verbose(who, 'Inside');
+
+  var templateBag = {
+    filePath: path.join(global.config.execTemplatesDir, 'job',
+      bag.buildTemplateFileName),
+    object: {
+      reqExecCommand: global.config.taskContainerCommand
+    }
+  };
+
+  generateScriptFromTemplate(templateBag,
+    function (err, resultBag) {
+      if (err) {
+        logger.error(util.format('%s, Generate script from template failed ' +
+          'with err: %s', who, err));
+        return next(err);
+      }
+      bag.buildScript = resultBag.script;
+      return next();
+    }
+  );
+}
+
+function _createBuildScript(bag, next) {
+  if (!bag.runtime.container) return next();
+  // Remove these conditions when the platform supports it.
+  if (_.contains(['WindowsServer_2016', 'macOS_10.12'],
+    global.config.shippableNodeOperatingSystem)) return next();
+
+  var who = bag.who + '|' + _createBuildScript.name;
+  logger.verbose(who, 'Inside');
+
+  var scriptFilePath = path.join(bag.buildScriptsDir, bag.buildScriptFileName);
+  __writeScriptFile(bag.buildScript, scriptFilePath, bag.scriptFilePermissions,
     function (err) {
       if (err) {
         logger.error(util.format('%s, Failed to write file: %s ' +

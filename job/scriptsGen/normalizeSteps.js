@@ -179,6 +179,8 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
       task.runtime.options.options, containerName);
     task.bootScriptFileName = util.format('%s_boot_%s.%s', group,
       task.taskIndex, global.config.scriptExtension);
+    task.buildScriptFileName = util.format('build.%s',
+      global.config.scriptExtension);
     task.killContainerScriptFileName = util.format('%s_kill_%s.%s', group,
       task.taskIndex, global.config.scriptExtension);
     // sets container task envs
@@ -194,6 +196,17 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
       ),
       taskContainerName: containerName
     };
+
+    // Make this override the default when the below OS support this.
+    if (!_.contains(['WindowsServer_2016', 'macOS_10.12'],
+      global.config.shippableNodeOperatingSystem)) {
+      taskContainerEnvs.taskContainerCommand = util.format('%s %s %s',
+        path.join(buildScriptsDir, task.buildScriptFileName),
+        path.join(buildScriptsDir, task.taskScriptFileName),
+        path.join(buildStatusDir, 'job.env')
+      );
+    }
+
     _.extend(taskEnvs, taskContainerEnvs);
   }
   task.shippableRuntimeEnvs = taskEnvs;
