@@ -254,9 +254,6 @@ function _createBootScript(bag, next) {
 
 function _generateBuildScriptFromTemplate(bag, next) {
   if (!bag.runtime.container) return next();
-  // Remove these conditions when the platform supports it.
-  if (_.contains(['WindowsServer_2016', 'macOS_10.12'],
-    global.config.shippableNodeOperatingSystem)) return next();
 
   var who = bag.who + '|' + _generateBuildScriptFromTemplate.name;
   logger.verbose(who, 'Inside');
@@ -284,9 +281,6 @@ function _generateBuildScriptFromTemplate(bag, next) {
 
 function _createBuildScript(bag, next) {
   if (!bag.runtime.container) return next();
-  // Remove these conditions when the platform supports it.
-  if (_.contains(['WindowsServer_2016', 'macOS_10.12'],
-    global.config.shippableNodeOperatingSystem)) return next();
 
   var who = bag.who + '|' + _createBuildScript.name;
   logger.verbose(who, 'Inside');

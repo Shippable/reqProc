@@ -190,22 +190,18 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
         task.runtime.options.imageName, task.runtime.options.imageTag),
       shouldPullTaskContainerImage: task.runtime.options.pull,
       taskContainerCommand: util.format('%s %s %s',
-        global.config.taskContainerCommand,
+        path.join(buildScriptsDir, task.buildScriptFileName),
         path.join(buildScriptsDir, task.taskScriptFileName),
         path.join(buildStatusDir, 'job.env')
       ),
       taskContainerName: containerName
     };
 
-    // Make this override the default when the below OS support this.
-    if (!_.contains(['WindowsServer_2016', 'macOS_10.12'],
-      global.config.shippableNodeOperatingSystem)) {
-      taskContainerEnvs.taskContainerCommand = util.format('%s %s %s',
-        path.join(buildScriptsDir, task.buildScriptFileName),
-        path.join(buildScriptsDir, task.taskScriptFileName),
-        path.join(buildStatusDir, 'job.env')
-      );
-    }
+    // Windows expects powershell scripts to be called with
+    // powershell.exe explicitly
+    if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
+      taskContainerEnvs.taskContainerCommand = util.format('powershell.exe %s',
+        taskContainerEnvs.taskContainerCommand);
 
     _.extend(taskEnvs, taskContainerEnvs);
   }
