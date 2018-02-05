@@ -23,7 +23,8 @@ function postVersion(externalBag, callback) {
     projectId: externalBag.projectId,
     trace: externalBag.trace,
     builderApiAdapter: externalBag.builderApiAdapter,
-    operation: externalBag.operation
+    operation: externalBag.operation,
+    updatedOUTResources: []
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -45,7 +46,8 @@ function postVersion(externalBag, callback) {
           version: bag.version,
           inPayload: bag.inPayload,
           isGrpSuccess: bag.isGrpSuccess,
-          jobStatusCode: bag.jobStatusCode
+          jobStatusCode: bag.jobStatusCode,
+          updatedOUTResources: bag.updatedOUTResources
         };
       }
       return callback(err, result);
@@ -314,6 +316,13 @@ function _postOutResourceVersions(bag, next) {
             bag.consoleAdapter.closeCmd(false);
             bag.consoleAdapter.closeGrp(false);
           }
+
+          if (innerBag.outVersion && innerBag.outVersion.id)
+            bag.updatedOUTResources.push({
+              resourceId: innerBag.outVersion.resourceId,
+              versionId: innerBag.outVersion.id
+            });
+
           return nextStep(err);
         }
       );
@@ -601,7 +610,8 @@ function __postVersion(bag, next) {
     resourceId: bag.resourceId,
     propertyBag: bag.versionJson.propertyBag,
     versionName: bag.versionJson.versionName,
-    projectId: bag.projectId
+    projectId: bag.projectId,
+    versionTrigger: false
   };
 
   bag.builderApiAdapter.postVersion(newVersion,
@@ -616,10 +626,10 @@ function __postVersion(bag, next) {
         return next(true);
       }
 
-      bag.versionJson = version;
+      bag.outVersion = version;
       msg = util.format('Post version for resourceId: %s succeeded with ' +
-        'version %s', bag.versionJson.resourceId,
-        util.inspect(bag.versionJson.versionNumber)
+        'version %s', version.resourceId,
+        util.inspect(version.versionNumber)
       );
       bag.consoleAdapter.publishMsg(msg);
       bag.consoleAdapter.closeCmd(true);

@@ -11,7 +11,8 @@ function updateStatus(externalBag, callback) {
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
     jobStatusCode: externalBag.jobStatusCode,
-    version: externalBag.version
+    version: externalBag.version,
+    updatedOUTResources: externalBag.updatedOUTResources
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -68,6 +69,12 @@ function _updateBuildJobStatusAndVersion(bag, next) {
   update.statusCode = bag.jobStatusCode;
   if (bag.version && bag.version.id)
     update.versionId = bag.version.id;
+
+  if (bag.updatedOUTResources)
+    update.propertyBag = {
+      outData: bag.updatedOUTResources
+    };
+
 
   bag.builderApiAdapter.putBuildJobById(bag.buildJobId, update,
     function (err) {

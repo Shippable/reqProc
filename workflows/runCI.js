@@ -2312,6 +2312,7 @@ function _postOutResourceVersions(bag, next) {
   var who = bag.who + '|' + _postOutResourceVersions.name;
   logger.verbose(who, 'Inside');
 
+  bag.updatedOUTResources = [];
   async.eachSeries(bag.inPayload.propertyBag.yml.steps,
     function (step, nextStep) {
 
@@ -2396,6 +2397,13 @@ function _postOutResourceVersions(bag, next) {
             bag.consoleAdapter.closeCmd(false);
             bag.consoleAdapter.closeGrp(false);
           }
+
+          if (innerBag.outVersion && innerBag.outVersion.id)
+            bag.updatedOUTResources.push({
+              resourceId: innerBag.outVersion.resourceId,
+              versionId: innerBag.outVersion.id
+            });
+
           return nextStep(err);
         }
       );
@@ -2671,7 +2679,8 @@ function __postVersion(bag, next) {
     resourceId: bag.resourceId,
     propertyBag: bag.versionJson.propertyBag,
     versionName: bag.versionJson.versionName,
-    projectId: bag.projectId
+    projectId: bag.projectId,
+    versionTrigger: false
   };
 
   bag.builderApiAdapter.postVersion(newVersion,
@@ -2686,10 +2695,10 @@ function __postVersion(bag, next) {
         return next(true);
       }
 
-      bag.versionJson = version;
+      bag.outVersion = version;
       msg = util.format('Post version for resourceId: %s succeeded with ' +
-        'version %s', bag.versionJson.resourceId,
-        util.inspect(bag.versionJson.versionNumber)
+        'version %s', version.resourceId,
+        util.inspect(version.versionNumber)
       );
       bag.consoleAdapter.publishMsg(msg);
       bag.consoleAdapter.closeCmd(true);
@@ -2739,6 +2748,9 @@ function _updateJobStatus(bag, next) {
       getStatusCodeByName('SUCCESS');
 
   update.statusCode = bag.jobStatusCode;
+  update.proxyBuildJobPropertyBag = {
+    outData: bag.updatedOUTResources
+  };
 
   bag.builderApiAdapter.putJobById(bag.jobId, update,
     function (err) {
