@@ -13,16 +13,16 @@ RUN npm install
 # execTemplates
 ENV IMAGE_EXEC_TEMPLATES_DIR C:/Users/ContainerAdministrator/Shippable/execTemplates
 RUN mkdir $Env:IMAGE_EXEC_TEMPLATES_DIR; \
-    Invoke-WebRequest https://github.com/Shippable/execTemplates/archive/master.zip -OutFile $env:TEMP\execTemplates.zip; \
+    Invoke-WebRequest https://github.com/Shippable/execTemplates/archive/{{%TAG%}}.zip -OutFile $env:TEMP\execTemplates.zip; \
     Expand-Archive $env:TEMP\execTemplates.zip -DestinationPath $env:IMAGE_EXEC_TEMPLATES_DIR; \
-    Move-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-master\* -Destination  $env:IMAGE_EXEC_TEMPLATES_DIR; \
-    Remove-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-master; \
+    Move-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-{{%TAG%}}\* -Destination  $env:IMAGE_EXEC_TEMPLATES_DIR; \
+    Remove-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-{{%TAG%}}; \
     Remove-Item $env:TEMP\execTemplates.zip;
 
 # reqExec
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqExec
 ENV IMAGE_REQEXEC_DIR C:/Users/ContainerAdministrator/Shippable/reqExec
-RUN Invoke-WebRequest https://s3.amazonaws.com/shippable-artifacts/reqExec/master/reqExec-master-x86_64-WindowsServer_2016.zip -OutFile reqExecBin.zip
+RUN Invoke-WebRequest https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-x86_64-WindowsServer_2016.zip -OutFile reqExecBin.zip
 RUN Expand-Archive  .\reqExecBin.zip -DestinationPath $env:IMAGE_REQEXEC_DIR/x86_64/WindowsServer_2016/ -Force; Remove-Item .\reqExecBin.zip
 
 # Docker client binary
@@ -39,9 +39,9 @@ RUN Invoke-WebRequest https://download.docker.com/win/static/stable/x86_64/docke
 RUN choco install -y git
 
 # shipctl
-RUN Invoke-WebRequest https://github.com/Shippable/node/archive/master.zip -OutFile $env:TEMP\node.zip; \
+RUN Invoke-WebRequest https://github.com/Shippable/node/archive/{{%TAG%}}.zip -OutFile $env:TEMP\node.zip; \
     Expand-Archive $env:TEMP\node.zip -DestinationPath $env:TEMP\node; \
-    & $env:TEMP\node\node-master\shipctl\x86_64\WindowsServer_2016\install.ps1;
+    & $env:TEMP\node\node-{{%TAG%}}\shipctl\x86_64\WindowsServer_2016\install.ps1;
 
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqProc
 CMD C:\Users\ContainerAdministrator\Shippable\reqProc\boot.ps1
