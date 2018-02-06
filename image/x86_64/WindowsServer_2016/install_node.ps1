@@ -1,4 +1,4 @@
-#!/bin/bash -e
+$ErrorActionPreference = "Stop";
 
 #TODO: move this to microbase later
 echo "downloading node zip"

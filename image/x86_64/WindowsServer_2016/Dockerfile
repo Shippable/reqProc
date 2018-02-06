@@ -10,6 +10,9 @@ RUN .\image\x86_64\WindowsServer_2016\install_util.ps1
 RUN .\image\x86_64\WindowsServer_2016\install_node.ps1
 RUN npm install
 
+ENV GIT_SSH "C:\Program Files\OpenSSH-Win64\ssh.exe"
+ENV OPENSSH_FIX_USER_FILEPERMS "C:\Program Files\OpenSSH-Win64\FixUserFilePermissions.ps1"
+
 # execTemplates
 ENV IMAGE_EXEC_TEMPLATES_DIR C:/Users/ContainerAdministrator/Shippable/execTemplates
 RUN mkdir $Env:IMAGE_EXEC_TEMPLATES_DIR; \
