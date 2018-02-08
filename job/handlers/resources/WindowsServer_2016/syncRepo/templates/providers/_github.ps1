@@ -69,6 +69,19 @@ $PROJECT = @'
 '@
 
 Function git_sync() {
+  $ssh_dir = Join-Path "$global:HOME" ".ssh"
+  $key_file_path = Join-Path "$ssh_dir" "id_rsa"
+
+  if (Test-Path $key_file_path) {
+    echo "----> Removing $key_file_path"
+    Remove-Item -Force $key_file_path
+  }
+  [IO.File]::WriteAllLines($key_file_path, $PRIVATE_KEY)
+  & $env:OPENSSH_FIX_USER_FILEPERMS
+
+  exec_exe "ssh-agent"
+  exec_exe "ssh-add $key_file_path"
+
   $temp_clone_path = Join-Path "$env:TEMP" "Shippable\syncRepo"
 
   if (Test-Path $temp_clone_path) {
@@ -110,6 +123,7 @@ Function git_sync() {
 
   echo "----> Removing temporary data"
   Remove-Item -Recurse -Force $temp_clone_path
+  exec_exe "ssh-add -D"
 }
 
 exec_cmd git_sync
