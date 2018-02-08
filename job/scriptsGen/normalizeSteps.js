@@ -74,21 +74,21 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
     env: {}
   };
 
-  // TODO: Add proxy support for Windows, macOS later. 
+  // TODO: Add proxy support for Windows, macOS later.
   if (!_.contains(['WindowsServer_2016', 'macOS_10.12'],
     global.config.shippableNodeOperatingSystem
   )) {
     if (process.env.http_proxy)
       defaultContainerOpts.options = util.format('%s -e http_proxy=%s',
-        defaultContainerOpts.options, process.env.http_proxy)
+        defaultContainerOpts.options, process.env.http_proxy);
 
     if (process.env.https_proxy)
       defaultContainerOpts.options = util.format('%s -e https_proxy=%s',
-        defaultContainerOpts.options, process.env.https_proxy)
+        defaultContainerOpts.options, process.env.https_proxy);
 
     if (process.env.no_proxy)
       defaultContainerOpts.options = util.format('%s -e no_proxy=%s',
-        defaultContainerOpts.options, process.env.no_proxy)
+        defaultContainerOpts.options, process.env.no_proxy);
   }
 
   // Default options for hosts tasks.
