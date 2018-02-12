@@ -892,7 +892,7 @@ function __generateReplaceScript(bag, seriesParams, next) {
 
   var envs = _.map(bag.paramEnvs.concat(bag.commonEnvs),
     function (env) {
-      var value = env.split('=')[1];
+      var value = env.split('=').slice(1).join('=');
       if (_.isString(value) && value[0] === '"' &&
         value[value.length - 1] === '"')
         value = value.substring(1, value.length - 1);
