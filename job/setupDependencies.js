@@ -203,6 +203,10 @@ function _setUpDependencies(bag, next) {
       value: bag.buildRootDir
     },
     {
+      key: 'BUILD_SECRETS_DIR',
+      value: bag.buildSecretsDir
+    },
+    {
       key: 'SUBSCRIPTION_PRIVATE_KEY',
       value: bag.subPrivateKeyPath
     },
