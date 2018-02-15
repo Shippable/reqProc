@@ -28,13 +28,14 @@ export PULL_REQUEST_SOURCE_URL="<%=shaData.pullRequestSourceUrl%>"
 export PULL_REQUEST_BASE_BRANCH="<%=shaData.pullRequestBaseBranch%>"
 export PROJECT="<%=name%>"
 export SUBSCRIPTION_PRIVATE_KEY_PATH="<%=subPrivateKeyPath%>"
+export PROJECT_KEY_LOCATION="<%=keyLocation%>"
 
 git_sync() {
-  echo "$PRIVATE_KEY" > /tmp/"$PROJECT"_key.pem
-  chmod 600 /tmp/"$PROJECT"_key.pem
+  echo "$PRIVATE_KEY" > $PROJECT_KEY_LOCATION
+  chmod 600 $PROJECT_KEY_LOCATION
   git config --global credential.helper store
 
-  shippable_retry ssh-agent bash -c "ssh-add /tmp/"$PROJECT"_key.pem; git clone $PROJECT_CLONE_URL $PROJECT_CLONE_LOCATION"
+  shippable_retry ssh-agent bash -c "ssh-add $PROJECT_KEY_LOCATION; git clone $PROJECT_CLONE_URL $PROJECT_CLONE_LOCATION"
 
   echo "----> Pushing Directory $PROJECT_CLONE_LOCATION"
   pushd $PROJECT_CLONE_LOCATION
