@@ -6,13 +6,13 @@ var path = require('path');
 var executeDependencyScript = require('../../../executeDependencyScript.js');
 
 function inStep(params, callback) {
-//function inStep(externalBag, dependency, buildInDir, callback) {
   var bag = {
     resBody: {},
     subPrivateKeyPath: params.bag.subPrivateKeyPath,
     dependency: params.dependency,
     templatePath: path.resolve(__dirname, 'templates/inStep.sh'),
     buildInDir: params.rootDir,
+    buildSecretsDir: params.buildSecretsDir,
     scriptName: 'inStep.sh',
     builderApiAdapter: params.builderApiAdapter,
     consoleAdapter: params.consoleAdapter
@@ -23,7 +23,7 @@ function inStep(params, callback) {
   logger.verbose(bag.who, 'Starting');
 
   bag.scriptPath =
-   path.join(bag.buildInDir, bag.dependency.name, bag.scriptName);
+    path.join(bag.buildInDir, bag.dependency.name, bag.scriptName);
 
   async.series([
       _checkInputParams.bind(null, bag),
@@ -100,6 +100,8 @@ function _injectDependencies(bag, next) {
 
   bag.dependency.cloneLocation = path.join(bag.buildInDir,
     bag.dependency.name, bag.dependency.type);
+  bag.dependency.keyLocation = path.join(bag.buildSecretsDir,
+    bag.dependency.name + '_key.pem');
   bag.dependency.commitSha = bag.dependency.version.versionName;
   bag.dependency.shaData = bag.dependency.version.propertyBag.shaData;
   bag.dependency.subPrivateKeyPath = bag.subPrivateKeyPath;
