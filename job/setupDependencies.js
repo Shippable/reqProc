@@ -27,7 +27,8 @@ function setupDependencies(externalBag, callback) {
     stepMessageFilename: externalBag.stepMessageFilename,
     buildSharedDir: externalBag.buildSharedDir,
     subPrivateKeyPath: externalBag.subPrivateKeyPath,
-    buildScriptsDir: externalBag.buildScriptsDir
+    buildScriptsDir: externalBag.buildScriptsDir,
+    buildSecretsDir: externalBag.buildSecretsDir
   };
 
   bag.who = util.format('%s|job|%s', msName, self.name);
@@ -640,7 +641,7 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
         });
         bag.commonEnvs.push({
           key: util.format('%s_KEYPATH', sanitizedDependencyName),
-          value: '/tmp/' + dependency.name + '_key.pem'
+          value: path.join(bag.buildSecretsDir, dependency.name + '_key.pem')
         });
         bag.commonEnvs.push({
           key: util.format('%s_IS_PULL_REQUEST', sanitizedDependencyName),
