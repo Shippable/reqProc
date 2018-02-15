@@ -22,6 +22,7 @@ function handleDependency(externalBag, dependency, callback) {
     buildInDir: externalBag.buildInDir,
     buildOutDir: externalBag.buildOutDir,
     buildScriptsDir: externalBag.buildScriptsDir,
+    buildSecretsDir: externalBag.buildSecretsDir,
     stepMessageFilename: externalBag.stepMessageFilename
   };
   bag.who = util.format('%s|job|handlers|%s', msName, self.name);
@@ -138,7 +139,8 @@ function _handleDependency(bag, dependency, next) {
     inPayload: bag.inPayload,
     rootDir: rootDir,
     stepMessageFilename: bag.stepMessageFilename,
-    buildScriptsDir: bag.buildScriptsDir
+    buildScriptsDir: bag.buildScriptsDir,
+    buildSecretsDir: bag.buildSecretsDir
   };
 
   dependencyHandler(params,

@@ -17,7 +17,8 @@ function processINs(externalBag, callback) {
     buildOutDir: externalBag.buildOutDir,
     stepMessageFilename: externalBag.stepMessageFilename,
     subPrivateKeyPath: externalBag.subPrivateKeyPath,
-    buildScriptsDir: externalBag.buildScriptsDir
+    buildScriptsDir: externalBag.buildScriptsDir,
+    buildSecretsDir: externalBag.buildSecretsDir
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
