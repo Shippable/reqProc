@@ -118,11 +118,9 @@ Function git_sync() {
 
   popd
 
-  echo "----> Copying to $PROJECT_CLONE_LOCATION"
-  Copy-Item "$temp_clone_path\*" -Destination $PROJECT_CLONE_LOCATION -Recurse
+  echo "----> Moving to $PROJECT_CLONE_LOCATION"
+  Move-Item "$temp_clone_path" "$PROJECT_CLONE_LOCATION"
 
-  echo "----> Removing temporary data"
-  Remove-Item -Recurse -Force $temp_clone_path
   exec_exe "ssh-add -D"
 }
 
