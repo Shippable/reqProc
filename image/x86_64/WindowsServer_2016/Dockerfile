@@ -16,6 +16,7 @@ ENV OPENSSH_FIX_USER_FILEPERMS "C:\Program Files\OpenSSH-Win64\FixUserFilePermis
 # execTemplates
 ENV IMAGE_EXEC_TEMPLATES_DIR C:/Users/ContainerAdministrator/Shippable/execTemplates
 RUN mkdir $Env:IMAGE_EXEC_TEMPLATES_DIR; \
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
     Invoke-WebRequest https://github.com/Shippable/execTemplates/archive/{{%TAG%}}.zip -OutFile $env:TEMP\execTemplates.zip; \
     Expand-Archive $env:TEMP\execTemplates.zip -DestinationPath $env:IMAGE_EXEC_TEMPLATES_DIR; \
     Move-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-{{%TAG%}}\* -Destination  $env:IMAGE_EXEC_TEMPLATES_DIR; \
@@ -42,7 +43,8 @@ RUN Invoke-WebRequest https://download.docker.com/win/static/stable/x86_64/docke
 RUN choco install -y git
 
 # shipctl
-RUN Invoke-WebRequest https://github.com/Shippable/node/archive/{{%TAG%}}.zip -OutFile $env:TEMP\node.zip; \
+RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+    Invoke-WebRequest https://github.com/Shippable/node/archive/{{%TAG%}}.zip -OutFile $env:TEMP\node.zip; \
     Expand-Archive $env:TEMP\node.zip -DestinationPath $env:TEMP\node; \
     & $env:TEMP\node\node-{{%TAG%}}\shipctl\x86_64\WindowsServer_2016\install.ps1;
 
