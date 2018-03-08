@@ -323,8 +323,10 @@ function _processINs(bag, next) {
 
   processINs(bag,
     function (err) {
-      if (err)
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('error');
+      }
       return next();
     }
   );
@@ -377,6 +379,8 @@ function _handOffAndPoll(bag, next) {
 }
 
 function _readJobStatus(bag, next) {
+  bag.consoleAdapter.openGrp('Cleanup');
+
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
@@ -384,7 +388,7 @@ function _readJobStatus(bag, next) {
   var who = bag.who + '|' + _readJobStatus.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Reading job status');
+  // bag.consoleAdapter.openGrp('Reading job status');
   readJobStatus(bag,
     function (err, resultBag) {
       if (err) {
@@ -392,7 +396,7 @@ function _readJobStatus(bag, next) {
         bag.jobStatusCode = getStatusCodeByName('failure');
       } else {
         bag = _.extend(bag, resultBag);
-        bag.consoleAdapter.closeGrp(true);
+        // bag.consoleAdapter.closeGrp(true);
       }
 
       return next();
@@ -410,8 +414,10 @@ function _processOUTs(bag, next) {
 
   processOUTs(bag,
     function (err) {
-      if (err)
+      if (err) {
+        bag.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('failure');
+      }
       return next();
     }
   );
@@ -425,7 +431,7 @@ function _createTrace(bag, next) {
   var who = bag.who + '|' + _createTrace.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Creating trace');
+  // bag.consoleAdapter.openGrp('Creating trace');
   createTrace(bag,
     function (err, resultBag) {
       if (err) {
@@ -433,7 +439,7 @@ function _createTrace(bag, next) {
         bag.jobStatusCode = getStatusCodeByName('failure');
       } else {
         bag = _.extend(bag, resultBag);
-        bag.consoleAdapter.closeGrp(true);
+        // bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
@@ -447,15 +453,16 @@ function _persistPreviousState(bag, next) {
   var who = bag.who + '|' + _persistPreviousState.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Persisting previous state');
+  // bag.consoleAdapter.openGrp('Persisting previous state');
   persistPreviousState(bag,
     function (err) {
       if (err) {
         bag.jobStatusCode = getStatusCodeByName('failure');
         bag.consoleAdapter.closeGrp(false);
-      } else {
-        bag.consoleAdapter.closeGrp(true);
       }
+      // else {
+      //   bag.consoleAdapter.closeGrp(true);
+      // }
 
       return next();
     }
@@ -470,7 +477,7 @@ function _saveStepState(bag, next) {
   var who = bag.who + '|' + _saveStepState.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Saving job files');
+  // bag.consoleAdapter.openGrp('Saving job files');
   saveStepState(bag,
     function (err, resultBag) {
       if (err) {
@@ -478,7 +485,7 @@ function _saveStepState(bag, next) {
         bag.consoleAdapter.closeGrp(false);
       } else {
         bag = _.extend(bag, resultBag);
-        bag.consoleAdapter.closeGrp(true);
+        // bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
@@ -513,7 +520,7 @@ function _updateBuildJobStatus(bag, next) {
   var who = bag.who + '|' + _updateBuildJobStatus.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Updating job status');
+  // bag.consoleAdapter.openGrp('Updating job status');
   updateStatus(bag,
     function (err) {
       if (err)

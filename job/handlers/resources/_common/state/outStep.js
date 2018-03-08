@@ -42,8 +42,8 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating dependencies to save current' +
-    ' central state files');
+  // bag.consoleAdapter.openCmd('Validating dependencies to save current' +
+  //   ' central state files');
 
   var consoleErrors = [];
 
@@ -67,7 +67,7 @@ function _checkInputParams(bag, next) {
 
   bag.consoleAdapter.publishMsg('Successfully validated ' +
     'dependencies to save current resource state files');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -75,7 +75,7 @@ function _getFilePaths(bag, next) {
   var who = bag.who + '|' + _getFilePaths.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Creating file list for current resource');
+  // bag.consoleAdapter.openCmd('Creating file list for current resource');
 
   bag.resourceOutStatePath = path.join(bag.outRootDir, bag.dependency.name,
     bag.dependency.type);
@@ -96,14 +96,14 @@ function _getFilePaths(bag, next) {
     bag.consoleAdapter.publishMsg('Successfully created file list ' +
       'for current resource');
 
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
 function _readFilePermissions(bag, next) {
   if (_.isEmpty(bag.allFilesLocation)) return next();
 
-  bag.consoleAdapter.openCmd('Reading file permissions for current resource');
+  // bag.consoleAdapter.openCmd('Reading file permissions for current resource');
 
   var who = bag.who + '|' + _readFilePermissions.name;
   logger.verbose(who, 'Inside');
@@ -131,7 +131,7 @@ function _readFilePermissions(bag, next) {
       else {
         bag.consoleAdapter.publishMsg('Successfully read file permissions ' +
           'for current resource');
-        bag.consoleAdapter.closeCmd(true);
+        // bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
     }
@@ -144,7 +144,7 @@ function _constructJson(bag, next) {
   var who = bag.who + '|' + _constructJson.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Constructing message for current resource');
+  // bag.consoleAdapter.openCmd('Constructing message for current resource');
 
   async.eachLimit(bag.allFilesLocation, 10,
     function (fileLocation, nextFileLocation) {
@@ -175,7 +175,7 @@ function _constructJson(bag, next) {
       else {
         bag.consoleAdapter.publishMsg('Successfully constructed message ' +
           'for current resource');
-        bag.consoleAdapter.closeCmd(true);
+        // bag.consoleAdapter.closeCmd(true);
       }
 
       return next(err);
@@ -187,7 +187,7 @@ function _postFiles(bag, next) {
   var who = bag.who + '|' + _postFiles.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Posting message for current resource');
+  // bag.consoleAdapter.openCmd('Posting message for current resource');
 
   bag.builderApiAdapter.postFilesByResourceId(bag.dependency.resourceId,
     bag.stateJSON,
@@ -206,7 +206,7 @@ function _postFiles(bag, next) {
 
       bag.consoleAdapter.publishMsg('Successfully posted message ' +
         'for current resource');
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -216,7 +216,8 @@ function _readResourceVersion(bag, next) {
   var who = bag.who + '|' + _readResourceVersion.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Reading version file');
+  // bag.consoleAdapter.openCmd('Reading version file');
+  bag.consoleAdapter.publishMsg('Reading version file');
 
   var resourceVersionPath = path.join(bag.rootDir, bag.dependency.name,
     bag.stepMessageFilename);
@@ -232,7 +233,7 @@ function _readResourceVersion(bag, next) {
       }
 
       bag.resource = resource;
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -242,7 +243,7 @@ function _generateNewVersion(bag, next) {
   var who = bag.who + '|' + _generateNewVersion.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Generating a new version');
+  bag.consoleAdapter.publishMsg('Generating a new version');
 
   _.extend(bag.resource.version, {
     versionName: bag.sha,
@@ -252,7 +253,7 @@ function _generateNewVersion(bag, next) {
     shaData: bag.sha
   });
 
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -260,7 +261,7 @@ function _writeResourceVersion(bag, next) {
   var who = bag.who + '|' + _writeResourceVersion.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Overriding version file');
+  // bag.consoleAdapter.openCmd('Overriding version file');
 
   var resourceVersionPath = path.join(bag.rootDir, bag.dependency.name,
     bag.stepMessageFilename);
@@ -276,7 +277,7 @@ function _writeResourceVersion(bag, next) {
       }
 
       bag.consoleAdapter.publishMsg('Successfully overrided version file.');
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );

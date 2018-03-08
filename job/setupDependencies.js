@@ -102,7 +102,7 @@ function _setUpDependencies(bag, next) {
 
   if (!bag.inPayload.propertyBag.yml) {
     // bag.consoleAdapter.openGrp('Step Error');
-    bag.consoleAdapter.openCmd('Errors');
+    bag.consoleAdapter.openCmd('Step Errors');
     bag.consoleAdapter.publishMsg('No YML found for job steps');
     bag.consoleAdapter.closeCmd(false);
     // bag.consoleAdapter.closeGrp(false);
@@ -296,7 +296,7 @@ function _setUpDependencies(bag, next) {
     },
     function (err) {
       if (err){
-        bag.consoleAdapter.closeGrp(false);
+        // bag.consoleAdapter.closeGrp(false);
         return next(err);
       }
       // else {
@@ -1267,7 +1267,7 @@ function _saveTaskMessage(bag, next) {
 
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        // bag.consoleAdapter.closeGrp(false);
       } else {
         bag.consoleAdapter.publishMsg(
           'Successfully saved message at: ' + bag.messageFilePath);

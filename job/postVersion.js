@@ -100,7 +100,7 @@ function _getOutputVersion(bag, next) {
   var who = bag.who + '|' + _getOutputVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Saving resource version');
+  // bag.consoleAdapter.openGrp('Saving resource version');
   bag.consoleAdapter.openCmd('Reading output version');
 
   fs.readJson(bag.outputVersionFilePath,
@@ -164,7 +164,7 @@ function _extendOutputVersionWithEnvs(bag, next) {
     bag.consoleAdapter.publishMsg(
       util.format('unable to read file %s.env', bag.inPayload.name));
     bag.consoleAdapter.closeCmd(true);
-    bag.consoleAdapter.closeGrp(true);
+    // bag.consoleAdapter.closeGrp(true);
     return next();
   }
   var extraVersionInfo = {};
@@ -218,7 +218,7 @@ function _postTaskVersion(bag, next) {
           'resourceId: %s', newVersion.id, bag.resourceId);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(true);
-        bag.consoleAdapter.closeGrp(true);
+        // bag.consoleAdapter.closeGrp(true);
       }
 
       return next();
@@ -252,14 +252,14 @@ function _postOutResourceVersions(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openGrp('Step Error');
+        // bag.consoleAdapter.openGrp('Step Error');
         bag.consoleAdapter.openCmd('Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        // bag.consoleAdapter.closeGrp(false);
 
         return nextStep(true);
       }
@@ -299,7 +299,8 @@ function _postOutResourceVersions(bag, next) {
         isChanged: false,
         isGrpSuccess: true
       };
-      bag.consoleAdapter.openGrp('Processing version for ' + dependency.name);
+      // bag.consoleAdapter.openGrp('Processing version for ' + dependency.name);
+      bag.consoleAdapter.openCmd('Processing version for ' + dependency.name);
       async.series([
           __readVersionJson.bind(null, innerBag),
           __readReplicatedVersionJson.bind(null, innerBag),
@@ -311,10 +312,10 @@ function _postOutResourceVersions(bag, next) {
         ],
         function (err) {
           if (innerBag.isGrpSuccess) {
-            bag.consoleAdapter.closeGrp(true);
+            bag.consoleAdapter.closeCmd(true);
           } else {
             bag.consoleAdapter.closeCmd(false);
-            bag.consoleAdapter.closeGrp(false);
+            // bag.consoleAdapter.closeGrp(false);
           }
 
           if (innerBag.outVersion && innerBag.outVersion.id)
@@ -341,7 +342,7 @@ function __readVersionJson(bag, next) {
 
   var dependencyPath = path.join(bag.buildOutDir, bag.dependency.name);
 
-  bag.consoleAdapter.openCmd('Reading dependency metadata from file');
+  bag.consoleAdapter.publishMsg('Reading dependency metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
   var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
@@ -394,7 +395,7 @@ function __readVersionJson(bag, next) {
 
       bag.consoleAdapter.publishMsg(
         'Successfully read dependency metadata file');
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -409,7 +410,7 @@ function __readReplicatedVersionJson(bag, next) {
 
   var dependencyPath = path.join(bag.buildInDir, bag.replicate);
 
-  bag.consoleAdapter.openCmd('Reading replicated metadata from file');
+  bag.consoleAdapter.publishMsg('Reading replicated metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
   var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
@@ -441,7 +442,7 @@ function __readReplicatedVersionJson(bag, next) {
 
       bag.consoleAdapter.publishMsg(
         'Successfully read replicated metadata file');
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -454,7 +455,8 @@ function __readVersionEnv(bag, next) {
   var who = bag.who + '|' + __readVersionEnv.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Reading resource env file');
+  // bag.consoleAdapter.openCmd('Reading resource env file');
+  bag.consoleAdapter.publishMsg('Reading resource env file');
 
   var envFilePath = path.join(bag.buildStateDir, util.format('%s.env',
     bag.dependency.name));
@@ -494,7 +496,7 @@ function __readVersionEnv(bag, next) {
     bag.hasEnv = false;
   }
   bag.consoleAdapter.publishMsg('Successfully parsed .env file.');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
 
   return next();
 }
@@ -506,7 +508,8 @@ function __compareVersions(bag, next) {
   var who = bag.who + '|' + __compareVersions.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Comparing current version to original');
+  // bag.consoleAdapter.openCmd('Comparing current version to original');
+  bag.consoleAdapter.publishMsg('Comparing current version to original');
   var originalVersion = bag.dependency.version;
 
   // Don't compare the trace
@@ -541,7 +544,7 @@ function __compareVersions(bag, next) {
 
   if (!bag.isChanged)
     bag.consoleAdapter.publishMsg('version has NOT changed');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -605,7 +608,8 @@ function __postVersion(bag, next) {
   var who = bag.who + '|' + __postVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Posting new version');
+  // bag.consoleAdapter.openCmd('Posting new version');
+  bag.consoleAdapter.publishMsg('Posting new version');
   var newVersion = {
     resourceId: bag.resourceId,
     propertyBag: bag.versionJson.propertyBag,
@@ -632,7 +636,7 @@ function __postVersion(bag, next) {
         util.inspect(version.versionNumber)
       );
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -644,7 +648,9 @@ function __triggerJob(bag, next) {
   var who = bag.who + '|' + __triggerJob.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Triggering job: ' + bag.dependency.name);
+  // bag.consoleAdapter.openCmd('Triggering job: ' + bag.dependency.name);
+  bag.consoleAdapter.publishMsg('Triggering job: ' + bag.dependency.name);
+
   bag.builderApiAdapter.triggerNewBuildByResourceId(
     bag.dependency.resourceId, {},
     function (err) {
@@ -655,7 +661,7 @@ function __triggerJob(bag, next) {
         return next(true);
       }
       bag.consoleAdapter.publishMsg('Successfully triggered job.');
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );

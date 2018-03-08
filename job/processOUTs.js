@@ -93,14 +93,14 @@ function _processOutSteps(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openGrp('Step Error');
+        // bag.consoleAdapter.openGrp('Step Error');
         bag.consoleAdapter.openCmd('Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        // bag.consoleAdapter.closeGrp(false);
 
         return nextStep(true);
       }
@@ -111,10 +111,11 @@ function _processOutSteps(bag, next) {
         function (err) {
           if (err) {
             bag.consoleAdapter.closeCmd(false);
-            bag.consoleAdapter.closeGrp(false);
-          } else {
-            bag.consoleAdapter.closeGrp(true);
+            // bag.consoleAdapter.closeGrp(false);
           }
+          // else {
+          //   bag.consoleAdapter.closeGrp(true);
+          // }
           return nextStep(err);
         }
       );
