@@ -40,7 +40,8 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating dependencies');
+  // bag.consoleAdapter.openCmd('Validating dependencies');
+
   var consoleErrors = [];
   bag.firstState = false;
   if (!bag.dependency.version.propertyBag.shaData){
@@ -64,7 +65,7 @@ function _checkInputParams(bag, next) {
   }
 
   bag.consoleAdapter.publishMsg('Successfully validated dependencies');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
 
   return next();
 }
@@ -74,7 +75,8 @@ function _getFiles(bag, next) {
   var who = bag.who + '|' + _getFiles.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Getting resource files');
+  // bag.consoleAdapter.openCmd('Getting resource files');
+  bag.consoleAdapter.publishMsg('Getting resource files');
   var query = 'sha=' + bag.sha;
   bag.builderApiAdapter.getFilesByResourceId(bag.resourceId, query,
     function (err, data) {
@@ -93,7 +95,7 @@ function _getFiles(bag, next) {
         msg = 'Successfully received files for resource';
 
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
+      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -106,7 +108,8 @@ function _createFiles(bag, next) {
   var who = bag.who + '|' + _createFiles.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Creating resource files');
+  // bag.consoleAdapter.openCmd('Creating resource files');
+  bag.consoleAdapter.publishMsg('Creating resource files');
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
       var outPutFilePath = path.join(bag.buildInDir, bag.dependency.name,
@@ -128,7 +131,7 @@ function _createFiles(bag, next) {
         bag.consoleAdapter.closeCmd(false);
       } else {
         bag.consoleAdapter.publishMsg('Successfully created resource files');
-        bag.consoleAdapter.closeCmd(true);
+        // bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
     }
@@ -142,7 +145,8 @@ function _setPermissions(bag, next) {
   var who = bag.who + '|' + _setPermissions.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Setting resource files permissions');
+  // bag.consoleAdapter.openCmd('Setting resource files permissions');
+  bag.consoleAdapter.publishMsg('Setting resource files permissions');
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
       var outPutFilePath = path.join(bag.buildInDir, bag.dependency.name,
@@ -165,7 +169,7 @@ function _setPermissions(bag, next) {
       } else {
         bag.consoleAdapter.publishMsg('Successfully set resource files ' +
           'permissions');
-        bag.consoleAdapter.closeCmd(true);
+        // bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
     }

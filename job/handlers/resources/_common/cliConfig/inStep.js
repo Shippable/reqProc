@@ -23,8 +23,9 @@ function inStep(params, callback) {
     self.name);
   logger.verbose(bag.who, 'Starting');
 
-  bag.consoleAdapter.openCmd(util.format('Copying integration script for %s',
-    bag.dependency.name));
+  // bag.consoleAdapter.openCmd(util.format('Copying integration script for %s',
+  //   bag.dependency.name));
+
   async.series([
       _copyIntegrationInitScript.bind(null, bag),
       _copyIntegrationCleanupScript.bind(null, bag)

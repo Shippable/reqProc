@@ -101,11 +101,11 @@ function _setUpDependencies(bag, next) {
   logger.verbose(who, 'Inside');
 
   if (!bag.inPayload.propertyBag.yml) {
-    bag.consoleAdapter.openGrp('Step Error');
+    // bag.consoleAdapter.openGrp('Step Error');
     bag.consoleAdapter.openCmd('Errors');
     bag.consoleAdapter.publishMsg('No YML found for job steps');
     bag.consoleAdapter.closeCmd(false);
-    bag.consoleAdapter.closeGrp(false);
+    // bag.consoleAdapter.closeGrp(false);
 
     return next('No yml found for job steps');
   }
@@ -236,7 +236,7 @@ function _setUpDependencies(bag, next) {
     }
   );
 
-  bag.consoleAdapter.openGrp('Setting up dependencies');
+  // bag.consoleAdapter.openGrp('Setting up dependencies');
   async.eachSeries(inAndOutSteps,
     function (step, nextStep) {
       logger.verbose('Executing step:', step);
@@ -298,9 +298,10 @@ function _setUpDependencies(bag, next) {
       if (err){
         bag.consoleAdapter.closeGrp(false);
         return next(err);
-      } else {
-        bag.consoleAdapter.closeGrp(true);
       }
+      // else {
+      //   bag.consoleAdapter.closeGrp(true);
+      // }
 
       // adding bag.paramEnvs to the beginning of bag.commonEnvs because
       // Shippable envs should always override user envs
@@ -1197,7 +1198,7 @@ function _saveTaskMessage(bag, next) {
   var who = bag.who + '|' + _saveTaskMessage.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Saving task message');
+  // bag.consoleAdapter.openGrp('Saving task message');
 
   // If TASK step is not present, a managed TASK step is
   // automatically injected as last step by Shippable
@@ -1271,7 +1272,7 @@ function _saveTaskMessage(bag, next) {
         bag.consoleAdapter.publishMsg(
           'Successfully saved message at: ' + bag.messageFilePath);
         bag.consoleAdapter.closeCmd(true);
-        bag.consoleAdapter.closeGrp(true);
+        // bag.consoleAdapter.closeGrp(true);
       }
       return next(err);
     }

@@ -63,17 +63,18 @@ function _handleDependency(bag, dependency, next) {
 
   var msg = util.format('Processing %s Dependency: %s', dependency.operation,
     dependency.name);
-  bag.consoleAdapter.openGrp(msg);
-  bag.consoleAdapter.openCmd('Dependency Info');
+  // bag.consoleAdapter.openGrp(msg);
+  bag.consoleAdapter.openCmd(msg);
+  // bag.consoleAdapter.openCmd('Dependency Info');
   bag.consoleAdapter.publishMsg('Version Number: ' +
     dependency.version.versionNumber);
 
   if (dependency.version.versionName !== null)
     bag.consoleAdapter.publishMsg('Version Name: ' +
       dependency.version.versionName);
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
 
-  bag.consoleAdapter.openCmd('Validating ' + dependency.name + ' handler');
+  // bag.consoleAdapter.openCmd('Validating ' + dependency.name + ' handler');
 
   var dependencyHandler;
   var dependencyHandlerPath = '';
@@ -129,7 +130,7 @@ function _handleDependency(bag, dependency, next) {
 
   // Closing the command as dependencyHandler will call it's own cmd
   bag.consoleAdapter.publishMsg('Successfully validated handler');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
 
   var params = {
     bag: bag,

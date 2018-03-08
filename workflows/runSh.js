@@ -101,7 +101,8 @@ function _initializeJob(bag, next) {
   var who = bag.who + '|' + _initializeJob.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Initializing job');
+  bag.consoleAdapter.openGrp('Setup');
+  // bag.consoleAdapter.openGrp('Initializing job');
 
   initializeJob(bag,
     function (err, resultBag) {
@@ -237,7 +238,6 @@ function _getSecrets(bag, next) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
-        bag.consoleAdapter.closeGrp(true);
         bag = _.extend(bag, resultBag);
       }
       return next();
@@ -286,9 +286,10 @@ function _notifyOnStart(bag, next) {
         // Closing of "Initializing job" is handled here as this is the last
         // step of the group.
         bag.consoleAdapter.closeGrp(false);
-      } else {
-        bag.consoleAdapter.closeGrp(true);
       }
+      // else {
+      //   bag.consoleAdapter.closeGrp(true);
+      // }
 
       return next();
     }
@@ -299,14 +300,14 @@ function _publishJobNodeInfo(bag, next) {
   var who = bag.who + '|' + _publishJobNodeInfo.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Job node info');
+  // bag.consoleAdapter.openGrp('Job node info');
 
   publishJobNodeInfo(bag,
     function (err) {
       if (err)
         bag.consoleAdapter.closeGrp(false);
-      else
-        bag.consoleAdapter.closeGrp(true);
+      // else
+        // bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
@@ -337,7 +338,7 @@ function _generateSteps(bag, next) {
   var who = bag.who + '|' + _generateSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Generating steps');
+  // bag.consoleAdapter.openGrp('Generating steps');
   generateSteps(bag,
     function (err, resultBag) {
       if (err) {
