@@ -27,10 +27,8 @@ function _setDefaultValues(bag, next) {
   var who = bag.who + '|' + _setDefaultValues.name;
   logger.debug(who, 'Inside');
 
-  // bag.consoleAdapter.openCmd('Setting default values');
   bag.dependency.version.propertyBag.memory = 400;
   bag.consoleAdapter.publishMsg('Successfully set default values');
-  // bag.consoleAdapter.closeCmd(true);
 
   return next();
 }
