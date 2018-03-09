@@ -34,7 +34,6 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  // bag.consoleAdapter.openCmd('Validating dependencies');
   var consoleErrors = [];
 
   bag.replicate = bag.dependency.versionDependencyPropertyBag &&
@@ -68,7 +67,6 @@ function _checkInputParams(bag, next) {
   }
 
   bag.consoleAdapter.publishMsg('Successfully validated dependencies');
-  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -91,7 +89,6 @@ function _getCiRepoProject(bag, next) {
 
       bag.ciRepoProject = project;
       bag.consoleAdapter.publishMsg('Successfully completed.');
-      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -116,7 +113,6 @@ function _getCiRepoProvider(bag, next) {
 
       bag.ciRepoProvider = provider;
       bag.consoleAdapter.publishMsg('Successfully completed.');
-      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -158,7 +154,6 @@ function _generateNewVersion(bag, next) {
     };
   }
 
-  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 

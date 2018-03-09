@@ -39,7 +39,6 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  // bag.consoleAdapter.openCmd('Validating dependencies');
   var consoleErrors = [];
   bag.firstState = false;
   console.log(bag.dependency);
@@ -82,7 +81,6 @@ function _getFiles(bag, next) {
         msg = util.format('%s :getFilesByResourceId failed for ' +
           'resourceId: %s with error %s', who, bag.resourceId, err);
         bag.consoleAdapter.publishMsg(msg);
-        // bag.consoleAdapter.closeCmd(true);
         return next();
       }
       bag.outputFileJSON = data;
@@ -92,7 +90,6 @@ function _getFiles(bag, next) {
         msg = 'Successfully received files for resource';
 
       bag.consoleAdapter.publishMsg(msg);
-      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -127,7 +124,6 @@ function _createFiles(bag, next) {
         bag.consoleAdapter.closeCmd(false);
       } else {
         bag.consoleAdapter.publishMsg('Successfully created resource files');
-        // bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
     }
@@ -164,7 +160,6 @@ function _setPermissions(bag, next) {
       } else {
         bag.consoleAdapter.publishMsg('Successfully set resource files ' +
           'permissions');
-        // bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
     }

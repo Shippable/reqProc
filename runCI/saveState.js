@@ -61,7 +61,6 @@ function _checkInputParams(bag, next) {
 
   bag.consoleAdapter.publishMsg('Successfully validated ' +
     'dependencies to save current job files');
-  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -79,7 +78,6 @@ function _getFilePaths(bag, next) {
     bag.consoleAdapter.publishMsg('Successfully created file list ' +
       'for current job');
 
-  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -114,7 +112,6 @@ function _readFilePermissions(bag, next) {
       else {
         bag.consoleAdapter.publishMsg('Successfully read file permissions ' +
           'for current job');
-        // bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
     }
@@ -158,7 +155,6 @@ function _constructJson(bag, next) {
       else {
         bag.consoleAdapter.publishMsg('Successfully constructed message ' +
           'for current job');
-        // bag.consoleAdapter.closeCmd(true);
       }
 
       return next(err);
@@ -188,7 +184,6 @@ function _postFiles(bag, next) {
 
       bag.consoleAdapter.publishMsg('Successfully posted message ' +
         'for current job');
-      // bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );

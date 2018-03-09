@@ -152,7 +152,6 @@ function _checkInputParams(bag, next) {
   bag.consoleAdapter.openGrp('Setup');
   bag.consoleAdapter.openCmd('Validating incoming message');
 
-  // We don't know where the group will end so need a flag
   bag.isSetupGrpSuccess = true;
   var consoleErrors = [];
 
@@ -295,6 +294,7 @@ function _validateCIJobMessage(bag, next) {
     );
     bag.consoleAdapter.closeCmd(false);
     bag.isSetupGrpSuccess = false;
+
     bag.ciJobStatusCode = getStatusCodeByName('FAILED');
   } else {
     bag.consoleAdapter.publishMsg('Successfully validated CI Steps');
