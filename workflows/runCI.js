@@ -728,10 +728,11 @@ function _setUpDependencies(bag, next) {
     bag.consoleAdapter.openCmd('Step Errors');
     bag.consoleAdapter.publishMsg('No YML found for job steps');
     bag.consoleAdapter.closeCmd(false);
+    bag.isSetupGrpSuccess = false;
 
     bag.jobStatusCode = getStatusCodeByName('FAILED');
-
-    return next('No yml found for job steps');
+    logger.warn('No yml found for job steps');
+    return next();
   }
 
   var jobName = bag.inPayload.name.replace(/[^A-Za-z0-9_]/g, '').
@@ -797,12 +798,13 @@ function _setUpDependencies(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openCmd('Errors');
+        bag.consoleAdapter.openCmd('Step Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
+        bag.isSetupGrpSuccess = false;
         return nextStep(true);
       }
 
@@ -1792,6 +1794,7 @@ function _processInSteps(bag, next) {
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
+        bag.isSetupGrpSuccess = false;
 
         return nextStep(true);
       }
@@ -1903,6 +1906,7 @@ function _processOutSteps(bag, next) {
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
+        bag.isCleanupGrpSuccess = false;
 
         return nextStep(true);
       }
@@ -1948,7 +1952,6 @@ function __handleDependency(bag, dependency, next) {
   if (dependency.version.versionName !== null)
     bag.consoleAdapter.publishMsg('Version Name: ' +
       dependency.version.versionName);
-  bag.consoleAdapter.closeCmd(true);
 
   var dependencyHandler;
   var dependencyHandlerPath = '';
@@ -2316,6 +2319,7 @@ function _postOutResourceVersions(bag, next) {
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
+        bag.isCleanupGrpSuccess = false;
 
         return nextStep(true);
       }
@@ -2743,6 +2747,7 @@ function _closeCleanupGroup(bag, next) {
   } else {
     bag.consoleAdapter.closeGrp(false);
   }
+  return next();
 }
 
 function _cleanBuildDirectory(bag, next) {

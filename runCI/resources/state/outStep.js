@@ -19,7 +19,7 @@ function outStep(externalBag, callback) {
     stepMessageFilename: externalBag.stepMessageFilename
   };
 
-  bag.who = util.format('%s|runCI|resources|params|%s', msName, self.name);
+  bag.who = util.format('%s|runCI|resources|state|%s', msName, self.name);
   logger.verbose(bag.who, 'Inside');
 
   async.series([

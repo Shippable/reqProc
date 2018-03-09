@@ -554,4 +554,6 @@ function _closeCleanupGroup(bag, next) {
   } else {
     bag.consoleAdapter.closeGrp(false);
   }
+
+  return next();
 }

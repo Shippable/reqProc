@@ -95,7 +95,6 @@ function __parseLogLine(bag, line) {
     bag.consoleAdapter.publishMsg(lineSplit[2]);
   } else if (lineSplit[0] === cmdEndHeader) {
     cmdJSON = JSON.parse(lineSplit[1]);
-    var isSuccess = cmdJSON.exitcode === '0';
   } else {
     bag.consoleAdapter.publishMsg(line);
   }

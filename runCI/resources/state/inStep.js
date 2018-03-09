@@ -16,7 +16,7 @@ function inStep(params, callback) {
     outputFileJSON: []
   };
 
-  bag.who = msName + '|runCI|resources|params|' + self.name;
+  bag.who = msName + '|runCI|resources|state|' + self.name;
   logger.verbose(bag.who, 'Starting');
 
   bag.paramsPath =
