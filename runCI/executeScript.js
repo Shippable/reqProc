@@ -31,7 +31,8 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating script dependencies');
+  // bag.consoleAdapter.openCmd('Validating script dependencies');
+  bag.consoleAdapter.publishMsg('Validating script dependencies');
   var consoleErrors = [];
   bag.consoleAdapter.publishMsg('the path is: ' + bag.scriptPath);
 
@@ -49,7 +50,7 @@ function _checkInputParams(bag, next) {
     return next(true);
   }
   bag.consoleAdapter.publishMsg('Successfully validated script dependencies');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -93,11 +94,12 @@ function __parseLogLine(bag, line) {
 
   if (lineSplit[0] === cmdStartHeader) {
     cmdJSON = JSON.parse(lineSplit[1]);
-    bag.consoleAdapter.openCmd(lineSplit[2]);
+    // bag.consoleAdapter.openCmd(lineSplit[2]);
+    bag.consoleAdapter.publishMsg(lineSplit[2]);
   } else if (lineSplit[0] === cmdEndHeader) {
     cmdJSON = JSON.parse(lineSplit[1]);
     var isSuccess = cmdJSON.exitcode === '0';
-    bag.consoleAdapter.closeCmd(isSuccess);
+    // bag.consoleAdapter.closeCmd(isSuccess);
   } else {
     bag.consoleAdapter.publishMsg(line);
   }

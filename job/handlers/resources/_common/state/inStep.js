@@ -81,7 +81,6 @@ function _getFiles(bag, next) {
         msg = util.format('%s :getFilesByResourceId failed for ' +
           'resourceId: %s with error %s', who, bag.resourceId, err);
         bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(true);
         return next();
       }
       bag.outputFileJSON = data;

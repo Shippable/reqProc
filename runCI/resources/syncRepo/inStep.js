@@ -40,7 +40,7 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating dependencies');
+  // bag.consoleAdapter.openCmd('Validating dependencies');
   var consoleErrors = [];
 
   if (!bag.dependency.propertyBag.normalizedRepo)
@@ -66,7 +66,7 @@ function _checkInputParams(bag, next) {
   }
 
   bag.consoleAdapter.publishMsg('Successfully validated dependencies');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -74,7 +74,7 @@ function _injectDependencies(bag, next) {
   var who = bag.who + '|' + _injectDependencies.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Injecting dependencies');
+  // bag.consoleAdapter.openCmd('Injecting dependencies');
 
   bag.dependency.privateKey = bag.dependency.propertyBag.sysDeployKey.private;
   bag.dependency.isPrivate =
@@ -94,7 +94,7 @@ function _injectDependencies(bag, next) {
   bag.dependency.subPrivateKeyPath = bag.subPrivateKeyPath;
 
   bag.consoleAdapter.publishMsg('Successfully injected dependencies');
-  bag.consoleAdapter.closeCmd(true);
+  // bag.consoleAdapter.closeCmd(true);
   return next();
 }
 

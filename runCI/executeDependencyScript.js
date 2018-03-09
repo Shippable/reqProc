@@ -36,7 +36,6 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Checking parameters');
   var consoleErrors = [];
 
   if (!bag.dependency)
@@ -67,7 +66,6 @@ function _checkInputParams(bag, next) {
   }
 
   bag.consoleAdapter.publishMsg('All parameters present.');
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -75,7 +73,6 @@ function _generateScript(bag, next) {
   var who = bag.who + '|' + _generateScript.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Generating script');
   var scriptContent =
     fs.readFileSync(bag.templatePath).toString();
   var template = _.template(scriptContent);
@@ -83,7 +80,6 @@ function _generateScript(bag, next) {
   var msg = util.format('Successfully generated %s script',
     bag.dependency.type);
   bag.consoleAdapter.publishMsg(msg);
-  bag.consoleAdapter.closeCmd(true);
 
   return next();
 }
@@ -92,7 +88,6 @@ function _writeScript(bag, next) {
   var who = bag.who + '|' + _writeScript.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Saving script');
   fs.writeFile(bag.scriptPath, bag.script,
     function (err) {
       var msg;
@@ -108,7 +103,6 @@ function _writeScript(bag, next) {
       msg = util.format('Successfully saved script for dependency %s',
         bag.dependency.name);
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
