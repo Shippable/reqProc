@@ -708,8 +708,8 @@ function _logTimeout(bag, next) {
 
   if (bag.ciJob.timeoutMS) {
     bag.consoleAdapter.openCmd('Setting timeout');
-    bag.consoleAdapter.publishMsg(
-      util.format('timeout set to %s minutes', bag.ciJob.timeoutMS / (60 * 1000))
+    bag.consoleAdapter.publishMsg(util.format('timeout set to %s minutes',
+      bag.ciJob.timeoutMS / (60 * 1000))
     );
     bag.consoleAdapter.closeCmd(true);
   }
