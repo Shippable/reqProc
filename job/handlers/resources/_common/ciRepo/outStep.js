@@ -35,7 +35,6 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating dependencies');
   var consoleErrors = [];
 
   bag.replicate = bag.dependency.versionDependencyPropertyBag &&
@@ -69,7 +68,6 @@ function _checkInputParams(bag, next) {
   }
 
   bag.consoleAdapter.publishMsg('Successfully validated dependencies');
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -78,7 +76,7 @@ function _getCiRepoProject(bag, next) {
   var who = bag.who + '|' + _getCiRepoProject.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Getting project of OUT dependency');
+  bag.consoleAdapter.publishMsg('Getting project of OUT dependency');
 
   bag.builderApiAdapter.getProjectById(bag.dependency.projectId,
     function (err, project) {
@@ -92,7 +90,6 @@ function _getCiRepoProject(bag, next) {
 
       bag.ciRepoProject = project;
       bag.consoleAdapter.publishMsg('Successfully completed.');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -103,7 +100,7 @@ function _getCiRepoProvider(bag, next) {
   var who = bag.who + '|' + _getCiRepoProvider.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Getting provider of OUT dependency');
+  bag.consoleAdapter.publishMsg('Getting provider of OUT dependency');
 
   bag.builderApiAdapter.getProviderById(bag.ciRepoProject.providerId,
     function (err, provider) {
@@ -117,7 +114,6 @@ function _getCiRepoProvider(bag, next) {
 
       bag.ciRepoProvider = provider;
       bag.consoleAdapter.publishMsg('Successfully completed.');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -127,8 +123,6 @@ function _generateNewVersion(bag, next) {
   if (bag.replicate) return next();
   var who = bag.who + '|' + _generateNewVersion.name;
   logger.debug(who, 'Inside');
-
-  bag.consoleAdapter.openCmd('Checking for matching gitRepo IN step.');
 
   var matchingGitRepo = _.find(bag.inPayload.dependencies,
     function (dependency) {
@@ -161,7 +155,6 @@ function _generateNewVersion(bag, next) {
     };
   }
 
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -172,7 +165,7 @@ function _compareVersions(bag, next) {
   var who = bag.who + '|' + _compareVersions.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Comparing new version to original');
+  bag.consoleAdapter.publishMsg('Comparing new version to original');
   var originalVersion = bag.dependency.version;
 
   if (originalVersion.propertyBag && originalVersion.propertyBag.trace)
@@ -191,7 +184,6 @@ function _compareVersions(bag, next) {
 
   if (!bag.isChanged)
     bag.consoleAdapter.publishMsg('version has NOT changed.');
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -201,8 +193,6 @@ function _postNewVersion(bag, next) {
 
   var who = bag.who + '|' + _postNewVersion.name;
   logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openCmd('Posting new version');
 
   bag.builderApiAdapter.postVersion(bag.newVersion,
     function (err, version) {
@@ -219,7 +209,6 @@ function _postNewVersion(bag, next) {
         'version %s', bag.newVersion.resourceId, version.versionNumber
       );
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );

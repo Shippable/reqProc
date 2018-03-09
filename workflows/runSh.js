@@ -101,7 +101,7 @@ function _initializeJob(bag, next) {
   var who = bag.who + '|' + _initializeJob.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Initializing job');
+  bag.consoleAdapter.openGrp('Setup');
 
   initializeJob(bag,
     function (err, resultBag) {
@@ -237,7 +237,6 @@ function _getSecrets(bag, next) {
         bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
-        bag.consoleAdapter.closeGrp(true);
         bag = _.extend(bag, resultBag);
       }
       return next();
@@ -286,8 +285,6 @@ function _notifyOnStart(bag, next) {
         // Closing of "Initializing job" is handled here as this is the last
         // step of the group.
         bag.consoleAdapter.closeGrp(false);
-      } else {
-        bag.consoleAdapter.closeGrp(true);
       }
 
       return next();
@@ -299,14 +296,10 @@ function _publishJobNodeInfo(bag, next) {
   var who = bag.who + '|' + _publishJobNodeInfo.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Job node info');
-
   publishJobNodeInfo(bag,
     function (err) {
       if (err)
         bag.consoleAdapter.closeGrp(false);
-      else
-        bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
@@ -322,8 +315,10 @@ function _processINs(bag, next) {
 
   processINs(bag,
     function (err) {
-      if (err)
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('error');
+      }
       return next();
     }
   );
@@ -337,7 +332,6 @@ function _generateSteps(bag, next) {
   var who = bag.who + '|' + _generateSteps.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Generating steps');
   generateSteps(bag,
     function (err, resultBag) {
       if (err) {
@@ -376,6 +370,10 @@ function _handOffAndPoll(bag, next) {
 }
 
 function _readJobStatus(bag, next) {
+  // This is required because a group is created
+  // no matter what the job status is.
+  bag.consoleAdapter.openGrp('Cleanup');
+
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
@@ -383,7 +381,6 @@ function _readJobStatus(bag, next) {
   var who = bag.who + '|' + _readJobStatus.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Reading job status');
   readJobStatus(bag,
     function (err, resultBag) {
       if (err) {
@@ -391,7 +388,6 @@ function _readJobStatus(bag, next) {
         bag.jobStatusCode = getStatusCodeByName('failure');
       } else {
         bag = _.extend(bag, resultBag);
-        bag.consoleAdapter.closeGrp(true);
       }
 
       return next();
@@ -409,8 +405,10 @@ function _processOUTs(bag, next) {
 
   processOUTs(bag,
     function (err) {
-      if (err)
+      if (err) {
+        bag.closeGrp(false);
         bag.jobStatusCode = getStatusCodeByName('failure');
+      }
       return next();
     }
   );
@@ -424,7 +422,6 @@ function _createTrace(bag, next) {
   var who = bag.who + '|' + _createTrace.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Creating trace');
   createTrace(bag,
     function (err, resultBag) {
       if (err) {
@@ -432,7 +429,6 @@ function _createTrace(bag, next) {
         bag.jobStatusCode = getStatusCodeByName('failure');
       } else {
         bag = _.extend(bag, resultBag);
-        bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
@@ -446,14 +442,11 @@ function _persistPreviousState(bag, next) {
   var who = bag.who + '|' + _persistPreviousState.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Persisting previous state');
   persistPreviousState(bag,
     function (err) {
       if (err) {
         bag.jobStatusCode = getStatusCodeByName('failure');
         bag.consoleAdapter.closeGrp(false);
-      } else {
-        bag.consoleAdapter.closeGrp(true);
       }
 
       return next();
@@ -469,7 +462,6 @@ function _saveStepState(bag, next) {
   var who = bag.who + '|' + _saveStepState.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Saving job files');
   saveStepState(bag,
     function (err, resultBag) {
       if (err) {
@@ -477,7 +469,6 @@ function _saveStepState(bag, next) {
         bag.consoleAdapter.closeGrp(false);
       } else {
         bag = _.extend(bag, resultBag);
-        bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
@@ -512,7 +503,6 @@ function _updateBuildJobStatus(bag, next) {
   var who = bag.who + '|' + _updateBuildJobStatus.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Updating job status');
   updateStatus(bag,
     function (err) {
       if (err)

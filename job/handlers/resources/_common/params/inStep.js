@@ -37,7 +37,6 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating dependencies');
   var consoleErrors = [];
 
   if (!bag.dependency.version.propertyBag.params)
@@ -58,7 +57,6 @@ function _checkInputParams(bag, next) {
   }
 
   bag.consoleAdapter.publishMsg('Successfully validated dependencies');
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -66,7 +64,6 @@ function _extractParams(bag, next) {
   var who = bag.who + '|' + _extractParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Extracting params');
   bag.extractedParams = '';
   _.each(bag.dependency.version.propertyBag.params,
     function (paramValue, paramKey) {
@@ -77,7 +74,6 @@ function _extractParams(bag, next) {
     }
   );
   bag.consoleAdapter.publishMsg('Successfully extracted params');
-  bag.consoleAdapter.closeCmd(true);
 
   return next();
 }
