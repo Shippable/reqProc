@@ -81,6 +81,7 @@ function runSh(externalBag, callback) {
       _publishJobNodeInfo.bind(null, bag),
       _processINs.bind(null, bag),
       _generateSteps.bind(null, bag),
+      _closeSetupGroup.bind(null, bag),
       _handOffAndPoll.bind(null, bag),
       _readJobStatus.bind(null, bag),
       _processOUTs.bind(null, bag),
@@ -89,7 +90,8 @@ function runSh(externalBag, callback) {
       _saveStepState.bind(null, bag),
       _postVersion.bind(null, bag),
       _updateBuildJobStatus.bind(null, bag),
-      _finalBuildDirectoryCleanup.bind(null, bag)
+      _finalBuildDirectoryCleanup.bind(null, bag),
+      _closeCleanupGroup.bind(null, bag)
     ],
     function (err) {
       return callback(err);
@@ -103,10 +105,13 @@ function _initializeJob(bag, next) {
 
   bag.consoleAdapter.openGrp('Setup');
 
+  // We don't know where the group will end so need a flag
+  bag.isSetupGrpSuccess = true;
+
   initializeJob(bag,
     function (err, resultBag) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       }
 
@@ -125,7 +130,7 @@ function _initialBuildDirectoryCleanup(bag, next) {
   cleanup(bag,
     function (err) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       }
 
@@ -145,7 +150,7 @@ function _setupDirectories(bag, next) {
   setupDirectories(bag,
     function (err) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       }
       return next();
@@ -164,7 +169,7 @@ function _pollBuildJobStatus(bag, next) {
   pollBuildJobStatus(bag,
     function (err) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       }
       return next();
@@ -190,7 +195,7 @@ function _setExecutorAsReqProc(bag, next) {
           'with err: %s', who, whoPath, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
@@ -215,7 +220,7 @@ function _getPreviousState(bag, next) {
   getPreviousState(bag,
     function (err) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       }
       return next();
@@ -234,7 +239,7 @@ function _getSecrets(bag, next) {
   getSecrets(bag,
     function (err, resultBag) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
         bag = _.extend(bag, resultBag);
@@ -255,7 +260,7 @@ function _setupDependencies(bag, next) {
   setupDependencies(bag,
     function (err, resultBag) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
         bag = _.extend(bag, resultBag);
@@ -282,9 +287,7 @@ function _notifyOnStart(bag, next) {
           '%s: Failed to queue on_start notification with error: %s',
           who, err));
 
-        // Closing of "Initializing job" is handled here as this is the last
-        // step of the group.
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
       }
 
       return next();
@@ -299,7 +302,7 @@ function _publishJobNodeInfo(bag, next) {
   publishJobNodeInfo(bag,
     function (err) {
       if (err)
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
       return next();
     }
   );
@@ -316,7 +319,7 @@ function _processINs(bag, next) {
   processINs(bag,
     function (err) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       }
       return next();
@@ -335,16 +338,27 @@ function _generateSteps(bag, next) {
   generateSteps(bag,
     function (err, resultBag) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
         return next();
       }
 
       _.extend(bag, resultBag);
-      bag.consoleAdapter.closeGrp(true);
       return next();
     }
   );
+}
+
+function _closeSetupGroup(bag, next) {
+  var who = bag.who + '|' + _closeSetupGroup.name;
+  logger.verbose(who, 'Inside');
+
+  if (bag.isSetupGrpSuccess)
+    bag.consoleAdapter.closeGrp(true);
+  else
+    bag.consoleAdapter.closeGrp(false);
+
+  return next();
 }
 
 function _handOffAndPoll(bag, next) {
@@ -374,6 +388,9 @@ function _readJobStatus(bag, next) {
   // no matter what the job status is.
   bag.consoleAdapter.openGrp('Cleanup');
 
+  // We don't know where the group will end so need a flag
+  bag.isCleanupGrpSuccess = true;
+
   if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
   if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
@@ -384,7 +401,7 @@ function _readJobStatus(bag, next) {
   readJobStatus(bag,
     function (err, resultBag) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('failure');
       } else {
         bag = _.extend(bag, resultBag);
@@ -406,7 +423,7 @@ function _processOUTs(bag, next) {
   processOUTs(bag,
     function (err) {
       if (err) {
-        bag.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('failure');
       }
       return next();
@@ -425,7 +442,7 @@ function _createTrace(bag, next) {
   createTrace(bag,
     function (err, resultBag) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('failure');
       } else {
         bag = _.extend(bag, resultBag);
@@ -446,7 +463,7 @@ function _persistPreviousState(bag, next) {
     function (err) {
       if (err) {
         bag.jobStatusCode = getStatusCodeByName('failure');
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
       }
 
       return next();
@@ -466,7 +483,7 @@ function _saveStepState(bag, next) {
     function (err, resultBag) {
       if (err) {
         bag.jobStatusCode = getStatusCodeByName('failure');
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
       }
@@ -487,7 +504,7 @@ function _postVersion(bag, next) {
     function (err, resultBag) {
       if (err) {
         bag.jobStatusCode = getStatusCodeByName('failure');
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
       } else {
         bag = _.extend(bag, resultBag);
       }
@@ -521,10 +538,22 @@ function _finalBuildDirectoryCleanup(bag, next) {
   cleanup(bag,
     function (err) {
       if (err)
-        bag.consoleAdapter.closeGrp(false);
-      else
-        bag.consoleAdapter.closeGrp(!bag.statusUpdateFailed);
+        bag.isCleanupGrpSuccess = false;
+
       return next();
     }
   );
+}
+
+function _closeCleanupGroup(bag, next) {
+  var who = bag.who + '|' + _closeCleanupGroup.name;
+  logger.verbose(who, 'Inside');
+
+  if (bag.isCleanupGrpSuccess) {
+    bag.consoleAdapter.closeGrp(true);
+  } else {
+    bag.consoleAdapter.closeGrp(false);
+  }
+
+  return next();
 }

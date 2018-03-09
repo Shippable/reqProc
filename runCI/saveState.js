@@ -36,7 +36,7 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Validating dependencies to save current' +
+  bag.consoleAdapter.publishMsg('Validating dependencies to save current' +
     ' job files');
 
   var consoleErrors = [];
@@ -61,7 +61,6 @@ function _checkInputParams(bag, next) {
 
   bag.consoleAdapter.publishMsg('Successfully validated ' +
     'dependencies to save current job files');
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -69,7 +68,7 @@ function _getFilePaths(bag, next) {
   var who = bag.who + '|' + _getFilePaths.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Creating file list for current job');
+  bag.consoleAdapter.publishMsg('Creating file list for current job');
 
   bag.allFilesLocation = getFileListRecursively(bag.stateDir);
 
@@ -79,14 +78,13 @@ function _getFilePaths(bag, next) {
     bag.consoleAdapter.publishMsg('Successfully created file list ' +
       'for current job');
 
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
 function _readFilePermissions(bag, next) {
   if (_.isEmpty(bag.allFilesLocation)) return next();
 
-  bag.consoleAdapter.openCmd('Reading file permissions for current job');
+  bag.consoleAdapter.publishMsg('Reading file permissions for current job');
 
   var who = bag.who + '|' + _readFilePermissions.name;
   logger.verbose(who, 'Inside');
@@ -114,7 +112,6 @@ function _readFilePermissions(bag, next) {
       else {
         bag.consoleAdapter.publishMsg('Successfully read file permissions ' +
           'for current job');
-        bag.consoleAdapter.closeCmd(true);
       }
       return next(err);
     }
@@ -127,7 +124,7 @@ function _constructJson(bag, next) {
   var who = bag.who + '|' + _constructJson.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Constructing message for current job');
+  bag.consoleAdapter.publishMsg('Constructing message for current job');
 
   async.eachLimit(bag.allFilesLocation, 10,
     function (fileLocation, nextFileLocation) {
@@ -158,7 +155,6 @@ function _constructJson(bag, next) {
       else {
         bag.consoleAdapter.publishMsg('Successfully constructed message ' +
           'for current job');
-        bag.consoleAdapter.closeCmd(true);
       }
 
       return next(err);
@@ -170,7 +166,7 @@ function _postFiles(bag, next) {
   var who = bag.who + '|' + _postFiles.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Posting message for current job');
+  bag.consoleAdapter.publishMsg('Posting message for current job');
 
   bag.builderApiAdapter.postFilesByResourceId(bag.resourceId, bag.stateJSON,
     function (err, res) {
@@ -188,7 +184,6 @@ function _postFiles(bag, next) {
 
       bag.consoleAdapter.publishMsg('Successfully posted message ' +
         'for current job');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );

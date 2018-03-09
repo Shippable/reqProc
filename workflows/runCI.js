@@ -41,7 +41,8 @@ function runCI(externalBag, callback) {
       OUT: 'OUT',
       TASK: 'TASK',
       NOTIFY: 'NOTIFY'
-    }
+    },
+    isCleanupGrpSuccess: true
   };
   bag.inRootDir = path.join(bag.buildRootDir, 'IN');
   bag.outRootDir = path.join(bag.buildRootDir, 'OUT');
@@ -81,11 +82,11 @@ function runCI(externalBag, callback) {
       _extractSecrets.bind(null, bag),
       _saveSubPrivateKey.bind(null, bag),
       _logTimeout.bind(null, bag),
-      _closeInitializingJobGroup.bind(null, bag),
       _setUpDependencies.bind(null, bag),
       _saveCommonENVsToFile.bind(null, bag),
       _saveTaskMessage.bind(null, bag),
       _processInSteps.bind(null, bag),
+      _closeSetupGroup.bind(null, bag),
       _processCITask.bind(null, bag),
       _processOutSteps.bind(null, bag),
       _createTrace.bind(null, bag),
@@ -97,6 +98,7 @@ function runCI(externalBag, callback) {
       _postTaskVersion.bind(null, bag),
       _postOutResourceVersions.bind(null, bag),
       _updateJobStatus.bind(null, bag),
+      _closeCleanupGroup.bind(null, bag),
       _cleanBuildDirectory.bind(null, bag)
     ],
     function (err) {
@@ -147,11 +149,10 @@ function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Initializing Job');
+  bag.consoleAdapter.openGrp('Setup');
   bag.consoleAdapter.openCmd('Validating incoming message');
 
-  // We don't know where the group will end so need a flag
-  bag.isInitializingJobGrpSuccess = true;
+  bag.isSetupGrpSuccess = true;
   var consoleErrors = [];
 
   if (_.isEmpty(bag.rawMessage))
@@ -218,7 +219,7 @@ function _checkInputParams(bag, next) {
       }
     );
     bag.consoleAdapter.closeCmd(false);
-    bag.isInitializingJobGrpSuccess = false;
+    bag.isSetupGrpSuccess = false;
 
     bag.jobStatusCode = getStatusCodeByName('FAILED');
   } else {
@@ -242,7 +243,7 @@ function _getJobStatus(bag, next) {
         bag.consoleAdapter.publishMsg(util.format('Failed to get ' +
           'job:%s with err:%s',bag.jobId, err));
         bag.consoleAdapter.closeCmd(false);
-        bag.isInitializingJobGrpSuccess = false;
+        bag.isSetupGrpSuccess = false;
         bag.ciJobStatusCode = getStatusCodeByName('FAILED');
       } else {
         bag.ciJob = job;
@@ -292,7 +293,7 @@ function _validateCIJobMessage(bag, next) {
       }
     );
     bag.consoleAdapter.closeCmd(false);
-    bag.isInitializingJobGrpSuccess = false;
+    bag.isSetupGrpSuccess = false;
 
     bag.ciJobStatusCode = getStatusCodeByName('FAILED');
   } else {
@@ -325,7 +326,7 @@ function _validateCIJobStepsOrder(bag, next) {
   if (errMsg) {
     bag.consoleAdapter.publishMsg(errMsg);
     bag.consoleAdapter.closeCmd(false);
-    bag.isInitializingJobGrpSuccess = false;
+    bag.isSetupGrpSuccess = false;
     bag.ciJobStatusCode = getStatusCodeByName('FAILED');
   } else {
     bag.consoleAdapter.publishMsg('Successfully validated steps order');
@@ -447,7 +448,7 @@ function _updateNodeIdInCIJob(bag, next) {
 
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.isInitializingJobGrpSuccess = false;
+        bag.isSetupGrpSuccess = false;
 
         bag.jobStatusCode = getStatusCodeByName('FAILED');
       } else {
@@ -499,7 +500,7 @@ function _setUpDirectories(bag, next) {
     function (err) {
       if (err) {
         bag.consoleAdapter.closeCmd(false);
-        bag.isInitializingJobGrpSuccess = false;
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('FAILED');
       } else {
         bag.consoleAdapter.closeCmd(true);
@@ -623,7 +624,7 @@ function _getPreviousState(bag, next) {
       }
 
       if (bag.jobStatusCode)
-        bag.isInitializingJobGrpSuccess = false;
+        bag.isSetupGrpSuccess = false;
 
       return next();
     }
@@ -716,18 +717,6 @@ function _logTimeout(bag, next) {
   return next();
 }
 
-function _closeInitializingJobGroup(bag, next) {
-  var who = bag.who + '|' + _closeInitializingJobGroup.name;
-  logger.verbose(who, 'Inside');
-
-  if (bag.isInitializingJobGrpSuccess)
-    bag.consoleAdapter.closeGrp(true);
-  else
-    bag.consoleAdapter.closeGrp(false);
-
-  return next();
-}
-
 function _setUpDependencies(bag, next) {
   if (bag.isJobCancelled) return next();
   if (bag.jobStatusCode) return next();
@@ -736,15 +725,14 @@ function _setUpDependencies(bag, next) {
   logger.verbose(who, 'Inside');
 
   if (!bag.inPayload.propertyBag.yml) {
-    bag.consoleAdapter.openGrp('Step Error');
-    bag.consoleAdapter.openCmd('Errors');
+    bag.consoleAdapter.openCmd('Step Errors');
     bag.consoleAdapter.publishMsg('No YML found for job steps');
     bag.consoleAdapter.closeCmd(false);
-    bag.consoleAdapter.closeGrp(false);
+    bag.isSetupGrpSuccess = false;
 
     bag.jobStatusCode = getStatusCodeByName('FAILED');
-
-    return next('No yml found for job steps');
+    logger.warn('No yml found for job steps');
+    return next();
   }
 
   var jobName = bag.inPayload.name.replace(/[^A-Za-z0-9_]/g, '').
@@ -801,7 +789,7 @@ function _setUpDependencies(bag, next) {
       );
       var name = step[operation];
 
-      bag.consoleAdapter.openGrp('Setting up dependency: ' + name);
+      bag.consoleAdapter.openCmd('Setting up dependency: ' + name);
 
       var dependency = _.find(bag.inPayload.dependencies,
         function (dependency) {
@@ -810,14 +798,13 @@ function _setUpDependencies(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openCmd('Errors');
+        bag.consoleAdapter.openCmd('Step Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-
+        bag.isSetupGrpSuccess = false;
         return nextStep(true);
       }
 
@@ -839,9 +826,9 @@ function _setUpDependencies(bag, next) {
         ],
         function (err) {
           if (err)
-            bag.consoleAdapter.closeGrp(false);
+            bag.isSetupGrpSuccess = false;
           else
-            bag.consoleAdapter.closeGrp(true);
+            bag.consoleAdapter.closeCmd(true);
 
           return nextStep(err);
         }
@@ -869,7 +856,7 @@ function __createDataFile(bag, seriesParams, next) {
   var dataFilePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name);
 
-  bag.consoleAdapter.openCmd('Creating metadata file');
+  bag.consoleAdapter.publishMsg('Creating metadata file');
 
   var innerBag = {
     who: who,
@@ -888,7 +875,6 @@ function __createDataFile(bag, seriesParams, next) {
         bag.consoleAdapter.closeCmd(false);
         return next(true);
       }
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -903,7 +889,7 @@ function __generateReplaceScript(bag, seriesParams, next) {
   var who = bag.who + '|' + __generateReplaceScript.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Generating replace script');
+  bag.consoleAdapter.publishMsg('Generating replace script');
 
   var dependencyPath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name);
@@ -941,7 +927,6 @@ function __generateReplaceScript(bag, seriesParams, next) {
       }
 
       bag.consoleAdapter.publishMsg('Successfully generated replace script');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -992,7 +977,7 @@ function __readTemplatedVersion(bag, seriesParams, next) {
   var who = bag.who + '|' + __readTemplatedVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Reading version.json');
+  bag.consoleAdapter.publishMsg('Reading version.json');
 
   var versionPath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name,
@@ -1020,8 +1005,6 @@ function __readTemplatedVersion(bag, seriesParams, next) {
 
       seriesParams.dependency = versionJson;
 
-      bag.consoleAdapter.closeCmd(true);
-
       return next();
     }
   );
@@ -1032,7 +1015,7 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
   var who = bag.who + '|' + __addDependencyEnvironmentVariables.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Generating environment variables');
+  bag.consoleAdapter.publishMsg('Generating environment variables');
 
   var dependency = seriesParams.dependency;
 
@@ -1274,8 +1257,6 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
   bag.consoleAdapter.publishMsg('Successfully added environment variables ' +
     'for ' + dependency.name);
 
-  bag.consoleAdapter.closeCmd(true);
-
   return next();
 }
 
@@ -1285,7 +1266,7 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
   var who = bag.who + '|' + __getDependencyIntegrations.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Getting integrations');
+  bag.consoleAdapter.publishMsg('Getting integrations');
 
   var dependencyPath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name);
@@ -1501,7 +1482,6 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
             return next(true);
           }
 
-          bag.consoleAdapter.closeCmd(true);
           return next();
         }
       );
@@ -1514,7 +1494,7 @@ function __createStateDirectory(bag, seriesParams, next) {
   var who = bag.who + '|' + __createStateDirectory.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Creating state directory');
+  bag.consoleAdapter.publishMsg('Creating state directory');
 
   var dependencyStatePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation, seriesParams.dependency.name,
@@ -1537,7 +1517,6 @@ function __createStateDirectory(bag, seriesParams, next) {
         return next(true);
       }
 
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -1554,7 +1533,7 @@ function __getStateInformation(bag, seriesParams, next) {
   var who = bag.who + '|' + __getStateInformation.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Getting state information');
+  bag.consoleAdapter.publishMsg('Getting state information');
 
   // any job should have this value
   if (!seriesParams.dependency.version.propertyBag.sha) {
@@ -1584,7 +1563,6 @@ function __getStateInformation(bag, seriesParams, next) {
       else
         msg = 'Successfully received state files for job';
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -1596,7 +1574,7 @@ function __createStateFiles(bag, seriesParams, next) {
   var who = bag.who + '|' + __createStateFiles.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Writing state files');
+  bag.consoleAdapter.publishMsg('Writing state files');
 
   var dependencyStatePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation,
@@ -1621,7 +1599,6 @@ function __createStateFiles(bag, seriesParams, next) {
       if (!err)
         bag.consoleAdapter.publishMsg(
           'Successfully created state files at path: ' + dependencyStatePath);
-      bag.consoleAdapter.closeCmd(!err);
       return next(err);
     }
   );
@@ -1632,7 +1609,7 @@ function __setStateFilePermissions(bag, seriesParams, next) {
   var who = bag.who + '|' + __setStateFilePermissions.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Setting state file permissions');
+  bag.consoleAdapter.publishMsg('Setting state file permissions');
 
   var dependencyStatePath = path.join(bag.buildRootDir,
     seriesParams.dependency.operation,
@@ -1657,7 +1634,6 @@ function __setStateFilePermissions(bag, seriesParams, next) {
       if (!err)
         bag.consoleAdapter.publishMsg(
           'Successfully set permissions for state files');
-      bag.consoleAdapter.closeCmd(!err);
       return next(err);
     }
   );
@@ -1671,7 +1647,6 @@ function _saveCommonENVsToFile(bag, next) {
   logger.verbose(who, 'Inside');
 
   var filePath = bag.buildRootDir + '/common.env';
-  bag.consoleAdapter.openGrp('Preparing environment variables');
   bag.consoleAdapter.openCmd('writing ENVs to file');
   var exportedEnvs = _.map(bag.commonEnvs,
     function (env) {
@@ -1686,12 +1661,11 @@ function _saveCommonENVsToFile(bag, next) {
           filePath, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('FAILED');
       } else {
         bag.consoleAdapter.publishMsg('Successfully created file: ' + filePath);
         bag.consoleAdapter.closeCmd(true);
-        bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
@@ -1704,8 +1678,6 @@ function _saveTaskMessage(bag, next) {
 
   var who = bag.who + '|' + _saveTaskMessage.name;
   logger.verbose(who, 'Inside');
-
-  bag.consoleAdapter.openGrp('Saving task message');
 
   // If TASK step is not present, a managed TASK step is
   // automatically injected as last step by Shippable
@@ -1776,14 +1748,12 @@ function _saveTaskMessage(bag, next) {
 
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('FAILED');
       } else {
         bag.consoleAdapter.publishMsg(
           'Successfully saved message at: ' + bag.messageFilePath);
         bag.consoleAdapter.closeCmd(true);
-        bag.consoleAdapter.closeGrp(true);
       }
 
       return next();
@@ -1818,14 +1788,13 @@ function _processInSteps(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openGrp('Step Error');
-        bag.consoleAdapter.openCmd('Errors');
+        bag.consoleAdapter.openCmd('Step Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
 
         return nextStep(true);
       }
@@ -1834,11 +1803,11 @@ function _processInSteps(bag, next) {
           __handleDependency.bind(null, bag, dependency),
         ],
         function (err) {
-          if (bag.isGrpSuccess)
-            bag.consoleAdapter.closeGrp(true);
-          else {
+          if (err) {
             bag.consoleAdapter.closeCmd(false);
-            bag.consoleAdapter.closeGrp(false);
+            bag.isSetupGrpSuccess = false;
+          } else {
+            bag.consoleAdapter.closeCmd(true);
           }
           return nextStep(err);
         }
@@ -1850,6 +1819,18 @@ function _processInSteps(bag, next) {
       return next();
     }
   );
+}
+
+function _closeSetupGroup(bag, next) {
+  var who = bag.who + '|' + _closeSetupGroup.name;
+  logger.verbose(who, 'Inside');
+
+  if (bag.isSetupGrpSuccess)
+    bag.consoleAdapter.closeGrp(true);
+  else
+    bag.consoleAdapter.closeGrp(false);
+
+  return next();
 }
 
 function _processCITask(bag, next) {
@@ -1894,6 +1875,11 @@ function _processOutSteps(bag, next) {
   var who = bag.who + '|' + _processOutSteps.name;
   logger.verbose(who, 'Inside');
 
+  // We will close the group at end, as we don't
+  // really know when the group will be closed
+  // we use bag.isCleanupGrpSuccess to check whether
+  // group is success or not.
+  bag.consoleAdapter.openGrp('Cleanup');
   async.eachSeries(bag.inPayload.propertyBag.yml.steps,
     function (step, nextStep) {
 
@@ -1914,14 +1900,13 @@ function _processOutSteps(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openGrp('Step Error');
-        bag.consoleAdapter.openCmd('Errors');
+        bag.consoleAdapter.openCmd('Step Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
 
         return nextStep(true);
       }
@@ -1933,11 +1918,11 @@ function _processOutSteps(bag, next) {
           __handleDependency.bind(null, bag, dependency),
         ],
         function (err) {
-          if (bag.isGrpSuccess)
-            bag.consoleAdapter.closeGrp(true);
-          else {
+          if (err) {
             bag.consoleAdapter.closeCmd(false);
-            bag.consoleAdapter.closeGrp(false);
+            bag.isCleanupGrpSuccess = false;
+          } else {
+            bag.consoleAdapter.closeCmd(true);
           }
           return nextStep(err);
         }
@@ -1952,9 +1937,6 @@ function _processOutSteps(bag, next) {
 }
 
 function __handleDependency(bag, dependency, next) {
-  // We don't know where the group will end so need a flag
-  bag.isGrpSuccess = true;
-
   if (dependency.operation === bag.operation.TASK) return next();
   if (dependency.operation === bag.operation.NOTIFY) return next();
 
@@ -1963,17 +1945,13 @@ function __handleDependency(bag, dependency, next) {
 
   var msg = util.format('Processing %s Dependency: %s', dependency.operation,
     dependency.name);
-  bag.consoleAdapter.openGrp(msg);
-  bag.consoleAdapter.openCmd('Dependency Info');
+  bag.consoleAdapter.openCmd(msg);
   bag.consoleAdapter.publishMsg('Version Number: ' +
     dependency.version.versionNumber);
 
   if (dependency.version.versionName !== null)
     bag.consoleAdapter.publishMsg('Version Name: ' +
       dependency.version.versionName);
-  bag.consoleAdapter.closeCmd(true);
-
-  bag.consoleAdapter.openCmd('Validating ' + dependency.name + ' handler');
 
   var dependencyHandler;
   var dependencyHandlerPath = '';
@@ -1997,7 +1975,6 @@ function __handleDependency(bag, dependency, next) {
     msg = util.format('No special dependencyHandler for dependency type: %s %s',
       dependency.operation, dependency.type);
     bag.consoleAdapter.publishMsg(msg);
-    bag.consoleAdapter.closeCmd(true);
     return next();
   }
 
@@ -2005,13 +1982,10 @@ function __handleDependency(bag, dependency, next) {
     msg = util.format('No root directory for dependency type: %s %s',
       dependency.operation, dependency.type);
     bag.consoleAdapter.publishMsg(msg);
-    bag.isGrpSuccess = false;
     return next(true);
   }
 
-  // Closing the command as dependencyHandler will call it's own cmd
   bag.consoleAdapter.publishMsg('Successfully validated handler');
-  bag.consoleAdapter.closeCmd(true);
 
   var params = {
     bag: bag,
@@ -2025,8 +1999,6 @@ function __handleDependency(bag, dependency, next) {
 
   dependencyHandler(params,
     function (err) {
-      if (err)
-        bag.isGrpSuccess = false;
       return next(err);
     }
   );
@@ -2130,8 +2102,8 @@ function _persistPreviousStateOnFailure(bag, next) {
   var who = bag.who + '|' + _persistPreviousStateOnFailure.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Persisting Previous State');
-  bag.consoleAdapter.openCmd('Copy previous state to current state');
+  bag.consoleAdapter.openCmd('Persisting Previous State');
+  bag.consoleAdapter.publishMsg('Copy previous state to current state');
 
   var srcDir = bag.previousStateDir ;
   var destDir = bag.stateDir;
@@ -2141,12 +2113,11 @@ function _persistPreviousStateOnFailure(bag, next) {
         bag.consoleAdapter.publishMsg(
           'Failed to persist previous state of job');
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
       }
       bag.consoleAdapter.publishMsg(
         'Successfully persisted previous state of job');
       bag.consoleAdapter.closeCmd(true);
-      bag.consoleAdapter.closeGrp(true);
 
       return next();
     }
@@ -2159,7 +2130,7 @@ function _saveStepState(bag, next) {
   var who = bag.who + '|' + _saveStepState.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Saving Job Files');
+  bag.consoleAdapter.openCmd('Saving Job Files');
 
   saveState(bag,
     function (err, sha) {
@@ -2168,13 +2139,12 @@ function _saveStepState(bag, next) {
           util.format('Failed to save state for resource: %s',
             bag.inPayload.name), err
         );
-
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
 
         bag.jobStatusCode = getStatusCodeByName('FAILED');
       } else {
         bag.versionSha = sha;
-        bag.consoleAdapter.closeGrp(true);
+        bag.consoleAdapter.closeCmd(true);
       }
       return next();
     }
@@ -2188,8 +2158,7 @@ function _getOutputVersion(bag, next) {
   var who = bag.who + '|' + _getOutputVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openGrp('Saving resource version');
-  bag.consoleAdapter.openCmd('Reading output version');
+  bag.consoleAdapter.openCmd('Saving resource version');
 
   fs.readJson(bag.outputVersionFilePath,
     function (err, outputVersion) {
@@ -2203,7 +2172,6 @@ function _getOutputVersion(bag, next) {
       bag.outputVersion = outputVersion || {};
 
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
 
       return next();
     }
@@ -2217,7 +2185,7 @@ function _extendOutputVersionWithEnvs(bag, next) {
   var who = bag.who + '|' + _extendOutputVersionWithEnvs.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Reading additional job properties');
+  bag.consoleAdapter.publishMsg('Reading additional job properties');
   var envFilePath = path.join(bag.stateDir, util.format('%s.env',
     bag.inPayload.name));
   var newVersionName = '';
@@ -2249,8 +2217,6 @@ function _extendOutputVersionWithEnvs(bag, next) {
         envFilePath));
     bag.consoleAdapter.publishMsg(
       util.format('unable to read file %s.env', bag.inPayload.name));
-    bag.consoleAdapter.closeCmd(true);
-    bag.consoleAdapter.closeGrp(true);
     return next();
   }
   var extraVersionInfo = {};
@@ -2263,7 +2229,6 @@ function _extendOutputVersionWithEnvs(bag, next) {
     extraVersionInfo.propertyBag = propertyBag;
 
   _.extend(bag.outputVersion, extraVersionInfo);
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -2274,7 +2239,7 @@ function _postTaskVersion(bag, next) {
   var who = bag.who + '|' + _postTaskVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Updating resource version');
+  bag.consoleAdapter.publishMsg('Updating resource version');
 
   // jobStatusCode is only set to FAILED, so if we reach this
   // function without any code we know job has succeeded
@@ -2288,7 +2253,6 @@ function _postTaskVersion(bag, next) {
     versionTrigger: false
   };
 
-  bag.isGrpSuccess = true;
   if (bag.outputVersion)
     _.extend(version,  bag.outputVersion);
 
@@ -2305,15 +2269,13 @@ function _postTaskVersion(bag, next) {
           'resourceId: %s with err: %s', who, bag.resourceId, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
-        bag.isGrpSuccess = false;
+        bag.isCleanupGrpSuccess = false;
       } else {
         bag.version = newVersion;
         msg = util.format('Successfully posted version:%s for ' +
           'resourceId: %s', newVersion.id, bag.resourceId);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(true);
-        bag.consoleAdapter.closeGrp(true);
       }
 
       return next();
@@ -2351,14 +2313,13 @@ function _postOutResourceVersions(bag, next) {
       );
 
       if (!dependency) {
-        bag.consoleAdapter.openGrp('Step Error');
-        bag.consoleAdapter.openCmd('Errors');
+        bag.consoleAdapter.openCmd('Step Errors');
 
         var msg = util.format('%s, Missing dependency for: %s %s',
           who, operation, name);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
 
         return nextStep(true);
       }
@@ -2396,9 +2357,10 @@ function _postOutResourceVersions(bag, next) {
         hasVersion: true,
         hasEnv: true,
         isChanged: false,
-        isGrpSuccess: true
+        isCmdSuccess: true
       };
-      bag.consoleAdapter.openGrp('Processing version for ' + dependency.name);
+
+      bag.consoleAdapter.openCmd('Processing version for ' + dependency.name);
       async.series([
           __readVersionJson.bind(null, innerBag),
           __readReplicatedVersionJson.bind(null, innerBag),
@@ -2409,13 +2371,12 @@ function _postOutResourceVersions(bag, next) {
           __triggerJob.bind(null, innerBag)
         ],
         function (err) {
-          if (innerBag.isGrpSuccess) {
-            bag.consoleAdapter.closeGrp(true);
+          if (innerBag.isCmdSuccess) {
+            bag.consoleAdapter.closeCmd(true);
           } else {
             bag.consoleAdapter.closeCmd(false);
-            bag.consoleAdapter.closeGrp(false);
+            bag.isCleanupGrpSuccess = false;
           }
-
           if (innerBag.outVersion && innerBag.outVersion.id)
             bag.updatedOUTResources.push({
               resourceId: innerBag.outVersion.resourceId,
@@ -2442,7 +2403,7 @@ function __readVersionJson(bag, next) {
 
   var dependencyPath = path.join(bag.outRootDir, bag.dependency.name);
 
-  bag.consoleAdapter.openCmd('Reading dependency metadata from file');
+  bag.consoleAdapter.publishMsg('Reading dependency metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
   var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
@@ -2450,8 +2411,7 @@ function __readVersionJson(bag, next) {
       if (err) {
         bag.consoleAdapter.publishMsg(util.format('Failed to read file %s.' +
           ' Hence skipping.', checkFile));
-        bag.consoleAdapter.closeCmd(false);
-        bag.isGrpSuccess = false;
+        bag.isCmdSuccess = false;
         bag.hasVersion = false;
         return next();
       }
@@ -2495,7 +2455,6 @@ function __readVersionJson(bag, next) {
 
       bag.consoleAdapter.publishMsg(
         'Successfully read dependency metadata file');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -2510,7 +2469,7 @@ function __readReplicatedVersionJson(bag, next) {
 
   var dependencyPath = path.join(bag.inRootDir, bag.replicate);
 
-  bag.consoleAdapter.openCmd('Reading replicated metadata from file');
+  bag.consoleAdapter.publishMsg('Reading replicated metadata from file');
   bag.consoleAdapter.publishMsg('the path is: ' + dependencyPath + '/');
   var checkFile = path.join(dependencyPath, bag.stepMessageFilename);
   fs.readJson(checkFile,
@@ -2519,8 +2478,7 @@ function __readReplicatedVersionJson(bag, next) {
         bag.consoleAdapter.publishMsg(util.format(
           'Failed to find resource %s. Is it an input to this job?',
           bag.replicate));
-        bag.consoleAdapter.closeCmd(false);
-        bag.isGrpSuccess = false;
+        bag.isCmdSuccess = false;
         bag.hasVersion = false;
         return next();
       }
@@ -2543,7 +2501,6 @@ function __readReplicatedVersionJson(bag, next) {
 
       bag.consoleAdapter.publishMsg(
         'Successfully read replicated metadata file');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -2556,7 +2513,7 @@ function __readVersionEnv(bag, next) {
   var who = bag.who + '|' + __readVersionEnv.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Reading resource env file');
+  bag.consoleAdapter.publishMsg('Reading resource env file');
 
   var envFilePath = path.join(bag.stateDir, util.format('%s.env',
     bag.dependency.name));
@@ -2593,7 +2550,6 @@ function __readVersionEnv(bag, next) {
     bag.hasEnv = false;
   }
   bag.consoleAdapter.publishMsg('Successfully parsed .env file.');
-  bag.consoleAdapter.closeCmd(true);
 
   return next();
 }
@@ -2605,7 +2561,7 @@ function __compareVersions(bag, next) {
   var who = bag.who + '|' + __compareVersions.name;
   logger.debug(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('comparing current version to original');
+  bag.consoleAdapter.publishMsg('comparing current version to original');
   var originalVersion = bag.dependency.version;
 
   // Don't compare the trace
@@ -2640,7 +2596,6 @@ function __compareVersions(bag, next) {
 
   if (!bag.isChanged)
     bag.consoleAdapter.publishMsg('version has NOT changed');
-  bag.consoleAdapter.closeCmd(true);
   return next();
 }
 
@@ -2692,7 +2647,7 @@ function __postVersion(bag, next) {
   var who = bag.who + '|' + __postVersion.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Posting new version');
+  bag.consoleAdapter.publishMsg('Posting new version');
   var newVersion = {
     resourceId: bag.resourceId,
     propertyBag: bag.versionJson.propertyBag,
@@ -2708,8 +2663,7 @@ function __postVersion(bag, next) {
         msg = util.format('%s, Failed to post version for resourceId: %s',
           who, bag.versionJson.resourceId, err);
         bag.consoleAdapter.publishMsg(msg);
-        bag.consoleAdapter.closeCmd(false);
-        bag.isGrpSuccess = false;
+        bag.isCmdSuccess = false;
         return next(true);
       }
 
@@ -2719,7 +2673,6 @@ function __postVersion(bag, next) {
         util.inspect(version.versionNumber)
       );
       bag.consoleAdapter.publishMsg(msg);
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -2731,7 +2684,7 @@ function __triggerJob(bag, next) {
   var who = bag.who + '|' + __triggerJob.name;
   logger.verbose(who, 'Inside');
 
-  bag.consoleAdapter.openCmd('Triggering job: ' + bag.dependency.name);
+  bag.consoleAdapter.publishMsg('Triggering job: ' + bag.dependency.name);
   bag.builderApiAdapter.triggerNewBuildByResourceId(
     bag.dependency.resourceId, {},
     function (err) {
@@ -2742,7 +2695,6 @@ function __triggerJob(bag, next) {
         return next(true);
       }
       bag.consoleAdapter.publishMsg('Successfully triggered job.');
-      bag.consoleAdapter.closeCmd(true);
       return next();
     }
   );
@@ -2751,7 +2703,6 @@ function __triggerJob(bag, next) {
 function _updateJobStatus(bag, next) {
   if (bag.isJobCancelled) return next();
 
-  bag.consoleAdapter.openGrp('Updating Status');
   bag.consoleAdapter.openCmd('Updating job status');
 
   var who = bag.who + '|' + _updateJobStatus.name;
@@ -2777,15 +2728,26 @@ function _updateJobStatus(bag, next) {
           'jobId: %s with err: %s', who, bag.jobId, err);
         bag.consoleAdapter.publishMsg(msg);
         bag.consoleAdapter.closeCmd(false);
-        bag.consoleAdapter.closeGrp(false);
+        bag.isCleanupGrpSuccess = false;
       } else {
         bag.consoleAdapter.publishMsg('Successfully updated job status');
         bag.consoleAdapter.closeCmd(true);
-        bag.consoleAdapter.closeGrp(true);
       }
       return next();
     }
   );
+}
+
+function _closeCleanupGroup(bag, next) {
+  var who = bag.who + '|' + _closeCleanupGroup.name;
+  logger.verbose(who, 'Inside');
+
+  if (bag.isCleanupGrpSuccess) {
+    bag.consoleAdapter.closeGrp(true);
+  } else {
+    bag.consoleAdapter.closeGrp(false);
+  }
+  return next();
 }
 
 function _cleanBuildDirectory(bag, next) {
