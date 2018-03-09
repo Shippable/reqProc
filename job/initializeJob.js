@@ -330,7 +330,7 @@ function _logTimeout(bag, next) {
   var who = bag.who + '|' + _logTimeout.name;
   logger.verbose(who, 'Inside');
 
-  if (bag.buildJob.timeoutMS && bag.buildJob && bag.buildJob.propertyBag &&
+  if (bag.buildJob && bag.buildJob.timeoutMS && bag.buildJob.propertyBag &&
     bag.buildJob.propertyBag.payload &&
     bag.buildJob.propertyBag.payload.type === 'runSh') {
     bag.consoleAdapter.openCmd('Setting timeout');
