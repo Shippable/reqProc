@@ -80,6 +80,7 @@ function runCI(externalBag, callback) {
       _getCISecrets.bind(null, bag),
       _extractSecrets.bind(null, bag),
       _saveSubPrivateKey.bind(null, bag),
+      _logTimeout.bind(null, bag),
       _closeInitializingJobGroup.bind(null, bag),
       _setUpDependencies.bind(null, bag),
       _saveCommonENVsToFile.bind(null, bag),
@@ -696,6 +697,23 @@ function _saveSubPrivateKey(bag, next) {
       return next();
     }
   );
+}
+
+function _logTimeout(bag, next) {
+  if (bag.isJobCancelled) return next();
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _logTimeout.name;
+  logger.verbose(who, 'Inside');
+
+  if (bag.ciJob.timeoutMS) {
+    bag.consoleAdapter.openCmd('Setting timeout');
+    bag.consoleAdapter.publishMsg(
+      util.format('timeout set to %s minutes', bag.ciJob.timeoutMS / (60 * 1000))
+    );
+    bag.consoleAdapter.closeCmd(true);
+  }
+  return next();
 }
 
 function _closeInitializingJobGroup(bag, next) {
