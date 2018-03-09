@@ -22,7 +22,8 @@ function initializeJob(externalBag, callback) {
       _getBuildJobStatus.bind(null, bag),
       _validateDependencies.bind(null, bag),
       _updateNodeIdInBuildJob.bind(null, bag),
-      _getBuildJobPropertyBag.bind(null, bag)
+      _getBuildJobPropertyBag.bind(null, bag),
+      _logTimeout.bind(null, bag)
     ],
     function (err) {
       var result;
@@ -286,7 +287,7 @@ function _updateNodeIdInBuildJob(bag, next) {
     nodeId: bag.nodeId
   };
   bag.builderApiAdapter.putBuildJobById(bag.buildJobId, update,
-    function (err) {
+    function (err, buildJob) {
       if (err) {
         var msg =
           util.format('%s: failed to :putBuildJobById for buildJobId: %s, %s',
@@ -295,6 +296,7 @@ function _updateNodeIdInBuildJob(bag, next) {
         bag.consoleAdapter.closeCmd(false);
         return next(err);
       } else {
+        bag.buildJob = buildJob;
         bag.consoleAdapter.publishMsg(
           'Successfully job with nodeId: ' + bag.nodeId);
         bag.consoleAdapter.closeCmd(true);
@@ -321,5 +323,22 @@ function _getBuildJobPropertyBag(bag, next) {
 
   bag.consoleAdapter.publishMsg('Successfully parsed job properties');
   bag.consoleAdapter.closeCmd(true);
+  return next();
+}
+
+function _logTimeout(bag, next) {
+  var who = bag.who + '|' + _logTimeout.name;
+  logger.verbose(who, 'Inside');
+
+  if (bag.buildJob && bag.buildJob.timeoutMS && bag.buildJob.propertyBag &&
+    bag.buildJob.propertyBag.payload &&
+    bag.buildJob.propertyBag.payload.type === 'runSh') {
+    bag.consoleAdapter.openCmd('Setting timeout');
+    bag.consoleAdapter.publishMsg(util.format('timeout set to %s minutes',
+      bag.buildJob.timeoutMS / (60 * 1000))
+    );
+    bag.consoleAdapter.closeCmd(true);
+  }
+
   return next();
 }
