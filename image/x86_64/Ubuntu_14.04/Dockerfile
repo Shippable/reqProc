@@ -1,4 +1,4 @@
-FROM drydock/u16microbase:{{%TAG%}}
+FROM drydock/microbase:{{%TAG%}}
 
 # Prefix all image ENVs with IMAGE_ so there are no confusions.
 ENV IMAGE_REQPROC_DIR /root/reqProc
