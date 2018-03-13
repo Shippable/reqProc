@@ -7,6 +7,7 @@ var ShippableAdapter = require('../../shippable/Adapter.js');
 var STATS_PERIOD = 2 * 60 * 1000; // 2 minutes
 var os = require('os');
 var diskUsage = require('diskusage');
+var path = require('path');
 
 function postNodeStats(params, callback) {
   if (!config.nodeId) {
@@ -94,7 +95,14 @@ function __checkActiveContainers(bag, done) {
   var who = bag.who + '|' + __checkActiveContainers.name;
   logger.debug(who, 'Inside');
 
-  var command = 'docker ps| wc -l';
+  var scriptPath = util.format('%s/%s/activeContainerCount.%s',
+    global.config.shippableNodeArchitecture,
+    global.config.shippableNodeOperatingSystem,
+    global.config.scriptExtension);
+  scriptPath = path.resolve(__dirname, scriptPath);
+
+  var command = util.format('%s %s %s', global.config.defaultShell,
+    global.config.defaultShellArgs.join(' '), scriptPath);
   exec(command,
     function (err, stdout) {
       if (err)
@@ -109,7 +117,14 @@ function __checkTotalContainers(bag, done) {
   var who = bag.who + '|' + __checkTotalContainers.name;
   logger.debug(who, 'Inside');
 
-  var command = 'docker ps -a| wc -l';
+  var scriptPath = util.format('%s/%s/totalContainerCount.%s',
+    global.config.shippableNodeArchitecture,
+    global.config.shippableNodeOperatingSystem,
+    global.config.scriptExtension);
+  scriptPath = path.resolve(__dirname, scriptPath);
+
+  var command = util.format('%s %s %s', global.config.defaultShell,
+    global.config.defaultShellArgs.join(' '), scriptPath);
   exec(command,
     function (err, stdout) {
       if (err)

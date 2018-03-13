@@ -45,10 +45,15 @@ function setupMS(params) {
     process.env.SHIPPABLE_NODE_OPERATING_SYSTEM
   );
 
-  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
+  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016') {
     global.config.scriptExtension = 'ps1';
-  else
+    global.config.defaultShell = 'powershell';
+    global.config.defaultShellArgs = [];
+  } else {
     global.config.scriptExtension = 'sh';
+    global.config.defaultShell = '/bin/bash';
+    global.config.defaultShellArgs = ['-c'];
+  }
 
   global.config.shippableReleaseVersion = process.env.SHIPPABLE_RELEASE_VERSION;
 
