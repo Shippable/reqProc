@@ -29,6 +29,7 @@ function generateSteps(externalBag, callback) {
       }
     },
     stepsFileNames: [],
+    runtimeTemplate: externalBag.runtimeTemplate,
     buildRootDir: externalBag.buildRootDir,
     commonEnvs: externalBag.commonEnvs
   };
@@ -70,6 +71,7 @@ function _checkInputParams(bag, next) {
     'buildJobId',
     'consoleAdapter',
     'jobSteps',
+    'runtimeTemplate',
     'buildRootDir',
     'commonEnvs'
   ];
@@ -96,7 +98,7 @@ function _normalizeSteps(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.ymlSteps = normalizeSteps(bag.inPayload.propertyBag.yml, bag.buildJobId,
-    bag.buildScriptsDir, bag.buildStatusDir, 'yml');
+    bag.buildScriptsDir, bag.buildStatusDir, 'yml', bag.runtimeTemplate);
 
   bag.ymlTasks = _.filter(bag.ymlSteps,
     function (step) {

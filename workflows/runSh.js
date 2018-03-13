@@ -12,6 +12,7 @@ var setupDirectories = require('../job/setupDirectories.js');
 var pollBuildJobStatus = require('../job/pollBuildJobStatus.js');
 var getPreviousState = require('../job/getPreviousState.js');
 var getSecrets = require('../job/getSecrets.js');
+var getRuntimeTemplate = require('../job/getRuntimeTemplate.js');
 var setupDependencies = require('../job/setupDependencies.js');
 var notifyOnStart = require('../job/notifyOnStart.js');
 var processINs = require('../job/processINs.js');
@@ -76,6 +77,7 @@ function runSh(externalBag, callback) {
       _setExecutorAsReqProc.bind(null, bag),
       _getPreviousState.bind(null, bag),
       _getSecrets.bind(null, bag),
+      _getRuntimeTemplate.bind(null, bag),
       _setupDependencies.bind(null, bag),
       _notifyOnStart.bind(null, bag),
       _publishJobNodeInfo.bind(null, bag),
@@ -242,6 +244,28 @@ function _getSecrets(bag, next) {
         bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
+        bag = _.extend(bag, resultBag);
+      }
+      return next();
+    }
+  );
+}
+
+function _getRuntimeTemplate(bag, next) {
+  if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('cancelled')) return next();
+  if (bag.jobStatusCode === getStatusCodeByName('timeout')) return next();
+
+  var who = bag.who + '|' + _getRuntimeTemplate.name;
+  logger.verbose(who, 'Inside');
+
+  getRuntimeTemplate(bag,
+    function (err, resultBag) {
+      if (err) {
+        bag.consoleAdapter.closeGrp(false);
+        bag.jobStatusCode = getStatusCodeByName('error');
+      } else {
+        bag.consoleAdapter.closeGrp(true);
         bag = _.extend(bag, resultBag);
       }
       return next();
