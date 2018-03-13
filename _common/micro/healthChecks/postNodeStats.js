@@ -45,11 +45,6 @@ function _checkInputParams(bag, next) {
   var consoleErrors = [];
   bag.adapter = new ShippableAdapter('');
 
-  bag.defaultShell = '/bin/bash -c';
-
-  if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
-    bag.defaultShell = 'powershell';
-
   if (consoleErrors.length > 0) {
     _.each(consoleErrors,
       function (e) {
@@ -106,7 +101,8 @@ function __checkActiveContainers(bag, done) {
     global.config.scriptExtension);
   scriptPath = path.resolve(__dirname, scriptPath);
 
-  var command = util.format('%s %s', bag.defaultShell, scriptPath);
+  var command = util.format('%s %s %s', global.config.defaultShell,
+    global.config.defaultShellArgs.join(' '), scriptPath);
   exec(command,
     function (err, stdout) {
       if (err)
@@ -127,7 +123,8 @@ function __checkTotalContainers(bag, done) {
     global.config.scriptExtension);
   scriptPath = path.resolve(__dirname, scriptPath);
 
-  var command = util.format('%s %s', bag.defaultShell, scriptPath);
+  var command = util.format('%s %s %s', global.config.defaultShell,
+    global.config.defaultShellArgs.join(' '), scriptPath);
   exec(command,
     function (err, stdout) {
       if (err)
