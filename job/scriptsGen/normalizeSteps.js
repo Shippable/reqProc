@@ -6,14 +6,14 @@ module.exports = self;
 var path = require('path');
 
 function normalizeSteps(yml, buildJobId, buildScriptsDir, buildStatusDir,
-  group) {
+  group, runtimeTemplate) {
   var clonedSteps = _.clone(yml.steps);
   clonedSteps = _convertOldFormatStepsToNew(clonedSteps);
   clonedSteps = _normalizeNewFormatSteps(clonedSteps, yml.runtime,
     __convertOldFormatTerminalGroupToNew(yml.on_success),
     __convertOldFormatTerminalGroupToNew(yml.on_failure),
     __convertOldFormatTerminalGroupToNew(yml.always), buildJobId,
-    buildScriptsDir, buildStatusDir, group
+    buildScriptsDir, buildStatusDir, group, runtimeTemplate
   );
 
   return clonedSteps;
@@ -45,7 +45,8 @@ function _convertOldFormatStepsToNew(steps) {
 }
 
 function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
-  onFailure, always, buildJobId, buildScriptsDir, buildStatusDir, group) {
+  onFailure, always, buildJobId, buildScriptsDir, buildStatusDir, group,
+  runtimeTemplate) {
   var clonedSteps = _.clone(steps);
   // This is the top-level defaults defined in the job.
   var defaultJobRuntime = _.clone(defaultRuntime) || {};
@@ -59,9 +60,8 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
     defaultIsContainer = false;
 
   // Default image.
-  var imageName = 'drydock/microbase';
-  if (global.config.shippableNodeArchitecture === 'aarch64')
-    imageName = 'drydockaarch64/microbase';
+  var imageName =  util.format('%s/%s', runtimeTemplate.drydockOrg,
+    runtimeTemplate.defaultTaskImage);
 
   // Default options for container tasks.
   var defaultContainerOpts = {
