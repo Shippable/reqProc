@@ -262,10 +262,9 @@ function _getRuntimeTemplate(bag, next) {
   getRuntimeTemplate(bag,
     function (err, resultBag) {
       if (err) {
-        bag.consoleAdapter.closeGrp(false);
+        bag.isSetupGrpSuccess = false;
         bag.jobStatusCode = getStatusCodeByName('error');
       } else {
-        bag.consoleAdapter.closeGrp(true);
         bag = _.extend(bag, resultBag);
       }
       return next();
