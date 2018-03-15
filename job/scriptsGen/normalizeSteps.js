@@ -62,11 +62,15 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   // Default image.
   var imageName =  util.format('%s/%s', runtimeTemplate.drydockOrg,
     runtimeTemplate.defaultTaskImage);
-
+  var imageTag = runtimeTemplate.drydockTag;
+  // use 6.2.4 tag for all 'microbase' taks images.
+  // otherwise use the drydockTag
+  if (runtimeTemplate.defaultTaskImage === 'microbase')
+    imageTag = 'v6.2.4';
   // Default options for container tasks.
   var defaultContainerOpts = {
     imageName: imageName,
-    imageTag: runtimeTemplate.drydockTag,
+    imageTag: imageTag,
     pull: true,
     options: util.format('%s %s',
       global.config.defaultTaskContainerOptions,
