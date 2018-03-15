@@ -1530,6 +1530,9 @@ function __getStateInformation(bag, seriesParams, next) {
     !seriesParams.dependency.version.propertyBag.sha))
     return next();
 
+  if (seriesParams.dependency.type === 'externalCI')
+    return next();
+
   var who = bag.who + '|' + __getStateInformation.name;
   logger.verbose(who, 'Inside');
 
