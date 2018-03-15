@@ -66,7 +66,7 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   // Default options for container tasks.
   var defaultContainerOpts = {
     imageName: imageName,
-    imageTag: global.config.shippableReleaseVersion,
+    imageTag: runtimeTemplate.drydockTag,
     pull: true,
     options: util.format('%s %s',
       global.config.defaultTaskContainerOptions,
