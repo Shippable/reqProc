@@ -2331,7 +2331,8 @@ function _postOutResourceVersions(bag, next) {
         dependency.versionDependencyPropertyBag.replicate;
 
       var replicateOnPullRequest = true;
-      if (_.has(dependency.versionDependencyPropertyBag, 'replicateOnPullRequest'))
+      if (_.has(dependency.versionDependencyPropertyBag,
+        'replicateOnPullRequest'))
         replicateOnPullRequest =
           dependency.versionDependencyPropertyBag.replicateOnPullRequest;
 
