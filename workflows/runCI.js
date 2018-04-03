@@ -2330,6 +2330,11 @@ function _postOutResourceVersions(bag, next) {
       var replicate = dependency.versionDependencyPropertyBag &&
         dependency.versionDependencyPropertyBag.replicate;
 
+      var replicateOnPullRequest = true;
+      if (_.has(dependency.versionDependencyPropertyBag, 'replicateOnPullRequest'))
+        replicateOnPullRequest =
+          dependency.versionDependencyPropertyBag.replicateOnPullRequest;
+
       // currently ciRepo version comparision and creation is done
       // in its outStep.js file. This is handled separately, as .env file
       // only allows string values and we need json support
@@ -2354,6 +2359,8 @@ function _postOutResourceVersions(bag, next) {
         builderApiAdapter: bag.builderApiAdapter,
         dependency: dependency,
         replicate: replicate,
+        replicateOnPullRequest: replicateOnPullRequest,
+        skipPostingReplicateVersion: false,
         versionJson: null,
         versionEnv: null,
         versionName: null,
@@ -2501,6 +2508,11 @@ function __readReplicatedVersionJson(bag, next) {
        bag.versionJson.propertyBag = resource.version.propertyBag || {};
      }
 
+      if (bag.versionJson.propertyBag &&
+        _.has(bag.versionJson.propertyBag, 'shaData') &&
+        bag.versionJson.propertyBag.shaData.isPullRequest &&
+        !bag.replicateOnPullRequest)
+        bag.skipPostingReplicateVersion = true;
 
       bag.consoleAdapter.publishMsg(
         'Successfully read replicated metadata file');
@@ -2512,6 +2524,7 @@ function __readReplicatedVersionJson(bag, next) {
 function __readVersionEnv(bag, next) {
   if (bag.dependency.isJob) return next();
   if (!bag.hasVersion) return next();
+  if (bag.skipPostingReplicateVersion) return next();
 
   var who = bag.who + '|' + __readVersionEnv.name;
   logger.debug(who, 'Inside');
@@ -2560,6 +2573,7 @@ function __readVersionEnv(bag, next) {
 function __compareVersions(bag, next) {
   if (bag.dependency.isJob) return next();
   if (!bag.hasVersion) return next();
+  if (bag.skipPostingReplicateVersion) return next();
 
   var who = bag.who + '|' + __compareVersions.name;
   logger.debug(who, 'Inside');
@@ -2605,6 +2619,7 @@ function __compareVersions(bag, next) {
 function __createTrace(bag, next) {
   if (bag.dependency.isJob) return next();
   if (!bag.isChanged) return next();
+  if (bag.skipPostingReplicateVersion) return next();
 
   var who = bag.who + '|' + __createTrace.name;
   logger.verbose(who, 'Inside');
@@ -2646,6 +2661,7 @@ function __createTrace(bag, next) {
 function __postVersion(bag, next) {
   if (bag.dependency.isJob) return next();
   if (!bag.isChanged) return next();
+  if (bag.skipPostingReplicateVersion) return next();
 
   var who = bag.who + '|' + __postVersion.name;
   logger.verbose(who, 'Inside');
@@ -2683,6 +2699,7 @@ function __postVersion(bag, next) {
 
 function __triggerJob(bag, next) {
   if (!bag.dependency.isJob) return next();
+  if (bag.skipPostingReplicateVersion) return next();
 
   var who = bag.who + '|' + __triggerJob.name;
   logger.verbose(who, 'Inside');
