@@ -81,6 +81,11 @@ if (!global.config.shippableReleaseVersion)
     util.format('%s is missing: shippableReleaseVersion', who)
   );
 
+if (!global.config.shippableAMIVersion)
+  consoleErrors.push(
+    util.format('%s is missing: shippableAMIVersion', who)
+  );
+
 if (!_dirExistsSync(global.config.baseDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
     global.config.baseDir));
