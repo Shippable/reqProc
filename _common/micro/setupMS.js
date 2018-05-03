@@ -56,6 +56,7 @@ function setupMS(params) {
   }
 
   global.config.shippableReleaseVersion = process.env.SHIPPABLE_RELEASE_VERSION;
+  global.config.shippableAMIVersion = process.env.SHIPPABLE_AMI_VERSION;
 
   /* Node Type Codes */
   global.nodeTypeCodes = {

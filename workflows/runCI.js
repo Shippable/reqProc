@@ -758,7 +758,8 @@ function _setUpDependencies(bag, next) {
     util.format('JOB_TRIGGERED_BY_NAME=%s',
       bag.inPayload.triggeredByName),
     util.format('JOB_TRIGGERED_BY_ID=%s',
-      bag.inPayload.triggeredById)
+      bag.inPayload.triggeredById),
+    util.format('SHIPPABLE_AMI_VERSION=%s', global.config.shippableAMIVersion)
   ];
   bag.paramEnvs = [];
 
