@@ -211,6 +211,10 @@ function _setUpDependencies(bag, next) {
     {
       key: 'SHIPPABLE_INTEGRATION_ENVS_PATH',
       value: path.join(bag.buildScriptsDir, 'integration_envs.env')
+    },
+    {
+      key: 'SHIPPABLE_AMI_VERSION',
+      value: global.config.shippableAMIVersion
     }
   ];
   bag.paramEnvs = [];
