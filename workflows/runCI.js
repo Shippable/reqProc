@@ -13,6 +13,7 @@ var saveState = require('../runCI/saveState.js');
 var executeScript = require('../runCI/executeScript.js');
 var generateReplaceScript =
   require('../runCI/scriptsGen/generateReplaceScript.js');
+var parseSecureVariable = require('../_common/parseSecureVariable.js');
 
 var pathPlaceholder = '{{TYPE}}';
 var inStepPath = '../runCI/resources/' + pathPlaceholder + '/inStep.js';
@@ -1076,32 +1077,9 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
               value
             ));
           } else if (key === 'secure') {
-            var secureEnvs = value;
-            var index;
-
-            while ((index = secureEnvs.indexOf('=')) > -1) {
-              var secureKey, secureValue, secondHalf;
-              secureKey = secureEnvs.substring(0, index);
-              secondHalf = secureEnvs.substring(index + 1, secureEnvs.length);
-
-              var hasMoreEnvs = secondHalf.indexOf('=') > -1;
-              if (hasMoreEnvs) {
-                var temp = secondHalf.substring(0, secondHalf.indexOf('='));
-                var spaceIndex = temp.lastIndexOf(' ');
-                secureValue = secondHalf.substring(0, spaceIndex);
-                secureEnvs = secondHalf.substring(secureValue.length + 1,
-                  secureEnvs.length);
-              } else {
-                secureValue = secondHalf;
-                secureEnvs = '';
-              }
-
-              if (!_.isEmpty(secureKey)) {
-                if (secureValue[0] === '"' &&
-                  secureValue[secureValue.length - 1] === '"')
-                  secureValue = secureValue.substring(1,
-                    secureValue.length - 1);
-
+            var parsedVariable = parseSecureVariable(value);
+            _.each(parsedVariable,
+              function (secureValue, secureKey) {
                 secureValue = ___escapeEnvironmentVariable(secureValue);
 
                 bag.commonEnvs.push(util.format('%s_PARAMS_%s="%s"',
@@ -1114,7 +1092,7 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
                   secureValue
                 ));
               }
-            }
+            );
           } else {
             value = ___escapeEnvironmentVariable(value);
             bag.commonEnvs.push(util.format('%s_PARAMS_%s="%s"',
