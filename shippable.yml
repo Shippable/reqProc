@@ -73,7 +73,7 @@ jobs:
         - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
         - shipctl put_resource_state_multi $IMG_OUT "versionName=$REL_VER" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
 
- - name: u14_reqProc_x8664_build
+  - name: u14_reqProc_x8664_build
     type: runSh
     triggerMode: parallel
     dependencyMode: strict
