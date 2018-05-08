@@ -27,7 +27,6 @@ resources:
       sourceName: "drydock/u14reqproc"
       versionName: master
 
-
 jobs:
   - name: u16_reqProc_x8664_build
     type: runSh
