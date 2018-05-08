@@ -64,8 +64,8 @@ jobs:
             - IMG_NAME=$(shipctl get_resource_version_key "$IMG_OUT" "sourceName")
             - pushd $(shipctl get_resource_state "$RES_REPO")
             - sed -i "s/{{%TAG%}}/$REL_VER/g" ./image/$ARCHITECTURE/$OS/Dockerfile
-            - docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$IMG_NAME/$REL_VER" .
-            - docker push $IMG_NAME/$REL_VER
+            - docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$IMG_NAME:$REL_VER" .
+            - docker push $IMG_NAME:$REL_VER
       - OUT: u16reqProc_dd_img
     on_success:
       script:
@@ -108,8 +108,8 @@ jobs:
             - IMG_NAME=$(shipctl get_resource_version_key "$IMG_OUT" "sourceName")
             - pushd $(shipctl get_resource_state "$RES_REPO")
             - sed -i "s/{{%TAG%}}/$REL_VER/g" ./image/$ARCHITECTURE/$OS/Dockerfile
-            - docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$IMG_NAME/$REL_VER" .
-            - docker push $IMG_NAME/$REL_VER
+            - docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$IMG_NAME:$REL_VER" .
+            - docker push $IMG_NAME:$REL_VER
       - OUT: u16reqProc_dd_img
     on_success:
       script:
