@@ -112,7 +112,7 @@ jobs:
             - sed -i "s/{{%TAG%}}/$REL_VER/g" ./image/$ARCHITECTURE/$OS/Dockerfile
             - docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$IMG_NAME:$REL_VER" .
             - docker push $IMG_NAME:$REL_VER
-      - OUT: u16reqProc_dd_img
+      - OUT: u14reqProc_dd_img
     on_success:
       script:
         - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
