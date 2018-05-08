@@ -10,7 +10,7 @@ resources:
     type: gitRepo
     integration: avinci_gh
     pointer:
-      sourceName: shippable/reqExec
+      sourceName: shippable/reqProc
       branch: master
 
   - name: u16reqProc_dd_img
