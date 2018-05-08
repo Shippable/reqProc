@@ -21,7 +21,7 @@ resources:
       versionName: master
 
 jobs:
-  - name: u16_reqProc_x8664_pack
+  - name: u16_reqProc_x8664_build
     type: runSh
     triggerMode: parallel
     dependencyMode: strict
