@@ -34,6 +34,13 @@ resources:
       sourceName: "drydock/m10reqproc"
       versionName: master
 
+  - name: u16reqProc_aarch64_dd_img
+    type: image
+    integration: ric03uec-dockerhub
+    versionTemplate:
+      sourceName: "drydock/aarch64_u16reqproc"
+      versionName: master
+
 jobs:
   - name: u16_reqProc_x8664_build
     type: runSh
@@ -155,6 +162,49 @@ jobs:
             - docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$IMG_NAME:$REL_VER" .
             - docker push $IMG_NAME:$REL_VER
       - OUT: macOS10reqProc_dd_img
+    on_success:
+      script:
+        - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
+        - shipctl put_resource_state_multi $IMG_OUT "versionName=$REL_VER" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
+
+  - name: u16_reqProc_aarch64_build
+    type: runSh
+    triggerMode: parallel
+    dependencyMode: strict
+    runtime:
+      nodePool: aarch64_u1604_cus_01
+      container: false
+    steps:
+      - IN: reqProc_runCI
+      - IN: u14_reqExec_x8664_pack
+      - IN: u16_reqExec_x8664_pack
+      - IN: c7_reqExec_x8664_pack
+      - IN: macOS10_reqExec_x8664_pack
+      - IN: u16_reqExec_aarch64_pack
+      - IN: execTemplates_repo
+      - IN: u16microbase_dd_img
+      - IN: reqProc_sh_repo
+        switch: off
+      - IN: shipit_dh_cli
+        switch: off
+      - TASK:
+          name: reqProc_build
+          runtime:
+            options:
+              env:
+                - IMG_OUT: "u16reqProc_aarch64_dd_img"
+                - IMG_BASE: "u16microbase_dd_img"
+                - RES_REPO: "reqProc_sh_repo"
+                - ARCHITECTURE: "aarch64"
+                - OS: "Ubuntu_16"
+          script:
+            - REL_VER=$(shipctl get_resource_version_key "$IMG_BASE" "versionName")
+            - IMG_NAME=$(shipctl get_resource_version_key "$IMG_OUT" "sourceName")
+            - pushd $(shipctl get_resource_state "$RES_REPO")
+            - sed -i "s/{{%TAG%}}/$REL_VER/g" ./image/$ARCHITECTURE/$OS/Dockerfile
+            - docker build -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "$IMG_NAME:$REL_VER" .
+            - docker push $IMG_NAME:$REL_VER
+      - OUT: u16reqProc_aarch64_dd_img
     on_success:
       script:
         - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
