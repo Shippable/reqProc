@@ -182,7 +182,7 @@ jobs:
       - IN: macOS10_reqExec_x8664_pack
       - IN: u16_reqExec_aarch64_pack
       - IN: execTemplates_repo
-      - IN: u16microbase_dd_img
+      - IN: u16microbase_aarch64_dd_img
       - IN: reqProc_sh_repo
         switch: off
       - IN: shipit_dh_cli
@@ -193,7 +193,7 @@ jobs:
             options:
               env:
                 - IMG_OUT: "u16reqProc_aarch64_dd_img"
-                - IMG_BASE: "u16microbase_dd_img"
+                - IMG_BASE: "u16microbase_aarch64_dd_img"
                 - RES_REPO: "reqProc_sh_repo"
                 - ARCHITECTURE: "aarch64"
                 - OS: "Ubuntu_16.04"
