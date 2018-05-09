@@ -245,7 +245,6 @@ jobs:
                 - OS: "WindowsServer_2016"
                 - REL_VER: "master"
           script:
-            - $script:REL_VER=$(shipctl get_resource_version_key "$env:IMG_BASE" "versionName")
             - $script:RES_REPO_COMMIT=$(shipctl get_resource_version_key "$env:RES_REPO" "shaData.commitSha")
             - $script:IMG_NAME=$(shipctl get_resource_version_key "$env:IMG_OUT" "sourceName")
             - $script:DH_USR_NAME=$(shipctl get_integration_resource_field "$env:IMG_OUT" "userName")
