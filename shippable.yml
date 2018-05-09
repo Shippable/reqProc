@@ -41,6 +41,13 @@ resources:
       sourceName: "drydock/aarch64_u16reqproc"
       versionName: master
 
+  - name: w2k16reqProc_dd_img
+    type: image
+    integration: ric03uec-dockerhub
+    versionTemplate:
+      sourceName: "drydock/w16reqproc"
+      versionName: master
+
 jobs:
   - name: u16_reqProc_x8664_build
     type: runSh
@@ -232,7 +239,7 @@ jobs:
           runtime:
             options:
               env:
-                - IMG_OUT: "w2k16reqProc_x86_64_dd_img"
+                - IMG_OUT: "w2k16reqProc_dd_img"
                 - RES_REPO: "reqProc_sh_repo"
                 - ARCHITECTURE: "x86_64"
                 - OS: "WindowsServer_2016"
@@ -247,7 +254,7 @@ jobs:
             - docker build --no-cache -f ./image/$ARCHITECTURE/$OS/Dockerfile -t "${IMG_NAME}:${REL_VER}" .
             - docker login -u "$DH_USR_NAME" -p "$DH_PASS"
             - docker push "${IMG_NAME}:${REL_VER}"
-      - OUT: w2k16reqProc_x86_64_dd_img
+      - OUT: w2k16reqProc_dd_img
     on_success:
       script:
         - shipctl put_resource_state_multi "$env:JOB_NAME" "versionName=$REL_VER" "IMG_REPO_COMMIT_SHA=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
