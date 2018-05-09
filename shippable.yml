@@ -196,7 +196,7 @@ jobs:
                 - IMG_BASE: "u16microbase_dd_img"
                 - RES_REPO: "reqProc_sh_repo"
                 - ARCHITECTURE: "aarch64"
-                - OS: "Ubuntu_16"
+                - OS: "Ubuntu_16.04"
           script:
             - REL_VER=$(shipctl get_resource_version_key "$IMG_BASE" "versionName")
             - IMG_NAME=$(shipctl get_resource_version_key "$IMG_OUT" "sourceName")
