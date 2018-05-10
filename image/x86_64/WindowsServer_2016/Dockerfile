@@ -16,18 +16,14 @@ ENV OPENSSH_FIX_USER_FILEPERMS "C:\Program Files\OpenSSH-Win64\FixUserFilePermis
 # execTemplates
 ENV IMAGE_EXEC_TEMPLATES_DIR C:/Users/ContainerAdministrator/Shippable/execTemplates
 RUN mkdir $Env:IMAGE_EXEC_TEMPLATES_DIR; \
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
-    Invoke-WebRequest https://github.com/Shippable/execTemplates/archive/{{%TAG%}}.zip -OutFile $env:TEMP\execTemplates.zip; \
-    Expand-Archive $env:TEMP\execTemplates.zip -DestinationPath $env:IMAGE_EXEC_TEMPLATES_DIR; \
-    Move-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-{{%TAG%}}\* -Destination  $env:IMAGE_EXEC_TEMPLATES_DIR; \
-    Remove-Item $env:IMAGE_EXEC_TEMPLATES_DIR\execTemplates-{{%TAG%}}; \
-    Remove-Item $env:TEMP\execTemplates.zip;
+    Move-Item -Force $env:IMAGE_REQPROC_DIR\execTemplates\* -Destination $env:IMAGE_EXEC_TEMPLATES_DIR; \
+    Remove-Item -Recurse -Force $env:IMAGE_REQPROC_DIR\execTemplates;
 
 # reqExec
-WORKDIR C:/Users/ContainerAdministrator/Shippable/reqExec
 ENV IMAGE_REQEXEC_DIR C:/Users/ContainerAdministrator/Shippable/reqExec
-RUN Invoke-WebRequest https://s3.amazonaws.com/shippable-artifacts/reqExec/{{%TAG%}}/reqExec-{{%TAG%}}-x86_64-WindowsServer_2016.zip -OutFile reqExecBin.zip
-RUN Expand-Archive  .\reqExecBin.zip -DestinationPath $env:IMAGE_REQEXEC_DIR/x86_64/WindowsServer_2016/ -Force; Remove-Item .\reqExecBin.zip
+RUN mkdir -p $env:IMAGE_REQEXEC_DIR\x86_64\WindowsServer_2016\; \
+    Move-Item -Force $env:IMAGE_REQPROC_DIR\reqExec\* -Destination $env:IMAGE_REQEXEC_DIR\x86_64\WindowsServer_2016\; \
+    Remove-Item -Recurse -Force $env:IMAGE_REQPROC_DIR\reqExec;
 
 # Docker client binary
 RUN Invoke-WebRequest https://download.docker.com/win/static/stable/x86_64/docker-17.06.2-ce.zip -OutFile docker-17.06.2-ce.zip; \
@@ -43,10 +39,8 @@ RUN Invoke-WebRequest https://download.docker.com/win/static/stable/x86_64/docke
 RUN choco install -y git
 
 # shipctl
-RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
-    Invoke-WebRequest https://github.com/Shippable/node/archive/{{%TAG%}}.zip -OutFile $env:TEMP\node.zip; \
-    Expand-Archive $env:TEMP\node.zip -DestinationPath $env:TEMP\node; \
-    & $env:TEMP\node\node-{{%TAG%}}\shipctl\x86_64\WindowsServer_2016\install.ps1;
+RUN & $env:IMAGE_REQPROC_DIR\node\shipctl\x86_64\WindowsServer_2016\install.ps1; \
+    Remove-Item -Recurse -Force $env:IMAGE_REQPROC_DIR\node;
 
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqProc
 CMD C:\Users\ContainerAdministrator\Shippable\reqProc\boot.ps1

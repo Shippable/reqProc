@@ -233,6 +233,7 @@ jobs:
       - IN: w2k16_reqExec_x8664_pack
       - IN: execTemplates_repo
       - IN: reqProc_sh_repo
+      - IN: node_repo
         switch: off
       - TASK:
           name: reqProc_build
@@ -250,6 +251,23 @@ jobs:
             - $script:DH_USR_NAME=$(shipctl get_integration_resource_field "$env:IMG_OUT" "userName")
             - $script:DH_PASS=$(shipctl get_integration_resource_field "$env:IMG_OUT" "password")
             - pushd $(shipctl get_resource_state "$env:RES_REPO")
+            - |
+              mkdir execTemplates
+              # TODO: Change this to use the actual packaged code from S3 once that job is fixed
+              cp -recurse $(shipctl get_resource_state "execTemplates_repo")\* execTemplates
+            - |
+              $script:REQEXEC_S3_BUCKET = $(shipctl get_resource_version_key w2k16_reqExec_x8664_pack S3_BUCKET);
+              $script:REQEXEC_S3_FILENAME = $(shipctl get_resource_version_key w2k16_reqExec_x8664_pack S3_FILENAME);
+              $script:REQEXEC_S3_FULL_PATH =  $script:REQEXEC_S3_BUCKET + $script:REQEXEC_S3_FILENAME;
+              # Make this downloadable without aws cli dependency on the host
+              $script:REQEXEC_S3_FULL_PATH = ($script:REQEXEC_S3_FULL_PATH).replace('s3://', 'https://s3.amazonaws.com/')
+              Invoke-RestMethod $script:REQEXEC_S3_FULL_PATH -LocalFile .\reqExecBin.zip
+              mkdir reqExec
+              Expand-Archive -Force .\reqExecBin.zip -DestinationPath .\reqExec
+              Remove-Item .\reqExecBin.zip
+            - |
+              mkdir node
+              cp -recurse $(shipctl get_resource_state "node_repo")\* node
             - docker build --no-cache -f ./image/${env:ARCHITECTURE}/${env:OS}/Dockerfile -t "${IMG_NAME}:${env:REL_VER}" .
             - docker login -u "$DH_USR_NAME" -p "$DH_PASS"
             - docker push "${IMG_NAME}:${env:REL_VER}"
