@@ -252,9 +252,11 @@ jobs:
             - $script:DH_PASS=$(shipctl get_integration_resource_field "$env:IMG_OUT" "password")
             - pushd $(shipctl get_resource_state "$env:RES_REPO")
             - |
-              mkdir execTemplates
+              mkdir execTemplates;
               # TODO: Change this to use the actual packaged code from S3 once that job is fixed
-              cp -recurse $(shipctl get_resource_state "execTemplates_repo")\* execTemplates
+              $script:EXECTEMPLATES_REPO_PATH = $(shipctl get_resource_state "execTemplates_repo");
+              Write-Output Copying execTemplates from $script:EXECTEMPLATES_REPO_PATH
+              cp -recurse ${script:EXECTEMPLATES_REPO_PATH}\* execTemplates
             - |
               $script:REQEXEC_S3_BUCKET = $(shipctl get_resource_version_key w2k16_reqExec_x8664_pack S3_BUCKET);
               $script:REQEXEC_S3_FILENAME = $(shipctl get_resource_version_key w2k16_reqExec_x8664_pack S3_FILENAME);
