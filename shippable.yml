@@ -263,7 +263,7 @@ jobs:
               $script:REQEXEC_S3_FULL_PATH =  $script:REQEXEC_S3_BUCKET + $script:REQEXEC_S3_FILENAME;
               # Make this downloadable without aws cli dependency on the host
               $script:REQEXEC_S3_FULL_PATH = ($script:REQEXEC_S3_FULL_PATH).replace('s3://', 'https://s3.amazonaws.com/')
-              Invoke-RestMethod $script:REQEXEC_S3_FULL_PATH -LocalFile .\reqExecBin.zip
+              Invoke-RestMethod $script:REQEXEC_S3_FULL_PATH -OutFile .\reqExecBin.zip
               mkdir reqExec
               Expand-Archive -Force .\reqExecBin.zip -DestinationPath .\reqExec
               Remove-Item .\reqExecBin.zip
