@@ -15,35 +15,35 @@ resources:
 
   - name: u16reqProc_dd_img
     type: image
-    integration: ric03uec-dockerhub
+    integration: shipDH
     versionTemplate:
       sourceName: "drydock/u16reqproc"
       versionName: master
 
   - name: u14reqProc_dd_img
     type: image
-    integration: ric03uec-dockerhub
+    integration: shipDH
     versionTemplate:
       sourceName: "drydock/u14reqproc"
       versionName: master
 
   - name: macOS10reqProc_dd_img
     type: image
-    integration: ric03uec-dockerhub
+    integration: shipDH
     versionTemplate:
       sourceName: "drydock/m10reqproc"
       versionName: master
 
   - name: u16reqProc_aarch64_dd_img
     type: image
-    integration: ric03uec-dockerhub
+    integration: shipDH
     versionTemplate:
       sourceName: "drydock/aarch64_u16reqproc"
       versionName: master
 
   - name: w2k16reqProc_dd_img
     type: image
-    integration: ric03uec-dockerhub
+    integration: shipDH
     versionTemplate:
       sourceName: "drydock/w16reqproc"
       versionName: master
