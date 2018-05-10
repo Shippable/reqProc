@@ -39,8 +39,7 @@ RUN Invoke-WebRequest https://download.docker.com/win/static/stable/x86_64/docke
 RUN choco install -y git
 
 # shipctl
-RUN & $env:IMAGE_REQPROC_DIR\node\shipctl\x86_64\WindowsServer_2016\install.ps1; \
-    Remove-Item -Recurse -Force $env:IMAGE_REQPROC_DIR\node;
+RUN & $env:IMAGE_REQPROC_DIR\node\shipctl\x86_64\WindowsServer_2016\install.ps1;
 
 WORKDIR C:/Users/ContainerAdministrator/Shippable/reqProc
 CMD C:\Users\ContainerAdministrator\Shippable\reqProc\boot.ps1
