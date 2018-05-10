@@ -255,21 +255,22 @@ jobs:
               mkdir execTemplates;
               # TODO: Change this to use the actual packaged code from S3 once that job is fixed
               $script:EXECTEMPLATES_REPO_PATH = $(shipctl get_resource_state "execTemplates_repo");
-              Write-Output Copying execTemplates from $script:EXECTEMPLATES_REPO_PATH
-              cp -recurse ${script:EXECTEMPLATES_REPO_PATH}\* execTemplates
+              Write-Output Copying execTemplates from $script:EXECTEMPLATES_REPO_PATH;
+              cp -recurse ${script:EXECTEMPLATES_REPO_PATH}\* execTemplates;
             - |
               $script:REQEXEC_S3_BUCKET = $(shipctl get_resource_version_key w2k16_reqExec_x8664_pack S3_BUCKET);
               $script:REQEXEC_S3_FILENAME = $(shipctl get_resource_version_key w2k16_reqExec_x8664_pack S3_FILENAME);
               $script:REQEXEC_S3_FULL_PATH =  $script:REQEXEC_S3_BUCKET + $script:REQEXEC_S3_FILENAME;
               # Make this downloadable without aws cli dependency on the host
-              $script:REQEXEC_S3_FULL_PATH = ($script:REQEXEC_S3_FULL_PATH).replace('s3://', 'https://s3.amazonaws.com/')
-              Invoke-RestMethod $script:REQEXEC_S3_FULL_PATH -OutFile .\reqExecBin.zip
-              mkdir reqExec
-              Expand-Archive -Force .\reqExecBin.zip -DestinationPath .\reqExec
-              Remove-Item .\reqExecBin.zip
+              $script:REQEXEC_S3_FULL_PATH = ($script:REQEXEC_S3_FULL_PATH).replace('s3://', 'https://s3.amazonaws.com/');
+              Invoke-RestMethod $script:REQEXEC_S3_FULL_PATH -OutFile .\reqExecBin.zip;
+              mkdir reqExec;
+              Expand-Archive -Force .\reqExecBin.zip -DestinationPath .\reqExec;
+              Remove-Item .\reqExecBin.zip;
             - |
               mkdir node
-              cp -recurse $(shipctl get_resource_state "node_repo")\* node
+              $script:NODE_REPO_PATH = $(shipctl get_resource_state "node_repo");
+              cp -recurse ${script:NODE_REPO_PATH}\* node;
             - docker build --no-cache -f ./image/${env:ARCHITECTURE}/${env:OS}/Dockerfile -t "${IMG_NAME}:${env:REL_VER}" .
             - docker login -u "$DH_USR_NAME" -p "$DH_PASS"
             - docker push "${IMG_NAME}:${env:REL_VER}"
