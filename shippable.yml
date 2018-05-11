@@ -233,7 +233,7 @@ jobs:
       - IN: w2k16_reqExec_x8664_pack
       - IN: execTemplates_sh_repo
       - IN: reqProc_sh_repo
-      - IN: node_sh_repo
+#      - IN: node_sh_repo
         switch: off
       - TASK:
           name: reqProc_build
