@@ -447,13 +447,13 @@ jobs:
                $script:DH_USR_NAME=$(shipctl get_integration_resource_field "$env:RES_IMG" "userName")
                $script:DH_PASS=$(shipctl get_integration_resource_field "$env:RES_IMG" "password")
             - docker login -u "$DH_USR_NAME" -p "$DH_PASS"
-            - docker pull "$IMG_NAME:$UP_IMG_TAG"
+            - docker pull "${IMG_NAME}:${UP_IMG_TAG}"
             - |
-               docker tag "$IMG_NAME:$UP_IMG_TAG" "$IMG_NAME:$REL_VER"
-               docker push "$IMG_NAME:$REL_VER"
+               docker tag "${IMG_NAME}:${UP_IMG_TAG}" "${IMG_NAME}:${REL_VER}"
+               docker push "${IMG_NAME}:${REL_VER}"
             - |
-               docker tag "$IMG_NAME:$UP_IMG_TAG" "$IMG_NAME:latest"
-               docker push "$IMG_NAME:latest"
+               docker tag "${IMG_NAME}:${UP_IMG_TAG}" "${IMG_NAME}:latest"
+               docker push "${IMG_NAME}:${REL_VER}"
     on_success:
       script:
         - shipctl put_resource_state_multi $JOB_NAME "versionName=$REL_VER" "TAG_COMMIT_SHA=$REPO_COMMIT" "TAG_IMG=$REL_VER"
