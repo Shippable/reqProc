@@ -90,40 +90,40 @@ jobs:
         - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
         - shipctl put_resource_state_multi $IMG_OUT "versionName=$REL_VER" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER" "BUILD_NUMBER=$BUILD_NUMBER"
 
-  - name: u16reqProc_dd_tag
-    type: runSh
-    triggerMode: parallel
-    dependencyMode: strict
-    steps:
-      - IN: prod_release
-      - IN: u16reqProc_dd_img
-        switch: off
-      - TASK:
-          name: u16reqproc_tag
-          runtime:
-            options:
-              env:
-                - RES_VER: "prod_release"
-                - RES_IMG: "u16reqProc_dd_img"
-          script:
-            - REL_VER=$(shipctl get_resource_version_key "$RES_VER" "versionName")
-            - |
-               REPO_COMMIT=$(shipctl get_resource_version_key "$RES_IMG" "IMG_REPO_COMMIT_SHA")
-               IMG_NAME=$(shipctl get_resource_version_key "$RES_IMG" "sourceName")
-               UP_IMG_TAG=$(shipctl get_resource_version_key "$RES_IMG" "versionName")
-               DH_USR_NAME=$(shipctl get_integration_resource_field "$RES_IMG" "userName")
-               DH_PASS=$(shipctl get_integration_resource_field "$RES_IMG" "password")
-            - docker login -u $DH_USR_NAME -p $DH_PASS
-            - docker pull "$IMG_NAME:$UP_IMG_TAG"
-            - |
-               docker tag "$IMG_NAME:$UP_IMG_TAG" "$IMG_NAME:$REL_VER"
-               docker push "$IMG_NAME:$REL_VER"
-            - |
-               docker tag "$IMG_NAME:$UP_IMG_TAG" "$IMG_NAME:latest"
-               docker push "$IMG_NAME:latest"
-    on_success:
-      script:
-        - shipctl put_resource_state_multi $JOB_NAME "versionName=$REL_VER" "TAG_COMMIT_SHA=$REPO_COMMIT" "TAG_IMG=$REL_VER"
+#  - name: u16reqProc_dd_tag
+#    type: runSh
+#    triggerMode: parallel
+#    dependencyMode: strict
+#    steps:
+#      - IN: prod_release
+#      - IN: u16reqProc_dd_img
+#        switch: off
+#      - TASK:
+#          name: u16reqproc_tag
+#          runtime:
+#            options:
+#              env:
+#                - RES_VER: "prod_release"
+#                - RES_IMG: "u16reqProc_dd_img"
+#          script:
+#            - REL_VER=$(shipctl get_resource_version_key "$RES_VER" "versionName")
+#            - |
+#               REPO_COMMIT=$(shipctl get_resource_version_key "$RES_IMG" "IMG_REPO_COMMIT_SHA")
+#               IMG_NAME=$(shipctl get_resource_version_key "$RES_IMG" "sourceName")
+#               UP_IMG_TAG=$(shipctl get_resource_version_key "$RES_IMG" "versionName")
+#               DH_USR_NAME=$(shipctl get_integration_resource_field "$RES_IMG" "userName")
+#               DH_PASS=$(shipctl get_integration_resource_field "$RES_IMG" "password")
+#            - docker login -u $DH_USR_NAME -p $DH_PASS
+#            - docker pull "$IMG_NAME:$UP_IMG_TAG"
+#            - |
+#               docker tag "$IMG_NAME:$UP_IMG_TAG" "$IMG_NAME:$REL_VER"
+#               docker push "$IMG_NAME:$REL_VER"
+#            - |
+#               docker tag "$IMG_NAME:$UP_IMG_TAG" "$IMG_NAME:latest"
+#               docker push "$IMG_NAME:latest"
+#    on_success:
+#      script:
+#        - shipctl put_resource_state_multi $JOB_NAME "versionName=$REL_VER" "TAG_COMMIT_SHA=$REPO_COMMIT" "TAG_IMG=$REL_VER"
 
   - name: u14reqProc_x8664_build
     type: runSh
