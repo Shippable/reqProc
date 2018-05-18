@@ -75,6 +75,7 @@ jobs:
                 - ARCHITECTURE: "x86_64"
                 - OS: "Ubuntu_16.04"
           script:
+            - REPO_COMMIT=$(shipctl get_resource_version_key "$RES_REPO" "shaData.commitSha")
             - REL_VER=$(shipctl get_resource_version_key "$IMG_BASE" "versionName")
             - IMG_NAME=$(shipctl get_resource_version_key "$IMG_OUT" "sourceName")
             - DH_USR_NAME=$(shipctl get_integration_resource_field "$IMG_OUT" "userName")
@@ -87,8 +88,8 @@ jobs:
       - OUT: u16reqProc_dd_img
     on_success:
       script:
-        - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
-        - shipctl put_resource_state_multi $IMG_OUT "versionName=$REL_VER" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER" "BUILD_NUMBER=$BUILD_NUMBER"
+        - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "IMG_COMMIT_SHA=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
+        - shipctl put_resource_state_multi $IMG_OUT "versionName=$REL_VER" "IMG_COMMIT_SHA=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER" "BUILD_NUMBER=$BUILD_NUMBER"
 
   - name: u16reqProc_dd_tag
     type: runSh
@@ -108,7 +109,7 @@ jobs:
           script:
             - REL_VER=$(shipctl get_resource_version_key "$RES_VER" "versionName")
             - |
-               REPO_COMMIT=$(shipctl get_resource_version_key "$RES_IMG" "IMG_REPO_COMMIT_SHA")
+               REPO_COMMIT=$(shipctl get_resource_version_key "$RES_IMG" "IMG_COMMIT_SHA")
                IMG_NAME=$(shipctl get_resource_version_key "$RES_IMG" "sourceName")
                UP_IMG_TAG=$(shipctl get_resource_version_key "$RES_IMG" "versionName")
                DH_USR_NAME=$(shipctl get_integration_resource_field "$RES_IMG" "userName")
@@ -153,6 +154,7 @@ jobs:
                 - ARCHITECTURE: "x86_64"
                 - OS: "Ubuntu_14.04"
           script:
+            - REPO_COMMIT=$(shipctl get_resource_version_key "$RES_REPO" "shaData.commitSha")
             - REL_VER=$(shipctl get_resource_version_key "$IMG_BASE" "versionName")
             - IMG_NAME=$(shipctl get_resource_version_key "$IMG_OUT" "sourceName")
             - DH_USR_NAME=$(shipctl get_integration_resource_field "$IMG_OUT" "userName")
@@ -165,8 +167,8 @@ jobs:
       - OUT: u14reqProc_dd_img
     on_success:
       script:
-        - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
-        - shipctl put_resource_state_multi $IMG_OUT "versionName=$REL_VER" "commitSha=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER" "BUILD_NUMBER=$BUILD_NUMBER"
+        - shipctl put_resource_state_multi $JOB_NAME "versionName=$REPO_COMMIT" "IMG_COMMIT_SHA=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER"
+        - shipctl put_resource_state_multi $IMG_OUT "versionName=$REL_VER" "IMG_COMMIT_SHA=$REPO_COMMIT" "IMG_NAME=$IMG_NAME" "IMG_TAG=$REL_VER" "BUILD_NUMBER=$BUILD_NUMBER"
 
   - name: u14reqProc_dd_tag
     type: runSh
@@ -186,7 +188,7 @@ jobs:
           script:
             - REL_VER=$(shipctl get_resource_version_key "$RES_VER" "versionName")
             - |
-               REPO_COMMIT=$(shipctl get_resource_version_key "$RES_IMG" "IMG_REPO_COMMIT_SHA")
+               REPO_COMMIT=$(shipctl get_resource_version_key "$RES_IMG" "IMG_COMMIT_SHA")
                IMG_NAME=$(shipctl get_resource_version_key "$RES_IMG" "sourceName")
                UP_IMG_TAG=$(shipctl get_resource_version_key "$RES_IMG" "versionName")
                DH_USR_NAME=$(shipctl get_integration_resource_field "$RES_IMG" "userName")
