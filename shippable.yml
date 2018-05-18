@@ -458,7 +458,7 @@ jobs:
                docker push "${IMG_NAME}:${REL_VER}"
     on_success:
       script:
-        - shipctl put_resource_state_multi $JOB_NAME "versionName=${REL_VER}" "TAG_COMMIT_SHA=${REPO_COMMIT}" "TAG_IMG=${REL_VER}"
+        - shipctl put_resource_state_multi "$env:JOB_NAME" "versionName=${REL_VER}" "TAG_COMMIT_SHA=${REPO_COMMIT}" "TAG_IMG=${REL_VER}"
 
   - name: reqProc_repo_tag
     type: runSh
