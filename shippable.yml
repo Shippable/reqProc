@@ -368,7 +368,7 @@ jobs:
     triggerMode: parallel
     dependencyMode: strict
     runtime:
-      nodePool: x86_w16_cus_01
+      nodePool: x86_w16_dyn_large_01
       container: false
     steps:
       - IN: reqProc_runCI
