@@ -131,7 +131,7 @@ jobs:
     triggerMode: parallel
     dependencyMode: strict
     runtime:
-      nodePool: x86_u1404_dyn_large_01
+      nodePool: u14_cache_x86
     steps:
       - IN: reqProc_runCI
       - IN: u14_reqExec_x8664_pack
@@ -210,7 +210,7 @@ jobs:
     triggerMode: parallel
     dependencyMode: strict
     runtime:
-      nodePool: x86_m10_cus_01
+      nodePool: mac10
       container: false
     steps:
       - IN: reqProc_runCI
@@ -368,7 +368,7 @@ jobs:
     triggerMode: parallel
     dependencyMode: strict
     runtime:
-      nodePool: x86_w16_cus_01
+      nodePool: w2k16_cache
       container: false
     steps:
       - IN: reqProc_runCI
@@ -427,7 +427,7 @@ jobs:
     triggerMode: parallel
     dependencyMode: strict
     runtime:
-      nodePool: x86_w16_cus_01
+      nodePool: w2k16_cache
       container: false
     steps:
       - IN: prod_release
