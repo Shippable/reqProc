@@ -147,8 +147,7 @@ function _constructJson(bag, next) {
           }
           var obj = {
             permissions: bag.allFilesPermissions[fileLocation],
-            path: fileLocation.substring(bag.resourceOutStatePath.length,
-              fileLocation.length),
+            path: path.relative(bag.resourceOutStatePath, fileLocation),
             contents: data.toString()
           };
 
