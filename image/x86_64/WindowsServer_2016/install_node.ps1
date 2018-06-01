@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop";
 
 #TODO: move this to microbase later
 echo "downloading node zip"
-$env:NODE_VERSION = "4.8.5"
+$env:NODE_VERSION = "8.11.2"
 
 Invoke-WebRequest $('https://nodejs.org/dist/v{0}/node-v{0}-win-x64.zip' -f $env:NODE_VERSION) -OutFile 'node.zip' -UseBasicParsing ;
 echo "extracting node archive"
