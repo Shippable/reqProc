@@ -2268,8 +2268,8 @@ function _postTaskVersion(bag, next) {
 function _postOutResourceVersions(bag, next) {
   if (bag.isJobCancelled) return next();
   if (!bag.resourceId) return next();
-  if (bag.jobStatusCode !== getStatusCodeByName('SUCCESS'))
-    return next();
+  if (bag.jobStatusCode !== getStatusCodeByName('SUCCESS') &&
+    bag.jobStatusCode !== getStatusCodeByName('FAILED')) return next();
 
   var who = bag.who + '|' + _postOutResourceVersions.name;
   logger.verbose(who, 'Inside');
@@ -2305,6 +2305,12 @@ function _postOutResourceVersions(bag, next) {
 
         return nextStep(true);
       }
+
+      var on_failure = dependency.versionDependencyPropertyBag &&
+        dependency.versionDependencyPropertyBag.on_failure;
+
+      if ((bag.jobStatusCode === getStatusCodeByName('FAILED')) && !on_failure)
+        return nextStep();
 
       var replicate = dependency.versionDependencyPropertyBag &&
         dependency.versionDependencyPropertyBag.replicate;
