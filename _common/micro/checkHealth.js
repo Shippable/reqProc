@@ -22,8 +22,8 @@ function checkHealth(callback) {
       checkAMQP.bind(null, params),
       checkShippableApi.bind(null, params),
       updateNodeStatus.bind(null, params),
-      validateNode.bind(null, params),
-      postNodeStats.bind(null, params)
+      postNodeStats.bind(null, params),
+      validateNode.bind(null, params)
     ],
     function (err) {
       if (err)

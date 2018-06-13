@@ -23,7 +23,9 @@ function validateNode(params, callback) {
 
   async.series([
       _checkInputParams.bind(null, bag),
+      _validateClusterNodeStatus.bind(null, bag),
       _validateClusterNodeStatusPeriodically.bind(null, bag),
+      _validateSystemNodeStatus.bind(null, bag),
       _validateSystemNodeStatusPeriodically.bind(null, bag)
     ],
     function (err) {
@@ -54,6 +56,14 @@ function _checkInputParams(bag, next) {
   return next();
 }
 
+function _validateClusterNodeStatus(bag, next) {
+  if (bag.isSystemNode) return next();
+  var who = bag.who + '|' + _validateClusterNodeStatus.name;
+  logger.debug(who, 'Inside');
+
+  __validateClusterNode(bag, next);
+}
+
 function _validateClusterNodeStatusPeriodically(bag, next) {
   if (bag.isSystemNode) return next();
   var who = bag.who + '|' + _validateClusterNodeStatusPeriodically.name;
@@ -66,6 +76,18 @@ function _validateClusterNodeStatusPeriodically(bag, next) {
     VALIDATION_PERIOD
   );
   return next();
+}
+
+function _validateSystemNodeStatus(bag, next) {
+  if (!bag.isSystemNode) return next();
+  var who = bag.who + '|' + _validateSystemNodeStatus.name;
+  logger.debug(who, 'Inside');
+
+  __validateSystemNode(bag,
+    function () {
+      return next();
+    }
+  );
 }
 
 function _validateSystemNodeStatusPeriodically(bag, next) {
@@ -82,7 +104,7 @@ function _validateSystemNodeStatusPeriodically(bag, next) {
   return next();
 }
 
-function __validateClusterNode(innerBag) {
+function __validateClusterNode(innerBag, done) {
   if (global.config.isProcessingRunShJob) return;
 
   var who = innerBag.who + '|' + __validateClusterNode.name;
@@ -119,13 +141,15 @@ function __validateClusterNode(innerBag) {
               util.format('clusterNodeId:%s action is %s, doing nothing',
                 config.nodeId, clusterNode.action)
             );
+          if (done)
+            return done();
         }
       );
     }
   );
 }
 
-function __validateSystemNode(innerBag) {
+function __validateSystemNode(innerBag, done) {
   if (global.config.isProcessingRunShJob) return;
 
   var who = innerBag.who + '|' + __validateSystemNode.name;
@@ -162,6 +186,9 @@ function __validateSystemNode(innerBag) {
               util.format('SystemNodeId:%s action is %s, doing nothing',
                 config.nodeId, systemNode.action)
             );
+
+          if (done)
+            return done();
         }
       );
     }
