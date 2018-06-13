@@ -21,18 +21,19 @@ function postNodeStats(params, callback) {
   };
 
   bag.who = util.format('%s|_common|%s', msName, self.name);
-  logger.verbose('Validating node status of nodeId: %s',
+  logger.verbose('Posting node stats of nodeId: %s',
     config.nodeId);
 
   async.series([
       _checkInputParams.bind(null, bag),
+      _postNodeStats.bind(null, bag),
       _postNodeStatsPeriodically.bind(null, bag)
     ],
     function (err) {
       if (err)
-        logger.error(bag.who, 'Failed to validate node status');
+        logger.error(bag.who, 'Failed to post node stats');
       else
-        logger.verbose(bag.who, 'Successfully validated node status');
+        logger.verbose(bag.who, 'Successfully posted node stats');
       return callback(err);
     }
   );
@@ -56,6 +57,17 @@ function _checkInputParams(bag, next) {
   return next();
 }
 
+function _postNodeStats(bag, next) {
+  var who = bag.who + '|' + _postNodeStats.name;
+  logger.debug(who, 'Inside');
+
+  __postNodeStats(bag,
+    function () {
+      return next();
+    }
+  );
+}
+
 function _postNodeStatsPeriodically(bag, next) {
   var who = bag.who + '|' + _postNodeStatsPeriodically.name;
   logger.debug(who, 'Inside');
@@ -69,7 +81,7 @@ function _postNodeStatsPeriodically(bag, next) {
   return next();
 }
 
-function __postNodeStats(innerBag) {
+function __postNodeStats(innerBag, done) {
   var who = innerBag.who + '|' + __postNodeStats.name;
   logger.debug(who, 'Inside');
 
@@ -87,6 +99,8 @@ function __postNodeStats(innerBag) {
         logger.warn(
           util.format('Unable to POST node stats with err:%s', err)
         );
+      if (done)
+        return done();
     }
   );
 }
