@@ -18,6 +18,7 @@ exec_cmd() {
   return $cmd_status
 }
 
+export NO_VERIFY_SSL="<%=noVerifySSL%>"
 export PRIVATE_KEY="<%=privateKey%>"
 export PROJECT_CLONE_URL="<%=projectUrl%>"
 export PROJECT_CLONE_LOCATION="<%=cloneLocation%>"
@@ -30,6 +31,10 @@ export PROJECT="<%=name%>"
 export PROJECT_KEY_LOCATION="<%=keyLocation%>"
 
 git_sync() {
+  if [ "$NO_VERIFY_SSL" == "true" ]; then
+    git config --global http.sslVerify false
+  fi
+
   echo "$PRIVATE_KEY" > $PROJECT_KEY_LOCATION
   chmod 600 $PROJECT_KEY_LOCATION
   git config --global credential.helper store

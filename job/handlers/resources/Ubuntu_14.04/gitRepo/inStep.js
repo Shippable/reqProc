@@ -79,6 +79,8 @@ function _injectDependencies(bag, next) {
   var who = bag.who + '|' + _injectDependencies.name;
   logger.debug(who, 'Inside');
 
+  bag.dependency.noVerifySSL =
+    !_.isUndefined(process.env.NODE_TLS_REJECT_UNAUTHORIZED);
   bag.dependency.privateKey = bag.dependency.propertyBag.sysDeployKey.private;
   bag.dependency.isPrivate =
     bag.dependency.propertyBag.normalizedRepo.isPrivateRepository;

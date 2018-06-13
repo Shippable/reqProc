@@ -18,6 +18,7 @@ exec_cmd() {
   return $cmd_status
 }
 
+export NO_VERIFY_SSL="<%=noVerifySSL%>"
 export PRIVATE_KEY="<%=privateKey%>"
 export PROJECT_CLONE_URL="<%=projectUrl%>"
 export PROJECT_CLONE_LOCATION="<%=cloneLocation%>"
@@ -27,6 +28,10 @@ export PULL_REQUEST="<%=shaData.pullRequestNumber%>"
 export PULL_REQUEST_BASE_BRANCH="<%=shaData.pullRequestBaseBranch%>"
 
 git_sync() {
+  if [ "$NO_VERIFY_SSL" == "true" ]; then
+    git config --global http.sslVerify false
+  fi
+
   echo "$PRIVATE_KEY" > /tmp/key.pem
 
   chmod 600 /tmp/key.pem
