@@ -145,10 +145,12 @@ function _constructJson(bag, next) {
             bag.consoleAdapter.publishMsg(msg);
             return nextFileLocation(true);
           }
+
+          var contents = new Buffer(data).toString('base64');
           var obj = {
             permissions: bag.allFilesPermissions[fileLocation],
             path: path.relative(bag.resourceOutStatePath, fileLocation),
-            contents: data.toString()
+            contents: contents
           };
 
           bag.stateJSON.push(obj);

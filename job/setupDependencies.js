@@ -1042,7 +1042,11 @@ function __createStateFiles(bag, seriesParams, next) {
   async.eachLimit(bag.outputFileJSON, 10,
     function (file, nextFile) {
       var path = util.format('%s%s', dependencyStatePath, file.path);
-      fs.outputFile(path, file.contents,
+      var data = file.contents;
+      var isBase64 = new Buffer(data, 'base64').toString('base64') === data;
+      if (isBase64)
+        data = new Buffer(file.contents, 'base64');
+      fs.outputFile(path, data,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to create file:%s with err:%s',
