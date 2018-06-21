@@ -107,7 +107,11 @@ function _createFiles(bag, next) {
     function (file, nextFile) {
       var outPutFilePath = path.join(bag.buildInDir, bag.dependency.name,
         bag.dependency.type, file.path);
-      fs.outputFile(outPutFilePath, file.contents,
+      var data = file.contents;
+      var isBase64 = new Buffer(data, 'base64').toString('base64') === data;
+      if (isBase64)
+        data = new Buffer(file.contents, 'base64');
+      fs.outputFile(outPutFilePath, data,
         function (err) {
           if (err) {
             var msg = util.format('%s, Failed to create file:%s with err:%s',
