@@ -114,9 +114,9 @@ function _createFiles(bag, next) {
     function (file, nextFile) {
       var stateFilePath = path.join(bag.previousStateDir, file.path);
       var data = file.contents;
-      var isBase64 = new Buffer(data, 'base64').toString('base64') === data;
-      if (isBase64)
-        data = new Buffer(file.contents, 'base64');
+      var buffer = new Buffer(data, 'base64');
+      if (buffer.toString('base64') === data)
+        data = buffer;
       fs.outputFile(stateFilePath, data,
         function (err) {
           if (err) {
