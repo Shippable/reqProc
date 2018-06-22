@@ -175,7 +175,8 @@ function _normalizeNewFormatSteps(steps, defaultRuntime, onSuccess,
   );
 
   // onSuccess can only happen in the last task
-  lastTask.onSuccess = onSuccess;
+  if (lastTask)
+    lastTask.onSuccess = onSuccess;
 
   return clonedSteps;
 }

@@ -74,6 +74,13 @@ function _getFiles(bag, next) {
   bag.builderApiAdapter.getFilesByResourceId(bag.resourceId, query,
     function (err, data) {
       if (err) {
+        if (data.id === ActErr.NoSystemIntegration) {
+          msg = util.format('No system state is enabled. ' +
+            'State cannot be saved.');
+          bag.consoleAdapter.publishMsg(msg);
+          bag.consoleAdapter.closeCmd(false);
+          return next();
+        }
         msg = util.format('%s, :getFilesByResourceId failed for ' +
           'resourceId: %s with error %s', who, bag.resourceId, err);
 
