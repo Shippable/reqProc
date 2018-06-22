@@ -171,6 +171,13 @@ function _postFiles(bag, next) {
   bag.builderApiAdapter.postFilesByResourceId(bag.resourceId, bag.stateJSON,
     function (err, res) {
       if (err) {
+        if (res.id === ActErr.NoSystemIntegration) {
+          var stateMsg = util.format('No system state is enabled. ' +
+            'State cannot be saved.');
+          bag.consoleAdapter.publishMsg(stateMsg);
+          bag.consoleAdapter.closeCmd(false);
+          return next();
+        }
         if (res && res.message)
           err = res.message;
         var msg = util.format('%s, :postFilesByResourceId failed for ' +

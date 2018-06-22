@@ -45,6 +45,7 @@ ActErr.NoShippableYaml = 4014;
 ActErr.BuildMinutesExceeded = 4015;
 ActErr.EmptyRepository = 4016;
 ActErr.ProviderRateLimit = 4017;
+ActErr.NoSystemIntegration = 4018;
 
 function ActErr(methodName, id, message, error) {
   //handle logType
