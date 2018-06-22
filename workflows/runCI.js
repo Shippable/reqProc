@@ -1566,9 +1566,9 @@ function __createStateFiles(bag, seriesParams, next) {
     function (file, nextFile) {
       var path = util.format('%s%s', dependencyStatePath, file.path);
       var data = file.contents;
-      var isBase64 = new Buffer(data, 'base64').toString('base64') === data;
-      if (isBase64)
-        data = new Buffer(file.contents, 'base64');
+      var buffer = new Buffer(data, 'base64');
+      if (buffer.toString('base64') === data)
+        data = buffer;
       fs.outputFile(path, data,
         function (err) {
           if (err) {
