@@ -86,6 +86,11 @@ if (!global.config.shippableAMIVersion)
     util.format('%s is missing: shippableAMIVersion', who)
   );
 
+if (!global.config.clusterTypeCode)
+  consoleErrors.push(
+    util.format('%s is missing: clusterTypeCode', who)
+  );
+
 if (!_dirExistsSync(global.config.baseDir))
   consoleErrors.push(util.format('%s is missing directory: %s', who,
     global.config.baseDir));
