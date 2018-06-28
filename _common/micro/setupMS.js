@@ -68,6 +68,7 @@ function setupMS(params) {
 
   global.config.isSystemNode =
     config.nodeTypeCode === global.nodeTypeCodes.system;
+  global.config.clusterTypeCode = process.env.CLUSTER_TYPE_CODE;
   global.config.isProcessingRunShJob = false;
   // 15 seconds
   global.config.runShJobStatusPollIntervalMS = 15 * 1000;
