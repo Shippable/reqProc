@@ -11,7 +11,11 @@ function initializeJob(externalBag, callback) {
     consoleAdapter: externalBag.consoleAdapter,
     rawMessage: _.clone(externalBag.rawMessage),
     builderApiAdapter: externalBag.builderApiAdapter,
-    nodeId: global.config.nodeId
+    nodeId: global.config.nodeId,
+    isDockerOptionsBuild: false,
+    isOnHostBuild: false,
+    isInvalidDockerImageName: false,
+    isRestrictedNode: false
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -23,6 +27,8 @@ function initializeJob(externalBag, callback) {
       _validateDependencies.bind(null, bag),
       _updateNodeIdInBuildJob.bind(null, bag),
       _getBuildJobPropertyBag.bind(null, bag),
+      _applySharedNodePoolRestrictions.bind(null, bag),
+      _errorBuildDueToRestrictions.bind(null, bag),
       _logTimeout.bind(null, bag)
     ],
     function (err) {
@@ -53,6 +59,12 @@ function initializeJob(externalBag, callback) {
 function _checkInputParams(bag, next) {
   var who = bag.who + '|' + _checkInputParams.name;
   logger.verbose(who, 'Inside');
+
+  var systemCodesByCode = _.indexBy(global.systemCodes, 'code');
+  var clusterType = systemCodesByCode[global.config.clusterTypeCode];
+  var clusterTypeName = clusterType.name;
+  if (clusterTypeName.includes('restricted'))
+    bag.isRestrictedNode = true;
 
   var expectedParams = [
     'consoleAdapter',
@@ -323,6 +335,73 @@ function _getBuildJobPropertyBag(bag, next) {
 
   bag.consoleAdapter.publishMsg('Successfully parsed job properties');
   bag.consoleAdapter.closeCmd(true);
+  return next();
+}
+
+function _applySharedNodePoolRestrictions(bag, next) {
+  if (!bag.isRestrictedNode) return next();
+  if (_.isEmpty(bag.buildJobPropertyBag.yml)) return next();
+
+  var who = bag.who + '|' + _applySharedNodePoolRestrictions.name;
+  logger.verbose(who, 'Inside');
+
+  bag.isOnHostBuild = bag.buildJobPropertyBag.yml.runtime &&
+    !bag.buildJobPropertyBag.yml.runtime.container;
+
+  _.each(bag.buildJobPropertyBag.yml.steps,
+    function (step) {
+      if (step.TASK) {
+        var task = step.TASK;
+        if (!bag.isOnHostBuild)
+          bag.isOnHostBuild = task.runtime && !task.runtime.container;
+
+        if (!bag.isDockerOptionsBuild) {
+          bag.isDockerOptionsBuild = !!(task.runtime && task.runtime.options &&
+            task.runtime.options.options);
+        }
+
+        if (!bag.isInvalidDockerImageName) {
+          var imageName = task.runtime && task.runtime.options &&
+            task.runtime.options.imageName;
+
+          if (imageName) {
+            var splitImageName = imageName.split(' ');
+            if (splitImageName.length > 1)
+              bag.isInvalidDockerImageName = true;
+          }
+        }
+      }
+    }
+  );
+  return next();
+}
+
+function _errorBuildDueToRestrictions(bag, next) {
+  if (!bag.isRestrictedNode) return next();
+
+  var who = bag.who + '|' + _errorBuildDueToRestrictions.name;
+  logger.verbose(who, 'Inside');
+
+  bag.errorBuild = bag.isOnHostBuild || bag.isDockerOptionsBuild ||
+    bag.isInvalidDockerImageName;
+
+  if (bag.errorBuild) {
+    bag.consoleAdapter.openCmd('Restricted shared node pool limitations');
+    if (bag.isOnHostBuild)
+      bag.consoleAdapter.publishMsg('Host builds are not allowed on ' +
+        'restricted shared node pools.');
+
+    if (bag.isDockerOptionsBuild)
+      bag.consoleAdapter.publishMsg('Docker options are not allowed on ' +
+        'restricted shared node pools.');
+
+    if (bag.isInvalidDockerImageName)
+      bag.consoleAdapter.publishMsg('Invalid Docker image name present in ' +
+        'task section.');
+    bag.consoleAdapter.closeCmd(false);
+
+    return next(true);
+  }
   return next();
 }
 

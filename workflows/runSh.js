@@ -319,6 +319,8 @@ function _notifyOnStart(bag, next) {
 }
 
 function _publishJobNodeInfo(bag, next) {
+  if (bag.jobStatusCode === getStatusCodeByName('error')) return next();
+
   var who = bag.who + '|' + _publishJobNodeInfo.name;
   logger.verbose(who, 'Inside');
 
