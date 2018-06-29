@@ -15,7 +15,9 @@ function initializeJob(externalBag, callback) {
     isDockerOptionsBuild: false,
     isOnHostBuild: false,
     isInvalidDockerImageName: false,
-    isRestrictedNode: false
+    isRestrictedNode: false,
+    hasPrivateGitReposAsIn: false,
+    privateGitRepoResourceNames: []
   };
   bag.who = util.format('%s|job|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
@@ -345,6 +347,20 @@ function _applySharedNodePoolRestrictions(bag, next) {
   var who = bag.who + '|' + _applySharedNodePoolRestrictions.name;
   logger.verbose(who, 'Inside');
 
+   var privateGitRepos = _.filter(bag.inPayload.dependencies,
+    function (dependency) {
+      if (dependency.operation !== 'IN') return;
+      if (dependency.type !== 'gitRepo') return;
+      return dependency.propertyBag && dependency.propertyBag.normalizedRepo &&
+        dependency.propertyBag.normalizedRepo.isPrivateRepository;
+    }
+  );
+
+  if (!_.isEmpty(privateGitRepos)) {
+    bag.hasPrivateGitReposAsIn = true;
+    bag.privateGitRepoResourceNames = _.pluck(privateGitRepos, 'name');
+  }
+
   bag.isOnHostBuild = bag.buildJobPropertyBag.yml.runtime &&
     !bag.buildJobPropertyBag.yml.runtime.container;
 
@@ -383,10 +399,16 @@ function _errorBuildDueToRestrictions(bag, next) {
   logger.verbose(who, 'Inside');
 
   bag.errorBuild = bag.isOnHostBuild || bag.isDockerOptionsBuild ||
-    bag.isInvalidDockerImageName;
+    bag.isInvalidDockerImageName || bag.hasPrivateGitReposAsIn;
 
   if (bag.errorBuild) {
     bag.consoleAdapter.openCmd('Restricted shared node pool limitations');
+    if (bag.hasPrivateGitReposAsIn)
+      bag.consoleAdapter.publishMsg('Private gitRepo resources cannot be ' +
+        'added as IN to builds running on restricted shared node pools: ' +
+        bag.privateGitRepoResourceNames.join(', ')
+      );
+
     if (bag.isOnHostBuild)
       bag.consoleAdapter.publishMsg('Host builds are not allowed on ' +
         'restricted shared node pools.');
@@ -398,8 +420,8 @@ function _errorBuildDueToRestrictions(bag, next) {
     if (bag.isInvalidDockerImageName)
       bag.consoleAdapter.publishMsg('Invalid Docker image name present in ' +
         'task section.');
-    bag.consoleAdapter.closeCmd(false);
 
+    bag.consoleAdapter.closeCmd(false);
     return next(true);
   }
   return next();
