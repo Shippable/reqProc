@@ -43,7 +43,8 @@ function runCI(externalBag, callback) {
       TASK: 'TASK',
       NOTIFY: 'NOTIFY'
     },
-    isCleanupGrpSuccess: true
+    isCleanupGrpSuccess: true,
+    isRestrictedNode: false
   };
   bag.inRootDir = path.join(bag.buildRootDir, 'IN');
   bag.outRootDir = path.join(bag.buildRootDir, 'OUT');
@@ -64,6 +65,12 @@ function runCI(externalBag, callback) {
     bag.previousStateDir, bag.stateDir, bag.buildManagedDir, bag.mexecScriptDir,
     bag.sshDir, bag.cexecDir, bag.artifactsDir, bag.jobEnvDir);
 
+  var systemCodesByCode = _.indexBy(global.systemCodes, 'code');
+  var clusterType = systemCodesByCode[global.config.clusterTypeCode];
+  var clusterTypeName = clusterType.name;
+  if (clusterTypeName.startsWith('restricted'))
+    bag.isRestrictedNode = true;
+
   bag.who = util.format('%s|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
 
@@ -77,6 +84,7 @@ function runCI(externalBag, callback) {
       _validateDependencies.bind(null, bag),
       _updateNodeIdInCIJob.bind(null, bag),
       _getBuildJobPropertyBag.bind(null, bag),
+      _applySharedNodePoolRestrictions.bind(null, bag),
       _setUpDirectories.bind(null, bag),
       _getPreviousState.bind(null, bag),
       _getCISecrets.bind(null, bag),
@@ -481,6 +489,39 @@ function _getBuildJobPropertyBag(bag, next) {
 
   bag.consoleAdapter.publishMsg('Successfully parsed job properties');
   bag.consoleAdapter.closeCmd(true);
+  return next();
+}
+
+function _applySharedNodePoolRestrictions(bag, next) {
+  if (bag.isJobCancelled) return next();
+  if (bag.jobStatusCode) return next();
+  if (!bag.isRestrictedNode) return next();
+  if (_.isEmpty(bag.buildJobPropertyBag.yml)) return next();
+
+  var who = bag.who + '|' + _applySharedNodePoolRestrictions.name;
+  logger.verbose(who, 'Inside');
+
+  var privateGitRepos = _.filter(bag.inPayload.dependencies,
+    function (dependency) {
+      if (dependency.operation !== 'IN') return;
+      if (dependency.type !== 'gitRepo') return;
+      return dependency.propertyBag && dependency.propertyBag.normalizedRepo &&
+        dependency.propertyBag.normalizedRepo.isPrivateRepository;
+    }
+  );
+
+  if (!_.isEmpty(privateGitRepos)) {
+    var privateGitRepoResourceNames = _.pluck(privateGitRepos, 'name');
+    bag.consoleAdapter.openCmd('Restricted shared node pool limitations');
+    bag.consoleAdapter.publishMsg('Private gitRepo resources cannot be added ' +
+      'as IN to builds running on restricted shared node pools: ' +
+      privateGitRepoResourceNames.join(', ')
+    );
+
+    bag.consoleAdapter.closeCmd(false);
+    bag.jobStatusCode = getStatusCodeByName('FAILED');
+  }
+
   return next();
 }
 
