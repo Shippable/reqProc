@@ -17,6 +17,14 @@ fi
 
 cp -r "$IMAGE_REQEXEC_DIR"/. "$REQEXEC_DIR"
 
+if [ -n "$KEY_STORE_LOCATION" ]; then
+  rm -rf $KEY_STORE_LOCATION/*
+fi
+
+if [ -n "$MESSAGE_STORE_LOCATION" ]; then
+  rm -rf $MESSAGE_STORE_LOCATION/*
+fi
+
 if [ "$RUN_MODE" == "dev" ]; then
   echo forever is watching file changes
   forever -w -v --minUptime 1000 --spinSleepTime 1000 app.js

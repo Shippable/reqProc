@@ -68,7 +68,6 @@ function runCI(externalBag, callback) {
   logger.info(bag.who, 'Inside');
 
   async.series([
-      _cleanupTmpDirectory.bind(null, bag),
       _getClusterNode.bind(null, bag),
       _getSystemNode.bind(null, bag),
       _checkInputParams.bind(null, bag),
@@ -105,31 +104,6 @@ function runCI(externalBag, callback) {
     ],
     function (err) {
       return callback(err);
-    }
-  );
-}
-
-function _cleanupTmpDirectory(bag, next) {
-  var who = bag.who + '|' + _cleanupTmpDirectory.name;
-  logger.verbose(who, 'Inside');
-
-  // sshDir and cexecDir contains sensitive information that should
-  // be deleted before the build runs
-  var subDirsToBeCleaned = [bag.sshDir, bag.cexecDir];
-
-  async.each(subDirsToBeCleaned, 10,
-    function (path, nextPath) {
-      fs.emptyDir(path,
-        function (err) {
-          if (err) {
-            return nextPath(true);
-          }
-          return nextPath();
-        }
-      );
-    },
-    function (err) {
-      return next(err);
     }
   );
 }
