@@ -65,7 +65,7 @@ function _checkInputParams(bag, next) {
   var systemCodesByCode = _.indexBy(global.systemCodes, 'code');
   var clusterType = systemCodesByCode[global.config.clusterTypeCode];
   var clusterTypeName = clusterType.name;
-  if (clusterTypeName.includes('restricted'))
+  if (clusterTypeName.startsWith('restricted'))
     bag.isRestrictedNode = true;
 
   var expectedParams = [
@@ -347,7 +347,7 @@ function _applySharedNodePoolRestrictions(bag, next) {
   var who = bag.who + '|' + _applySharedNodePoolRestrictions.name;
   logger.verbose(who, 'Inside');
 
-   var privateGitRepos = _.filter(bag.inPayload.dependencies,
+  var privateGitRepos = _.filter(bag.inPayload.dependencies,
     function (dependency) {
       if (dependency.operation !== 'IN') return;
       if (dependency.type !== 'gitRepo') return;
