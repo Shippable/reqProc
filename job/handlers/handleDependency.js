@@ -23,7 +23,8 @@ function handleDependency(externalBag, dependency, callback) {
     buildOutDir: externalBag.buildOutDir,
     buildScriptsDir: externalBag.buildScriptsDir,
     buildSecretsDir: externalBag.buildSecretsDir,
-    stepMessageFilename: externalBag.stepMessageFilename
+    stepMessageFilename: externalBag.stepMessageFilename,
+    subPrivateKeyPath: externalBag.subPrivateKeyPath
   };
   bag.who = util.format('%s|job|handlers|%s', msName, self.name);
   logger.info(bag.who, 'Inside');
