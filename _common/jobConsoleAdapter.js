@@ -158,7 +158,7 @@ Adapter.prototype.publishMsg = function (message) {
     consoleId: uuid.v4(),
     parentConsoleId: that.consoleCmdId,
     type: 'msg',
-    message: message + '\n',
+    message: message,
     timestamp: that._getTimestamp(),
     isShown: true
   };
