@@ -362,14 +362,15 @@ function _applySharedNodePoolRestrictions(bag, next) {
   }
 
   bag.isOnHostBuild = bag.buildJobPropertyBag.yml.runtime &&
-    !bag.buildJobPropertyBag.yml.runtime.container;
+    (bag.buildJobPropertyBag.yml.runtime.container === false);
 
   _.each(bag.buildJobPropertyBag.yml.steps,
     function (step) {
       if (step.TASK) {
         var task = step.TASK;
         if (!bag.isOnHostBuild)
-          bag.isOnHostBuild = task.runtime && !task.runtime.container;
+          bag.isOnHostBuild = task.runtime &&
+            (task.runtime.container === false);
 
         if (!bag.isDockerOptionsBuild) {
           bag.isDockerOptionsBuild = !!(task.runtime && task.runtime.options &&
