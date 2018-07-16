@@ -45,7 +45,7 @@ Adapter.prototype.openGrp = function (consoleGrpName, isShown) {
     consoleId: that.consoleGrpId,
     parentConsoleId: 'root',
     type: 'grp',
-    message: that.consoleGrpName,
+    message: that.consoleGrpName + '\n',
     timestamp: that._getTimestamp(),
     isShown: showGrp
   };
@@ -74,7 +74,7 @@ Adapter.prototype.closeGrp = function (isSuccess, isShown) {
     consoleId: that.consoleGrpId,
     parentConsoleId: 'root',
     type: 'grp',
-    message: that.consoleGrpName,
+    message: that.consoleGrpName + '\n',
     timestamp: that._getTimestamp(),
     timestampEndedAt: that._getTimestamp(),
     isSuccess: isSuccess,
@@ -109,7 +109,7 @@ Adapter.prototype.openCmd = function (consoleCmdName) {
     consoleId: that.consoleCmdId,
     parentConsoleId: that.consoleGrpId,
     type: 'cmd',
-    message: that.consoleCmdName,
+    message: that.consoleCmdName + '\n',
     timestamp: that._getTimestamp(),
     isShown: true
   };
@@ -132,7 +132,7 @@ Adapter.prototype.closeCmd = function (isSuccess) {
     consoleId: that.consoleCmdId,
     parentConsoleId: that.consoleGrpId,
     type: 'cmd',
-    message: that.consoleCmdName,
+    message: that.consoleCmdName + '\n',
     timestamp: that._getTimestamp(),
     timestampEndedAt: that._getTimestamp(),
     isSuccess: isSuccess,
@@ -158,7 +158,7 @@ Adapter.prototype.publishMsg = function (message) {
     consoleId: uuid.v4(),
     parentConsoleId: that.consoleCmdId,
     type: 'msg',
-    message: message,
+    message: message + '\n',
     timestamp: that._getTimestamp(),
     isShown: true
   };
