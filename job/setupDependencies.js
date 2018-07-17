@@ -21,6 +21,7 @@ function setupDependencies(externalBag, callback) {
     buildRootDir: externalBag.buildRootDir,
     buildStateDir: externalBag.buildStateDir,
     buildPreviousStateDir: externalBag.buildPreviousStateDir,
+    buildIntegrationsDir: externalBag.buildIntegrationsDir,
     resourceId: externalBag.resourceId,
     buildId: externalBag.buildId,
     buildNumber: externalBag.buildNumber,
@@ -38,6 +39,7 @@ function setupDependencies(externalBag, callback) {
   async.series([
       _checkInputParams.bind(null, bag),
       _setUpDependencies.bind(null, bag),
+      _setUpIntegrations.bind(null, bag),
       _saveTaskMessage.bind(null, bag)
     ],
     function (err) {
@@ -72,6 +74,7 @@ function _checkInputParams(bag, next) {
     'buildRootDir',
     'buildStateDir',
     'buildPreviousStateDir',
+    'buildIntegrationsDir',
     'resourceId',
     'buildId',
     'buildNumber',
@@ -158,6 +161,10 @@ function _setUpDependencies(bag, next) {
       value: bag.buildPreviousStateDir
     },
     {
+      key: 'JOB_INTEGRATIONS',
+      value: bag.buildIntegrationsDir
+    },
+    {
       key: 'JOB_MESSAGE',
       value: bag.messageFilePath
     },
@@ -180,6 +187,10 @@ function _setUpDependencies(bag, next) {
     {
       key: util.format('%s_PREVIOUS_STATE', jobName),
       value: bag.buildPreviousStateDir
+    },
+    {
+      key: util.format('%s_INTEGRATIONS', jobName),
+      value: bag.buildIntegrationsDir
     },
     {
       key: util.format('%s_MESSAGE', jobName),
@@ -1179,6 +1190,283 @@ function __appendFile(bag, next) {
 
       bag.consoleAdapter.publishMsg('Successfully appended file: ' + filePath);
       return next();
+    }
+  );
+}
+
+function _setUpIntegrations(bag, next) {
+  var who = bag.who + '|' + _setUpIntegrations.name;
+  logger.verbose(who, 'Inside');
+
+  if (!(bag.inPayload.propertyBag && bag.inPayload.propertyBag.yml &&
+    bag.inPayload.propertyBag.yml.type === 'runSh' &&
+    _.isArray(bag.inPayload.propertyBag.yml.integrations)))
+    return next();
+
+  async.eachSeries(bag.inPayload.propertyBag.yml.integrations,
+    function (integration, nextIntegrations) {
+      logger.verbose('Setting up Integration: ', integration);
+
+      bag.consoleAdapter.openCmd('Setting up integration: ' + integration);
+
+      var seriesParams = {
+        integration: integration
+      };
+
+      async.series([
+          __getDirectIntegrations.bind(null, bag, seriesParams)
+        ],
+        function (err) {
+          if (!err)
+            bag.consoleAdapter.closeCmd(true);
+
+          return nextIntegrations(err);
+        }
+      );
+    },
+    function (err) {
+      return next(err);
+    }
+  );
+}
+
+function __getDirectIntegrations(bag, seriesParams, next) {
+  if (!seriesParams.integration) return next();
+
+  var who = bag.who + '|' + __getDirectIntegrations.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.publishMsg('Getting integration');
+
+  var dependencyPath = path.join(bag.buildIntegrationsDir,
+    seriesParams.integration);
+
+  var query = util.format('subscriptionIds=%s&names=%s',
+    bag.inPayload.subscriptionId, seriesParams.integration);
+  bag.builderApiAdapter.getSubscriptionIntegrations(query,
+    function (err, subInts) {
+      if (err || _.isEmpty(subInts)) {
+        var msg = util.format('%s, Failed getSubscriptionIntegrations for ' +
+          'query: %s, with err: %s', who, query, err);
+
+        bag.consoleAdapter.publishMsg(msg);
+        bag.consoleAdapter.closeCmd(false);
+
+        return next(err);
+      }
+
+      bag.consoleAdapter.publishMsg('Successfully fetched integration');
+
+      var subInt = _.first(subInts);
+      var accountIntegration = _.findWhere(bag.secrets.data.accountIntegrations,
+       { id: subInt.accountIntegrationId });
+
+      var stringData = {};
+      var arrayData = {};
+      var objectData = {};
+      _.each(accountIntegration,
+        function (value, key) {
+          if (_.isObject(value) && !_.isArray(value)) {
+            _.each(value,
+              function (objValue, objKey) {
+                objectData[objKey] = objValue;
+              }
+            );
+          } else if (_.isObject(value) && _.isArray(value)) {
+            var arrData = [];
+            _.each(value,
+              function (arrValue) {
+                if (_.isObject(arrValue)) {
+                  _.each(arrValue,
+                    function(value2) {
+                      arrData.push(value2);
+                    }
+                  );
+                } else {
+                  arrData.push(arrValue);
+                }
+              }
+            );
+            arrayData[key] = arrData;
+          } else {
+            stringData[key] = value;
+          }
+        }
+      );
+
+      var stringAndObjectData = _.extend(_.clone(stringData), objectData);
+      var allData = _.extend(_.clone(stringAndObjectData), arrayData);
+
+      // integration.json should have object values flattened
+      // arrays and strings should be saved as it is
+      var innerBag = {
+        who: who,
+        path: dependencyPath,
+        fileName: 'integration.json',
+        object: allData,
+        consoleAdapter: bag.consoleAdapter
+      };
+
+      // array should be a single quoted string with values in double quotes
+      // and separated by comma
+      _.each(arrayData,
+        function (value, key) {
+          var values = [];
+          _.each(value,
+            function (val) {
+              values.push('"' + val + '"');
+            }
+          );
+          arrayData[key] = '\'' + values.join(',') + '\'';
+        }
+      );
+
+      stringAndObjectData = _.omit(stringAndObjectData, ['id', 'masterName']);
+      var envString  = _.map(
+        _.extend(_.clone(stringAndObjectData), arrayData),
+        function (value, key) {
+          if (_.has(arrayData, key))
+            return key + '=' + value;
+          else
+            return key + '="' + value + '"';
+        }
+      ).join('\n');
+
+      // add integrations to environment variables
+      var sanitizedIntegrationName = seriesParams.integration.
+        replace(/[^A-Za-z0-9_]/g, '').replace(/^[0-9]+/g, '').toUpperCase();
+      var stringAndArrayData = _.extend(_.clone(stringData), arrayData);
+
+      // environment variables should have objects flattened
+      // arrays should be same as integration.env
+      // and, special characters should be escaped in all the values
+      stringAndArrayData = _.omit(stringAndArrayData, ['id', 'masterName']);
+      _.each(stringAndArrayData,
+        function (value, key) {
+          value = ___escapeEnvironmentVariable(value);
+          bag.commonEnvs.push({
+            key: util.format('%s_INTEGRATION_%s',
+              sanitizedIntegrationName,
+              key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase()),
+            value: value
+          });
+        }
+      );
+      _.each(objectData,
+        function (value, key) {
+          value  = ___replaceSingleQuotes(value);
+          bag.commonEnvs.push({
+            key: key,
+            value: value,
+            surroundWithSingleQuotes: true
+          });
+        }
+      );
+
+      // integrations.env should have object values flattened
+      // array should be a single quoted string with values in double quotes
+      // and separated by comma
+      var innerBagEnv = {
+        who: who,
+        path: dependencyPath,
+        fileName: 'integration.env',
+        object: envString,
+        consoleAdapter: bag.consoleAdapter
+      };
+
+      var innerBagKey = {
+        who: who,
+        path: dependencyPath,
+        consoleAdapter: bag.consoleAdapter,
+        permissions: '600',
+        hasKey: false
+      };
+
+      var innerBagSshPublicKey = {
+        who: who,
+        path: dependencyPath,
+        consoleAdapter: bag.consoleAdapter,
+        permissions: '600',
+        hasKey: false
+      };
+
+      if (accountIntegration.masterName === 'pem-key' ||
+        accountIntegration.masterName === 'pemKey') {
+        innerBagKey.fileName = seriesParams.integration + '_key.pem';
+        innerBagKey.object = accountIntegration.key;
+        innerBagKey.hasKey = true;
+      } else if (accountIntegration.masterName === 'ssh-key' ||
+        accountIntegration.masterName === 'sshKey') {
+        // private key
+        innerBagKey.fileName = seriesParams.integration + '_key';
+        innerBagKey.object = accountIntegration.privateKey;
+        innerBagKey.hasKey = true;
+        bag.commonEnvs.push({
+          key: util.format('%s_PRIVATE_KEY_PATH', sanitizedIntegrationName),
+          value: path.join(dependencyPath, innerBagKey.fileName)
+        });
+
+        // public key
+        innerBagSshPublicKey.fileName =
+          seriesParams.integration + '_key.pub';
+        innerBagSshPublicKey.object = accountIntegration.publicKey;
+        innerBagSshPublicKey.hasKey = true;
+        bag.commonEnvs.push({
+          key: util.format('%s_PUBLIC_KEY_PATH',
+          sanitizedIntegrationName),
+          value: path.join(dependencyPath, innerBagSshPublicKey.fileName)
+        });
+      }
+
+      if (innerBagKey.hasKey)
+        bag.commonEnvs.push({
+          key: util.format('%s_KEYPATH', sanitizedIntegrationName),
+          value: path.join(dependencyPath, innerBagKey.fileName)
+        });
+      else
+        innerBagKey = {};
+
+      if (!innerBagSshPublicKey.hasKey)
+        innerBagSshPublicKey = {};
+
+      var innerBagGitCredential = {};
+      if (accountIntegration.masterName === 'gitCredential') {
+        // Git credentials need to be saved in a specific location.
+        innerBagGitCredential = {
+          who: who,
+          consoleAdapter: bag.consoleAdapter,
+          path: process.env.HOME,
+          fileName: '.git-credentials'
+        };
+
+        // Save credentials with and without port in case the port is implicit.
+        var keyWithoutPort = util.format('https://%s:%s@%s',
+          accountIntegration.username, accountIntegration.password,
+          accountIntegration.host);
+        var keyWithPort = util.format('%s:%s', keyWithoutPort,
+          accountIntegration.port);
+        innerBagGitCredential.object = util.format('%s\n%s\n',
+          keyWithoutPort, keyWithPort);
+      }
+
+      async.series([
+          __createDir.bind(null, innerBag),
+          __saveFile.bind(null, innerBag),
+          __saveFile.bind(null, innerBagEnv),
+          __saveFile.bind(null, innerBagKey),
+          __saveFile.bind(null, innerBagSshPublicKey),
+          __appendFile.bind(null, innerBagGitCredential)
+        ],
+        function (err) {
+          if (err) {
+            bag.consoleAdapter.publishMsg('Failed to create integration file');
+            bag.consoleAdapter.closeCmd(false);
+            return next(true);
+          }
+
+          return next();
+        }
+      );
     }
   );
 }

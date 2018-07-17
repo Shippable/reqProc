@@ -51,6 +51,7 @@ function runSh(externalBag, callback) {
     buildScriptsDir: path.join(global.config.buildDir, 'scripts'),
     buildSecretsDir: path.join(global.config.buildDir, 'secrets'),
     buildPreviousStateDir: path.join(global.config.buildDir, 'previousState'),
+    buildIntegrationsDir: path.join(global.config.buildDir, 'integrations'),
     messageFilePath: path.join(global.config.buildDir, 'message.json'),
     stepMessageFilename: 'version.json',
     operation: {
