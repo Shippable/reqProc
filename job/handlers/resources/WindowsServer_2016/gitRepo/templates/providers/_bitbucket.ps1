@@ -71,19 +71,40 @@ $SUBSCRIPTION_PRIVATE_KEY_PATH = @'
 <%=subPrivateKeyPath%>
 '@
 
-Function git_sync() {
+Function add_project_key() {
   $ssh_dir = Join-Path "$global:HOME" ".ssh"
   $key_file_path = Join-Path "$ssh_dir" "id_rsa"
 
   if (Test-Path $key_file_path) {
-    echo "----> Removing $key_file_path"
+    echo "----> Removing key: $key_file_path"
     Remove-Item -Force $key_file_path
   }
   [IO.File]::WriteAllLines($key_file_path, $PRIVATE_KEY)
   & $env:OPENSSH_FIX_USER_FILEPERMS
 
+  echo "----> Adding project key to ssh agent"
   exec_exe "ssh-agent"
   exec_exe "ssh-add $key_file_path"
+}
+
+Function add_subscription_key() {
+  $ssh_dir = Join-Path "$global:HOME" ".ssh"
+  $key_file_path = Join-Path "$ssh_dir" "id_rsa"
+
+  if (Test-Path $key_file_path) {
+    echo "----> Removing key: $key_file_path"
+    Remove-Item -Force $key_file_path
+  }
+  Copy-Item -Path $SUBSCRIPTION_PRIVATE_KEY_PATH -Destination $key_file_path
+  & $env:OPENSSH_FIX_USER_FILEPERMS
+
+  echo "----> Adding subscription key to ssh agent"
+  exec_exe "ssh-agent"
+  exec_exe "ssh-add $key_file_path"
+}
+
+Function git_sync() {
+  add_project_key
 
   $temp_clone_path = Join-Path "$env:TEMP" "Shippable\gitRepo"
 
@@ -112,12 +133,16 @@ Function git_sync() {
 
   echo "----> Checking out commit SHA"
   if ($IS_PULL_REQUEST) {
+    add_subscription_key
+
     if ([string]::Compare($PROJECT_CLONE_URL, $PULL_REQUEST_SOURCE_URL, $TRUE) -ne 0) {
       exec_exe "git remote add PR $PULL_REQUEST_SOURCE_URL"
       exec_exe "git fetch PR"
     }
     exec_exe "git reset --hard $COMMIT_SHA"
     exec_exe "git merge origin/$PULL_REQUEST_BASE_BRANCH"
+
+    add_project_key
   } else {
     exec_exe "git checkout $COMMIT_SHA"
   }
