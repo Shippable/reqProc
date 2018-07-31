@@ -185,7 +185,8 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
   buildStatusDir, group) {
   var defaultENVs = {
     shippableNodeArchitecture: global.config.shippableNodeArchitecture,
-    shippableNodeOperatingSystem: global.config.shippableNodeOperatingSystem
+    shippableNodeOperatingSystem: global.config.shippableNodeOperatingSystem,
+    isRestrictedNode: global.config.isRestrictedNode
   };
   var taskEnvs = _.extend({}, defaultENVs);
   _.extend(taskEnvs, {
@@ -216,7 +217,9 @@ function __generateRuntimeInfo(task, buildJobId, buildScriptsDir,
         path.join(buildScriptsDir, task.taskScriptFileName),
         path.join(buildStatusDir, 'job.env')
       ),
-      taskContainerName: containerName
+      taskContainerName: containerName,
+      shippableDindImage: global.config.shippableDindImage,
+      shippableDindContainerName: global.config.shippableDindContainerName
     };
 
     // Windows expects powershell scripts to be called with

@@ -72,4 +72,8 @@ function setupMS(params) {
   global.config.isProcessingRunShJob = false;
   // 15 seconds
   global.config.runShJobStatusPollIntervalMS = 15 * 1000;
+  global.config.isRestrictedNode = process.env.IS_RESTRICTED_NODE;
+  global.config.shippableDindImage = process.env.SHIPPABLE_DIND_IMAGE;
+  global.config.shippableDindContainerName =
+    process.env.SHIPPABLE_DIND_CONTAINER_NAME;
 }
