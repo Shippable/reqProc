@@ -217,6 +217,22 @@ function _setJobEnvs(bag, next) {
   if (global.config.shippableNodeOperatingSystem === 'WindowsServer_2016')
     jobEnvs.push('REQEXEC_SHELL=powershell.exe');
 
+  if (bag.inPayload.isNewBuildRunnerSubscription) {
+    jobEnvs.push('IS_NEW_BUILD_RUNNER_SUBSCRIPTION=true');
+    jobEnvs.push(
+      util.format('MAX_LOG_LINES_TO_FLUSH=%s',
+      bag.inPayload.newBuildRunnerParams.maxLogLinesToFlush)
+    );
+    jobEnvs.push(
+      util.format('MAX_LOGS_FLUSH_WAIT_TIME_IN_S=%s',
+      bag.inPayload.newBuildRunnerParams.maxLogsFlushWaitTimeInSeconds)
+    );
+    jobEnvs.push(
+      util.format('LOGS_FILE_READ_WAIT_TIME_IN_S=%s',
+      bag.inPayload.newBuildRunnerParams.logsFileReadWaitTimeInSeconds)
+    );
+  }
+
   var envPath = path.join(bag.buildStatusDir, 'job.env');
   fs.writeFile(envPath, jobEnvs.join('\n'),
     function (err) {
