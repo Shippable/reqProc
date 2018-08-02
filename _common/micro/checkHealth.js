@@ -6,7 +6,6 @@ var checkAMQP = require('./healthChecks/checkAMQP.js');
 var checkShippableApi = require('./healthChecks/checkShippableApi.js');
 var validateNode = require('./healthChecks/validateNode.js');
 var updateNodeStatus = require('./healthChecks/updateNodeStatus.js');
-var postNodeStats = require('./healthChecks/postNodeStats.js');
 
 function checkHealth(callback) {
   var bag = {};
@@ -22,7 +21,6 @@ function checkHealth(callback) {
       checkAMQP.bind(null, params),
       checkShippableApi.bind(null, params),
       updateNodeStatus.bind(null, params),
-      postNodeStats.bind(null, params),
       validateNode.bind(null, params)
     ],
     function (err) {
