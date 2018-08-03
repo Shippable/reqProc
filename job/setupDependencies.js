@@ -740,22 +740,22 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
         return next(err);
       }
       bag.consoleAdapter.publishMsg('Successfully fetched integration');
-      var accountIntegration = {};
+      var integration = {};
       if (subInt.isIntegration)
-        accountIntegration = _.findWhere(
-          bag.secrets.data.subscriptionIntegrations, { id: subInt.id });
+        integration = _.findWhere(bag.secrets.data.subscriptionIntegrations,
+          { id: subInt.id });
       else
-        accountIntegration = _.findWhere(bag.secrets.data.accountIntegrations,
+        integration = _.findWhere(bag.secrets.data.accountIntegrations,
           { id: subInt.accountIntegrationId });
 
       seriesParams.dependency.accountIntegration = {
-        masterName: accountIntegration.masterName
+        masterName: integration.masterName
       };
 
       var stringData = {};
       var arrayData = {};
       var objectData = {};
-      _.each(accountIntegration,
+      _.each(integration,
         function (value, key) {
           if (_.isObject(value) && !_.isArray(value)) {
             _.each(value,
@@ -881,16 +881,16 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
         hasKey: false
       };
 
-      if (accountIntegration.masterName === 'pem-key' ||
-        accountIntegration.masterName === 'pemKey') {
+      if (integration.masterName === 'pem-key' ||
+        integration.masterName === 'pemKey') {
         innerBagKey.fileName = seriesParams.dependency.name + '_key.pem';
-        innerBagKey.object = accountIntegration.key;
+        innerBagKey.object = integration.key;
         innerBagKey.hasKey = true;
-      } else if (accountIntegration.masterName === 'ssh-key' ||
-        accountIntegration.masterName === 'sshKey') {
+      } else if (integration.masterName === 'ssh-key' ||
+        integration.masterName === 'sshKey') {
         // private key
         innerBagKey.fileName = seriesParams.dependency.name + '_key';
-        innerBagKey.object = accountIntegration.privateKey;
+        innerBagKey.object = integration.privateKey;
         innerBagKey.hasKey = true;
         bag.commonEnvs.push({
           key: util.format('%s_PRIVATE_KEY_PATH', sanitizedDependencyName),
@@ -900,7 +900,7 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
         // public key
         innerBagSshPublicKey.fileName =
           seriesParams.dependency.name + '_key.pub';
-        innerBagSshPublicKey.object = accountIntegration.publicKey;
+        innerBagSshPublicKey.object = integration.publicKey;
         innerBagSshPublicKey.hasKey = true;
         bag.commonEnvs.push({
           key: util.format('%s_PUBLIC_KEY_PATH',
@@ -921,7 +921,7 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
         innerBagSshPublicKey = {};
 
       var innerBagGitCredential = {};
-      if (accountIntegration.masterName === 'gitCredential') {
+      if (integration.masterName === 'gitCredential') {
         // Git credentials need to be saved in a specific location.
         innerBagGitCredential = {
           who: who,
@@ -932,10 +932,10 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
 
         // Save credentials with and without port in case the port is implicit.
         var keyWithoutPort = util.format('https://%s:%s@%s',
-          accountIntegration.username, accountIntegration.password,
-          accountIntegration.host);
+          integration.username, integration.password,
+          integration.host);
         var keyWithPort = util.format('%s:%s', keyWithoutPort,
-          accountIntegration.port);
+          integration.port);
         innerBagGitCredential.object = util.format('%s\n%s\n',
           keyWithoutPort, keyWithPort);
       }
@@ -1263,18 +1263,18 @@ function __getDirectIntegrations(bag, seriesParams, next) {
       bag.consoleAdapter.publishMsg('Successfully fetched integration');
 
       var subInt = _.first(subInts);
-      var accountIntegration = {};
+      var integration = {};
       if (subInt.isIntegration)
-        accountIntegration = _.findWhere(
-          bag.secrets.data.subscriptionIntegrations, { id: subInt.id });
+        integration = _.findWhere(bag.secrets.data.subscriptionIntegrations,
+          { id: subInt.id });
       else
-        accountIntegration = _.findWhere(bag.secrets.data.accountIntegrations,
+        integration = _.findWhere(bag.secrets.data.accountIntegrations,
           { id: subInt.accountIntegrationId });
 
       var stringData = {};
       var arrayData = {};
       var objectData = {};
-      _.each(accountIntegration,
+      _.each(integration,
         function (value, key) {
           if (_.isObject(value) && !_.isArray(value)) {
             _.each(value,
@@ -1400,16 +1400,16 @@ function __getDirectIntegrations(bag, seriesParams, next) {
         hasKey: false
       };
 
-      if (accountIntegration.masterName === 'pem-key' ||
-        accountIntegration.masterName === 'pemKey') {
+      if (integration.masterName === 'pem-key' ||
+        integration.masterName === 'pemKey') {
         innerBagKey.fileName = seriesParams.integration + '_key.pem';
-        innerBagKey.object = accountIntegration.key;
+        innerBagKey.object = integration.key;
         innerBagKey.hasKey = true;
-      } else if (accountIntegration.masterName === 'ssh-key' ||
-        accountIntegration.masterName === 'sshKey') {
+      } else if (integration.masterName === 'ssh-key' ||
+        integration.masterName === 'sshKey') {
         // private key
         innerBagKey.fileName = seriesParams.integration + '_key';
-        innerBagKey.object = accountIntegration.privateKey;
+        innerBagKey.object = integration.privateKey;
         innerBagKey.hasKey = true;
         bag.commonEnvs.push({
           key: util.format('%s_PRIVATE_KEY_PATH', sanitizedIntegrationName),
@@ -1419,7 +1419,7 @@ function __getDirectIntegrations(bag, seriesParams, next) {
         // public key
         innerBagSshPublicKey.fileName =
           seriesParams.integration + '_key.pub';
-        innerBagSshPublicKey.object = accountIntegration.publicKey;
+        innerBagSshPublicKey.object = integration.publicKey;
         innerBagSshPublicKey.hasKey = true;
         bag.commonEnvs.push({
           key: util.format('%s_PUBLIC_KEY_PATH',
@@ -1440,7 +1440,7 @@ function __getDirectIntegrations(bag, seriesParams, next) {
         innerBagSshPublicKey = {};
 
       var innerBagGitCredential = {};
-      if (accountIntegration.masterName === 'gitCredential') {
+      if (integration.masterName === 'gitCredential') {
         // Git credentials need to be saved in a specific location.
         innerBagGitCredential = {
           who: who,
@@ -1451,10 +1451,10 @@ function __getDirectIntegrations(bag, seriesParams, next) {
 
         // Save credentials with and without port in case the port is implicit.
         var keyWithoutPort = util.format('https://%s:%s@%s',
-          accountIntegration.username, accountIntegration.password,
-          accountIntegration.host);
+          integration.username, integration.password,
+          integration.host);
         var keyWithPort = util.format('%s:%s', keyWithoutPort,
-          accountIntegration.port);
+          integration.port);
         innerBagGitCredential.object = util.format('%s\n%s\n',
           keyWithoutPort, keyWithPort);
       }
