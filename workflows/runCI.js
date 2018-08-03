@@ -1264,8 +1264,13 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
         return next(err);
       }
       bag.consoleAdapter.publishMsg('Successfully fetched integration');
-      var accountIntegration = _.findWhere(bag.secrets.data.accountIntegrations,
-       { id: subInt.accountIntegrationId });
+      var accountIntegration = {};
+      if (subInt.isIntegration)
+        accountIntegration = _.findWhere(
+          bag.secrets.data.subscriptionIntegrations, { id: subInt.id });
+      else
+        accountIntegration = _.findWhere(bag.secrets.data.accountIntegrations,
+          { id: subInt.accountIntegrationId });
 
       var stringData = {};
       var arrayData = {};
