@@ -38,6 +38,7 @@ function runSh(externalBag, callback) {
     builderApiToken: externalBag.builderApiToken,
     builderApiAdapter: externalBag.builderApiAdapter,
     consoleAdapter: externalBag.consoleAdapter,
+    wwwUrl: externalBag.rawMessage.wwwUrl,
     reqProcDir: global.config.reqProcDir,
     reqKickDir: global.config.reqKickDir,
     reqExecDir: global.config.reqExecDir,

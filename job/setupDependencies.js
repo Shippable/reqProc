@@ -13,6 +13,7 @@ var parseSecureVariable = require('../_common/parseSecureVariable.js');
 function setupDependencies(externalBag, callback) {
   var bag = {
     inPayload: _.clone(externalBag.inPayload),
+    wwwUrl: externalBag.wwwUrl,
     consoleAdapter: externalBag.consoleAdapter,
     builderApiAdapter: externalBag.builderApiAdapter,
     buildJobId: externalBag.buildJobId,
@@ -227,8 +228,18 @@ function _setUpDependencies(bag, next) {
     {
       key: 'SHIPPABLE_AMI_VERSION',
       value: global.config.shippableAMIVersion
+    },
+    {
+      key: 'SHIPPABLE_WWW_URL',
+      value: bag.wwwUrl
+    },
+    {
+      key: 'BUILD_URL',
+      value: util.format('%s/subscriptions/%s/pipelines/builds/%s/consoles',
+        bag.wwwUrl, bag.inPayload.subscriptionId, bag.buildId)
     }
   ];
+
   bag.paramEnvs = [];
 
   if (bag.inPayload.injectedGlobalEnv) {
