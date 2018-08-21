@@ -23,6 +23,7 @@ function runCI(externalBag, callback) {
   var bag = {
     consoleAdapter: externalBag.consoleAdapter,
     rawMessage: externalBag.rawMessage,
+    wwwUrl: externalBag.rawMessage.wwwUrl,
     builderApiAdapter: externalBag.builderApiAdapter,
     nodeId: config.nodeId,
     isSystemNode: config.isSystemNode,
@@ -801,7 +802,8 @@ function _setUpDependencies(bag, next) {
       bag.inPayload.triggeredByName),
     util.format('JOB_TRIGGERED_BY_ID=%s',
       bag.inPayload.triggeredById),
-    util.format('SHIPPABLE_AMI_VERSION=%s', global.config.shippableAMIVersion)
+    util.format('SHIPPABLE_AMI_VERSION=%s', global.config.shippableAMIVersion),
+    util.format('SHIPPABLE_WWW_URL=%s', bag.wwwUrl)
   ];
   bag.paramEnvs = [];
 
