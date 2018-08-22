@@ -94,6 +94,13 @@ function _injectDependencies(bag, next) {
         bag.dependency.propertyBag.normalizedRepo.repositoryHttpsUrl;
   }
 
+  bag.dependency.gitConfig = bag.dependency.propertyBag.yml &&
+    bag.dependency.propertyBag.yml.versionTemplate &&
+    bag.dependency.propertyBag.yml.versionTemplate.gitConfig;
+  bag.dependency.depth = bag.dependency.propertyBag.yml &&
+    bag.dependency.propertyBag.yml.versionTemplate &&
+    bag.dependency.propertyBag.yml.versionTemplate.depth;
+
   bag.dependency.cloneLocation = path.join(bag.buildInDir,
     bag.dependency.name, bag.dependency.type);
   bag.dependency.keyLocation = path.join(bag.buildSecretsDir,
