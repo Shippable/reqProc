@@ -66,7 +66,7 @@ git_sync() {
     if [ ! -z "$SHIPPABLE_DEPTH" ]; then
       git_fetch_cmd="git fetch --depth $SHIPPABLE_DEPTH origin merge-requests/$PULL_REQUEST/head"
     fi
-    shippable_retry ssh-agent bash -c "ssh-add $PROJECT_KEY_LOCATION; git fetch origin merge-requests/$PULL_REQUEST/head"
+    shippable_retry ssh-agent bash -c "ssh-add $PROJECT_KEY_LOCATION; $git_fetch_cmd"
     git checkout -f FETCH_HEAD
     merge_result=0
     {
