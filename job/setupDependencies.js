@@ -206,6 +206,11 @@ function _setUpDependencies(bag, next) {
       value: bag.inPayload.triggeredById
     },
     {
+      key: 'JOB_TRIGGERED_BY_USER',
+      value: (bag.inPayload.triggeredByUser &&
+        bag.inPayload.triggeredByUser.login) || ''
+    },
+    {
       key: 'SHARED_DIR',
       value: bag.buildSharedDir
     },
