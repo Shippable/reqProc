@@ -39,6 +39,15 @@ git_sync() {
   chmod 600 $PROJECT_KEY_LOCATION
   git config --global credential.helper store
 
+  <% _.each(gitConfig, function (config) { %>
+  {
+    git config <%=config%>
+  } || {
+    exec_cmd "echo 'Error while setting up git config: <%=config%>'"
+    return 1
+  }
+  <% }); %>
+
   local git_clone_cmd="git clone $PROJECT_CLONE_URL $PROJECT_CLONE_LOCATION"
   if [ ! -z "$SHIPPABLE_DEPTH" ]; then
     git_clone_cmd="git clone --no-single-branch --depth $SHIPPABLE_DEPTH $PROJECT_CLONE_URL $PROJECT_CLONE_LOCATION"
@@ -52,15 +61,6 @@ git_sync() {
   echo "----> Setting git user name"
   git config --get user.name || git config user.name 'Shippable Build'
   git config --get user.email || git config user.email 'build@shippable.com'
-
-  <% _.each(gitConfig, function (config) { %>
-  {
-    git config <%=config%>
-  } || {
-    exec_cmd "echo 'Error while setting up git config: <%=config%>'"
-    return 1
-  }
-  <% }); %>
 
   echo "----> Checking out commit SHA"
   if [ "$IS_PULL_REQUEST" != false ]; then

@@ -96,9 +96,20 @@ function _injectDependencies(bag, next) {
         bag.dependency.propertyBag.normalizedRepo.repositoryHttpsUrl;
   }
 
-  bag.dependency.gitConfig = bag.dependency.propertyBag.yml &&
+  var gitConfig = bag.dependency.propertyBag.yml &&
     bag.dependency.propertyBag.yml.versionTemplate &&
     bag.dependency.propertyBag.yml.versionTemplate.gitConfig;
+
+  if (!_.isEmpty(gitConfig)) {
+    gitConfig = _.map(gitConfig,
+      function (config) {
+        if (config.indexOf('--global') ===  -1)
+          config = util.format('--global %s', config);
+        return config;
+      }
+    );
+    bag.dependency.gitConfig = gitConfig;
+  }
   bag.dependency.depth = bag.dependency.propertyBag.yml &&
     bag.dependency.propertyBag.yml.versionTemplate &&
     bag.dependency.propertyBag.yml.versionTemplate.depth;
