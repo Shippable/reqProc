@@ -34,12 +34,16 @@ Function exec_cmd([string]$cmd) {
 # exec_exe executes an exe program and throws a powershell exception if it fails
 # $ErrorActionPreference = "Stop" catches only cmdlet exceptions
 # Hence exit status of exe programs need to be wrapped and thrown as exception
-Function exec_exe([string]$cmd) {
+Function exec_exe([string]$cmd, [string]$error_msg) {
   $global:LASTEXITCODE = 0;
   Invoke-Expression $cmd
   $ret = $LASTEXITCODE
   if ($ret -ne 0) {
-    $msg = "$cmd exited with $ret"
+    if ($error_msg) {
+      $msg = "$cmd exited with $ret `n$error_msg"
+    } else {
+      $msg = "$cmd exited with $ret"
+    }
     throw $msg
   }
 }
@@ -70,6 +74,12 @@ $PROJECT = @'
 $SUBSCRIPTION_PRIVATE_KEY_PATH = @'
 <%=subPrivateKeyPath%>
 '@
+$SHIPPABLE_DEPTH = <%= depth %>
+if ($IS_PULL_REQUEST) {
+  $BEFORE_COMMIT_SHA = @'
+<%=shaData.beforeCommitSha%>
+'@
+}
 
 Function add_project_key() {
   $ssh_dir = Join-Path "$global:HOME" ".ssh"
@@ -113,8 +123,17 @@ Function git_sync() {
     Remove-Item -Recurse -Force $temp_clone_path
   }
 
+  <% _.each(gitConfig, function (config) { %>
+  echo "----> Setting up gitConfig: <%=config%>"
+  exec_exe "git config <%=config%>" "Error while setting up git config: <%=config%>"
+  <% }); %>
+
   echo "----> Cloning $PROJECT_CLONE_URL"
-  exec_exe "git clone $PROJECT_CLONE_URL $temp_clone_path"
+  if ($SHIPPABLE_DEPTH) {
+    exec_exe "git clone --depth $SHIPPABLE_DEPTH --no-single-branch $PROJECT_CLONE_URL $temp_clone_path"
+  } else {
+    exec_exe "git clone $PROJECT_CLONE_URL $temp_clone_path"
+  }
 
   echo "----> Pushing Directory $temp_clone_path"
   pushd $temp_clone_path
@@ -137,14 +156,30 @@ Function git_sync() {
 
     if ([string]::Compare($PROJECT_CLONE_URL, $PULL_REQUEST_SOURCE_URL, $TRUE) -ne 0) {
       exec_exe "git remote add PR $PULL_REQUEST_SOURCE_URL"
-      exec_exe "git fetch PR"
+      if ($SHIPPABLE_DEPTH) {
+        exec_exe "git fetch --depth $SHIPPABLE_DEPTH PR"
+      } else {
+        exec_exe "git fetch PR"
+      }
     }
-    exec_exe "git reset --hard $COMMIT_SHA"
-    exec_exe "git merge origin/$PULL_REQUEST_BASE_BRANCH"
+    if ($SHIPPABLE_DEPTH) {
+      exec_exe "git reset --hard $COMMIT_SHA" "The PR was fetched with depth $SHIPPABLE_DEPTH, but the commit $COMMIT_SHA is not present. Please ensure that the $COMMIT_SHA is present in the provided depth"
+    } else {
+      exec_exe "git reset --hard $COMMIT_SHA"
+    }
 
+    if ($SHIPPABLE_DEPTH) {
+      exec_exe "git merge origin/$PULL_REQUEST_BASE_BRANCH" "The PR was fetched with depth $SHIPPABLE_DEPTH. Please check whether the base commit $BEFORE_COMMIT_SHA is present in the provided depth."
+    } else {
+      exec_exe "git merge origin/$PULL_REQUEST_BASE_BRANCH"
+    }
     add_project_key
   } else {
-    exec_exe "git checkout $COMMIT_SHA"
+    if ($SHIPPABLE_DEPTH) {
+      exec_exe "git checkout $COMMIT_SHA" "The repository was cloned with depth $SHIPPABLE_DEPTH, but the commit $COMMIT_SHA is not present in this depth. Please ensure that the $COMMIT_SHA is present in the provided depth."
+    } else {
+      exec_exe "git checkout $COMMIT_SHA"
+    }
   }
 
   popd
