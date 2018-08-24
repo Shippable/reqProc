@@ -96,7 +96,7 @@ git_sync() {
     if [ $merge_result -ne 0 ]; then
       if [ ! -z "$SHIPPABLE_DEPTH" ]; then
         {
-          git rev-list FETCH_HEAD | grep $BEFORE_COMMIT_SHA >> /dev/null 2>&1
+          git rev-list HEAD | grep $BEFORE_COMMIT_SHA >> /dev/null 2>&1
         } || {
           echo "The PR was fetched with depth $SHIPPABLE_DEPTH, but the base commit $BEFORE_COMMIT_SHA is not present. Please try increasing the depth setting on your project."
         }
