@@ -102,7 +102,7 @@ function _injectDependencies(bag, next) {
   if (!_.isEmpty(gitConfig)) {
     gitConfig = _.map(gitConfig,
       function (config) {
-        if (config.indexOf('--global') ===  -1)
+        if (_.isString(config) && config.indexOf('--global') ===  -1)
           config = util.format('--global %s', config);
         return config;
       }
