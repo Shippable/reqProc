@@ -99,6 +99,8 @@ function _injectDependencies(bag, next) {
     bag.dependency.propertyBag.yml.versionTemplate &&
     bag.dependency.propertyBag.yml.versionTemplate.gitConfig;
 
+  bag.dependency.gitConfig = [];
+
   if (!_.isEmpty(gitConfig)) {
     gitConfig = _.map(gitConfig,
       function (config) {
