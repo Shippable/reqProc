@@ -5,6 +5,10 @@ module.exports = self;
 
 var fs = require('fs-extra');
 
+var generateCleanupGitConfig =
+  require('./scriptsGen/generateCleanupGitConfigScript.js');
+var executeScript = require('./handlers/executeScript.js');
+
 function cleanup(externalBag, callback) {
   var bag = {
     buildRootDir: externalBag.buildRootDir,
@@ -15,6 +19,8 @@ function cleanup(externalBag, callback) {
 
   async.series([
       _checkInputParams.bind(null, bag),
+      _generateCleanupGitConfigScript.bind(null, bag),
+      _executeCleanupGitConfigScript.bind(null, bag),
       _cleanupBuildDirectory.bind(null, bag)
     ],
     function (err) {
@@ -52,6 +58,56 @@ function _checkInputParams(bag, next) {
   if (hasErrors)
     logger.error(paramErrors.join('\n'));
   return next(hasErrors);
+}
+
+function _generateCleanupGitConfigScript(bag, next) {
+  var who = bag.who + '|' + _generateCleanupGitConfigScript.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd(util.format('Generate cleanup git config script'));
+
+  var params = {};
+  params.buildRootDir = bag.buildRootDir;
+  params.consoleAdapter = bag.consoleAdapter;
+
+  generateCleanupGitConfig(params,
+    function (err, resultBag) {
+      if (err) {
+        var msg = util.format('%s, Failed to generate cleanup git config ' +
+          'script with err: %s', who, err);
+        logger.error(msg);
+        return next(err);
+      }
+
+      bag.cleanupGitConfigPath = resultBag.cleanupGitConfigScriptFilePath;
+      return next();
+    }
+  );
+}
+
+function _executeCleanupGitConfigScript(bag, next) {
+  var who = bag.who + '|' + _executeCleanupGitConfigScript.name;
+  logger.verbose(who, 'Inside');
+
+  var scriptBag = {
+    scriptPath: bag.cleanupGitConfigPath,
+    args: [],
+    options: {},
+    consoleAdapter: bag.consoleAdapter,
+    ignoreCmd: false
+  };
+
+  executeScript(scriptBag,
+    function (err) {
+      if (err) {
+        var msg = util.format('%s, Failed to execute cleanup git config ' +
+          'script with err: %s', who, err);
+        return next(msg);
+      }
+
+      return next();
+    }
+  );
 }
 
 function _cleanupBuildDirectory(bag, next) {
