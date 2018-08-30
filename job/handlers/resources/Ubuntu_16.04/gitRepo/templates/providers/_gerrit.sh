@@ -38,6 +38,15 @@ git_sync() {
   chmod 600 $PROJECT_KEY_LOCATION
   git config --global credential.helper store
 
+  <% _.each(gitConfig, function (config) { %>
+  {
+    git config <%=config%>
+  } || {
+    exec_cmd "echo 'Error while setting up git config: <%=config%>'"
+    return 1
+  }
+  <% }); %>
+
   local git_clone_cmd="git clone $PROJECT_CLONE_URL $PROJECT_CLONE_LOCATION"
   if [ ! -z "$SHIPPABLE_DEPTH" ]; then
     git_clone_cmd="git clone --no-single-branch --depth $SHIPPABLE_DEPTH $PROJECT_CLONE_URL $PROJECT_CLONE_LOCATION"

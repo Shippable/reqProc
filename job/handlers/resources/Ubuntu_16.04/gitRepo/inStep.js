@@ -108,8 +108,8 @@ function _injectDependencies(bag, next) {
         return config;
       }
     );
-    bag.dependency.gitConfig = gitConfig;
   }
+  bag.dependency.gitConfig = gitConfig;
   bag.dependency.depth = bag.dependency.propertyBag.yml &&
     bag.dependency.propertyBag.yml.versionTemplate &&
     bag.dependency.propertyBag.yml.versionTemplate.depth;
