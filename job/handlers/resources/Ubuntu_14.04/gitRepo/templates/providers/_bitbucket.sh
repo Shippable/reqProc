@@ -127,7 +127,7 @@ git_sync() {
   {
     git config --global --unset-all <%=config%>
   } || {
-    exec_cmd "echo 'Error while unsetting up git config: <%=config%>'"
+    exec_cmd "echo 'Error while unsetting git config: <%=config%>'"
     return 1
   }
 
