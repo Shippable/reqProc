@@ -190,6 +190,11 @@ Function git_sync() {
   echo "----> Removing temporary data"
   Remove-Item -Recurse -Force $temp_clone_path
   exec_exe "ssh-add -D"
+
+  <% _.each(gitConfig, function (config) { %>
+  echo "----> Unsetting gitConfig: <%=config%>"
+  exec_exe "git config --global --unset-all <%=config%>" "Error while unsetting git config: <%=config%>"
+  <% }); %>
 }
 
 exec_cmd git_sync

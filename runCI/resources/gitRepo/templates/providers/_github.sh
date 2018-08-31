@@ -107,6 +107,15 @@ git_sync() {
     fi
   fi
 
+  <% _.each(gitConfig, function (config) { %>
+  {
+    git config --global --unset-all <%=config%>
+  } || {
+    exec_cmd "echo 'Error while unsetting git config: <%=config%>'"
+    return 1
+  }
+  <% }); %>
+
   echo "----> Popping $PROJECT_CLONE_LOCATION"
   popd
 }
