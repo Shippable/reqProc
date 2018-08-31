@@ -6,6 +6,8 @@ module.exports = self;
 var fs = require('fs-extra');
 var path = require('path');
 var executeJobScript = require('../_common/executeJobScript.js');
+var executeCleanupGitConfigScript =
+  require('../runCI/executeCleanupGitConfigScript.js');
 
 function ci(externalBag, callback) {
   var bag = {
@@ -36,11 +38,13 @@ function ci(externalBag, callback) {
       _validateCIJobMessage.bind(null, bag),
       _validateCIJobStepsOrder.bind(null, bag),
       _updateNodeIdInCIJob.bind(null, bag),
+      _initialGitConfigCleanup.bind(null, bag),
       _createMexecDir.bind(null, bag),
       _cleanOnStartEnvDir.bind(null, bag),
       _cleanSSHDir.bind(null, bag),
       _executeCIJob.bind(null, bag),
-      _updateJobStatus.bind(null, bag)
+      _updateJobStatus.bind(null, bag),
+      _cleanupGitConfig.bind(null, bag)
     ],
     function (err) {
       return callback(err);
@@ -246,6 +250,28 @@ function _updateNodeIdInCIJob(bag, next) {
   );
 }
 
+function _initialGitConfigCleanup(bag, next) {
+  if (bag.ciJobStatusCode) return next();
+
+  var who = bag.who + '|' + _initialGitConfigCleanup.name;
+  logger.verbose(who, 'Inside');
+
+  var innerBag = {
+    consoleAdapter: bag.consoleAdapter
+  };
+
+  executeCleanupGitConfigScript(innerBag,
+    function (err) {
+      if (err) {
+        bag.isSetupGrpSuccess = false;
+        bag.ciJobStatusCode = __getStatusCodeByNameForCI('FAILED');
+      }
+
+      return next();
+    }
+  );
+}
+
 function _createMexecDir(bag, next) {
   if (bag.ciJobStatusCode) return next();
   if (bag.isCIJobCancelled) return next();
@@ -406,6 +432,28 @@ function _updateJobStatus(bag, next) {
         bag.consoleAdapter.closeCmd(true);
         bag.consoleAdapter.closeGrp(true);
       }
+      return next();
+    }
+  );
+}
+
+function _cleanupGitConfig(bag, next) {
+  var who = bag.who + '|' + _cleanupGitConfig.name;
+  logger.verbose(who, 'Inside');
+
+  var innerBag = {
+    consoleAdapter: bag.consoleAdapter
+  };
+
+  bag.consoleAdapter.openGrp('Cleanup');
+
+  executeCleanupGitConfigScript(innerBag,
+    function (err) {
+      if (err)
+        bag.consoleAdapter.closeGrp(false);
+      else
+        bag.consoleAdapter.closeGrp(true);
+
       return next();
     }
   );
