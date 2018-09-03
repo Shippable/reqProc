@@ -14,6 +14,8 @@ var executeScript = require('../runCI/executeScript.js');
 var generateReplaceScript =
   require('../runCI/scriptsGen/generateReplaceScript.js');
 var parseSecureVariable = require('../_common/parseSecureVariable.js');
+var executeCleanupGitConfigScript =
+  require('../runCI/executeCleanupGitConfigScript.js');
 
 var pathPlaceholder = '{{TYPE}}';
 var inStepPath = '../runCI/resources/' + pathPlaceholder + '/inStep.js';
@@ -84,6 +86,7 @@ function runCI(externalBag, callback) {
       _validateCIJobStepsOrder.bind(null, bag),
       _validateDependencies.bind(null, bag),
       _updateNodeIdInCIJob.bind(null, bag),
+      _initialGitConfigCleanup.bind(null, bag),
       _getBuildJobPropertyBag.bind(null, bag),
       _applySharedNodePoolRestrictions.bind(null, bag),
       _setUpDirectories.bind(null, bag),
@@ -109,6 +112,7 @@ function runCI(externalBag, callback) {
       _postOutResourceVersions.bind(null, bag),
       _updateJobStatus.bind(null, bag),
       _closeCleanupGroup.bind(null, bag),
+      _cleanupGitConfig.bind(null, bag),
       _cleanBuildDirectory.bind(null, bag)
     ],
     function (err) {
@@ -465,6 +469,28 @@ function _updateNodeIdInCIJob(bag, next) {
         bag.consoleAdapter.publishMsg('Successfully updated node in job');
         bag.consoleAdapter.closeCmd(true);
       }
+      return next();
+    }
+  );
+}
+
+function _initialGitConfigCleanup(bag, next) {
+  if (bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _initialGitConfigCleanup.name;
+  logger.verbose(who, 'Inside');
+
+  var innerBag = {
+    consoleAdapter: bag.consoleAdapter
+  };
+
+  executeCleanupGitConfigScript(innerBag,
+    function (err) {
+      if (err) {
+        bag.isSetupGrpSuccess = false;
+        bag.jobStatusCode = getStatusCodeByName('FAILED');
+      }
+
       return next();
     }
   );
@@ -2798,6 +2824,24 @@ function _updateJobStatus(bag, next) {
         bag.consoleAdapter.publishMsg('Successfully updated job status');
         bag.consoleAdapter.closeCmd(true);
       }
+      return next();
+    }
+  );
+}
+
+function _cleanupGitConfig(bag, next) {
+  var who = bag.who + '|' + _cleanupGitConfig.name;
+  logger.verbose(who, 'Inside');
+
+  var innerBag = {
+    consoleAdapter: bag.consoleAdapter
+  };
+
+  executeCleanupGitConfigScript(innerBag,
+    function (err) {
+      if (err)
+        bag.isCleanupGrpSuccess = false;
+
       return next();
     }
   );
