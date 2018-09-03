@@ -111,8 +111,8 @@ function runCI(externalBag, callback) {
       _postTaskVersion.bind(null, bag),
       _postOutResourceVersions.bind(null, bag),
       _updateJobStatus.bind(null, bag),
-      _closeCleanupGroup.bind(null, bag),
       _cleanupGitConfig.bind(null, bag),
+      _closeCleanupGroup.bind(null, bag),
       _cleanBuildDirectory.bind(null, bag)
     ],
     function (err) {
