@@ -106,8 +106,8 @@ function _injectDependencies(bag, next) {
         return config;
       }
     );
-    bag.dependency.gitConfig = gitConfig;
   }
+  bag.dependency.gitConfig = gitConfig;
   bag.dependency.depth = bag.dependency.propertyBag.yml &&
     bag.dependency.propertyBag.yml.versionTemplate &&
     bag.dependency.propertyBag.yml.versionTemplate.depth;
@@ -148,6 +148,9 @@ function _executeScript(bag, next) {
   else if (provider === 'gitlab')
     scriptBag.templatePath =
       path.resolve(__dirname, 'templates/providers/_gitlab.sh');
+  else if (provider === 'gerrit')
+    scriptBag.templatePath =
+      path.resolve(__dirname, 'templates/providers/_gerrit.sh');
 
   executeDependencyScript(scriptBag,
     function (err) {
