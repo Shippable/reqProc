@@ -68,6 +68,9 @@ $PULL_REQUEST = @'
 $PULL_REQUEST_BASE_BRANCH = @'
 <%=shaData.pullRequestBaseBranch%>
 '@
+$HEAD_BRANCH = @'
+<%=shaData.headCommitRef%>
+'@
 $PROJECT = @'
 <%=name%>
 '@
@@ -129,9 +132,9 @@ Function git_sync() {
   echo "----> Checking out commit SHA"
   if ($IS_PULL_REQUEST) {
     if ($SHIPPABLE_DEPTH) {
-      exec_exe "git fetch --depth $SHIPPABLE_DEPTH origin merge-requests/$PULL_REQUEST/head"
+      exec_exe "git fetch --depth $SHIPPABLE_DEPTH origin $HEAD_BRANCH"
     } else {
-      exec_exe "git fetch origin merge-requests/$PULL_REQUEST/head"
+      exec_exe "git fetch origin $HEAD_BRANCH"
     }
     exec_exe "git checkout -f FETCH_HEAD"
     if ($SHIPPABLE_DEPTH) {
@@ -154,7 +157,13 @@ Function git_sync() {
 
   echo "----> Removing temporary data"
   Remove-Item -Recurse -Force $temp_clone_path
+
   exec_exe "ssh-add -D"
+
+  <% _.each(gitConfig, function (config) { %>
+  echo "----> Unsetting gitConfig: <%=config%>"
+  exec_exe "git config --global --unset-all <%=config%>" "Error while unsetting git config: <%=config%>"
+  <% }); %>
 }
 
 exec_cmd git_sync

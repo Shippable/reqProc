@@ -18,6 +18,7 @@ exec_cmd() {
   return $cmd_status
 }
 
+export NO_VERIFY_SSL="<%=noVerifySSL%>"
 export PRIVATE_KEY="<%=privateKey%>"
 export PROJECT_CLONE_URL="<%=projectUrl%>"
 export PROJECT_CLONE_LOCATION="<%=cloneLocation%>"
@@ -25,8 +26,13 @@ export COMMIT_SHA="<%=commitSha%>"
 export IS_PULL_REQUEST=<%=shaData.isPullRequest%>
 export PULL_REQUEST="<%=shaData.pullRequestNumber%>"
 export PULL_REQUEST_BASE_BRANCH="<%=shaData.pullRequestBaseBranch%>"
+export HEAD_BRANCH="<%=shaData.headCommitRef%>"
 
 git_sync() {
+  if [ "$NO_VERIFY_SSL" == "true" ]; then
+    git config --global http.sslVerify false
+  fi
+
   echo "$PRIVATE_KEY" > /tmp/key.pem
 
   chmod 600 /tmp/key.pem
@@ -42,7 +48,7 @@ git_sync() {
 
   echo "----> Checking out commit SHA"
   if [ "$IS_PULL_REQUEST" != false ]; then
-    shippable_retry ssh-agent bash -c "ssh-add /tmp/key.pem; git fetch origin merge-requests/$PULL_REQUEST/head"
+    shippable_retry ssh-agent bash -c "ssh-add /tmp/key.pem; git fetch origin $HEAD_BRANCH"
     git checkout -f FETCH_HEAD
     git merge origin/$PULL_REQUEST_BASE_BRANCH
   else
