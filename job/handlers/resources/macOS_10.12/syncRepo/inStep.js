@@ -119,6 +119,9 @@ function _executeScript(bag, next) {
   else if (provider === 'gitlab')
     scriptBag.templatePath =
       path.resolve(__dirname, 'templates/providers/_gitlab.sh');
+  else if (provider === 'gerrit')
+    scriptBag.templatePath =
+      path.resolve(__dirname, 'templates/providers/_gerrit.sh');
 
   executeDependencyScript(scriptBag,
     function (err) {
