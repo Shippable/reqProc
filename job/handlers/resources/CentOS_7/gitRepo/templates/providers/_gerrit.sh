@@ -90,6 +90,13 @@ git_sync() {
       fi
       return $merge_result
     fi
+  elif [ "$IS_PULL_REQUEST_CLOSE" != false ]; then
+    local git_fetch_cmd="git fetch origin $HEAD_BRANCH"
+    if [ ! -z "$SHIPPABLE_DEPTH" ]; then
+      git_fetch_cmd="git fetch --depth $SHIPPABLE_DEPTH origin $HEAD_BRANCH"
+    fi
+    shippable_retry ssh-agent bash -c "ssh-add $PROJECT_KEY_LOCATION; $git_fetch_cmd"
+    git checkout -f FETCH_HEAD
   else
     checkout_result=0
     {
