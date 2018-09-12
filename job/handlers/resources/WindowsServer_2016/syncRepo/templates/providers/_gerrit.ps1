@@ -64,6 +64,9 @@ $PULL_REQUEST = @'
 $PULL_REQUEST_BASE_BRANCH = @'
 <%=shaData.pullRequestBaseBranch%>
 '@
+$HEAD_BRANCH = @'
+<%=shaData.headCommitRef%>
+'@
 $PROJECT = @'
 <%=name%>
 '@
@@ -109,7 +112,7 @@ Function git_sync() {
 
   echo "----> Checking out commit SHA"
   if ($IS_PULL_REQUEST) {
-    exec_exe "git fetch origin merge-requests/$PULL_REQUEST/head"
+    exec_exe "git fetch origin $HEAD_BRANCH"
     exec_exe "git checkout -f FETCH_HEAD"
     exec_exe "git merge origin/$PULL_REQUEST_BASE_BRANCH"
   } else {

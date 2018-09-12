@@ -26,6 +26,7 @@ export IS_PULL_REQUEST=<%=shaData.isPullRequest%>
 export IS_PULL_REQUEST_CLOSE=<%=shaData.isPullRequestClose%>
 export PULL_REQUEST="<%=shaData.pullRequestNumber%>"
 export PULL_REQUEST_BASE_BRANCH="<%=shaData.pullRequestBaseBranch%>"
+export HEAD_BRANCH="<%=shaData.headCommitRef%>"
 export PROJECT="<%=name%>"
 export PROJECT_KEY_LOCATION="<%=keyLocation%>"
 export SHIPPABLE_DEPTH=<%=depth%>
@@ -37,6 +38,15 @@ git_sync() {
   echo "$PRIVATE_KEY" > $PROJECT_KEY_LOCATION
   chmod 600 $PROJECT_KEY_LOCATION
   git config --global credential.helper store
+
+  <% _.each(gitConfig, function (config) { %>
+  {
+    git config <%=config%>
+  } || {
+    exec_cmd "echo 'Error while setting up git config: <%=config%>'"
+    return 1
+  }
+  <% }); %>
 
   local git_clone_cmd="git clone $PROJECT_CLONE_URL $PROJECT_CLONE_LOCATION"
   if [ ! -z "$SHIPPABLE_DEPTH" ]; then
@@ -53,9 +63,9 @@ git_sync() {
 
   echo "----> Checking out commit SHA"
   if [ "$IS_PULL_REQUEST" != false ]; then
-    local git_fetch_cmd="git fetch origin merge-requests/$PULL_REQUEST/head"
+    local git_fetch_cmd="git fetch origin $HEAD_BRANCH"
     if [ ! -z "$SHIPPABLE_DEPTH" ]; then
-      git_fetch_cmd="git fetch --depth $SHIPPABLE_DEPTH origin merge-requests/$PULL_REQUEST/head"
+      git_fetch_cmd="git fetch --depth $SHIPPABLE_DEPTH origin $HEAD_BRANCH"
     fi
     shippable_retry ssh-agent bash -c "ssh-add $PROJECT_KEY_LOCATION; $git_fetch_cmd"
     git checkout -f FETCH_HEAD
@@ -93,6 +103,15 @@ git_sync() {
       return $checkout_result
     fi
   fi
+
+  <% _.each(gitConfig, function (config) { %>
+  {
+    git config --global --unset-all <%=config%>
+  } || {
+    exec_cmd "echo 'Error while unsetting git config: <%=config%>'"
+    return 1
+  }
+  <% }); %>
 
   echo "----> Popping $PROJECT_CLONE_LOCATION"
   popd
