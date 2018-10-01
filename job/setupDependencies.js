@@ -1026,12 +1026,12 @@ function __getStateInformation(bag, seriesParams, next) {
 
   bag.consoleAdapter.publishMsg('Getting state information');
 
-  // any job should have this value
+  // any job with state should have this value
   if (!seriesParams.dependency.version.propertyBag.sha) {
     bag.consoleAdapter.publishMsg(util.format(
       '%s is missing propertyBag.sha', seriesParams.dependency.name));
     bag.consoleAdapter.closeCmd(false);
-    return next(true);
+    return next();
   }
   var sha = seriesParams.dependency.version.propertyBag.sha;
 
