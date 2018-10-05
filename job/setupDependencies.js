@@ -730,21 +730,22 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
             key: util.format('%s_GERRIT_REST_URL', sanitizedDependencyName),
             value: shaData.providerUrl
           });
+          var changeOwner = shaData.changeOwner || {};
           bag.commonEnvs.push({
             key: util.format('%s_GERRIT_CHANGE_OWNER_NAME',
               sanitizedDependencyName),
-            value: shaData.changeOwner.displayName
+            value: changeOwner.displayName
           });
           bag.commonEnvs.push({
             key: util.format('%s_GERRIT_CHANGE_OWNER_EMAIL',
               sanitizedDependencyName),
-            value: shaData.changeOwner.email
+            value: changeOwner.email
           });
           bag.commonEnvs.push({
             key: util.format('%s_GERRIT_CHANGE_OWNER',
               sanitizedDependencyName),
-            value: '\\\"' + shaData.changeOwner.displayName + '\\\" <' +
-              shaData.changeOwner.email + '>'
+            value: '\\\"' + changeOwner.displayName + '\\\" <' +
+              changeOwner.email + '>'
           });
           bag.commonEnvs.push({
             key: util.format('%s_GERRIT_CHANGE_UPLOADER_NAME',
