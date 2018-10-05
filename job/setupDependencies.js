@@ -489,7 +489,7 @@ function __readTemplatedVersion(bag, seriesParams, next) {
 }
 
 function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
-  /* jshint maxstatements:60 */
+  /* jshint maxstatements:80 */
   var who = bag.who + '|' + __addDependencyEnvironmentVariables.name;
   logger.verbose(who, 'Inside');
 
