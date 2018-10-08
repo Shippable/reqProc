@@ -1082,7 +1082,7 @@ function __readTemplatedVersion(bag, seriesParams, next) {
 }
 
 function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
-  /* jshint maxstatements:60 */
+  /* jshint maxstatements:90 */
   var who = bag.who + '|' + __addDependencyEnvironmentVariables.name;
   logger.verbose(who, 'Inside');
 
@@ -1242,6 +1242,95 @@ function __addDependencyEnvironmentVariables(bag, seriesParams, next) {
           sanitizedDependencyName,
           ___escapeEnvironmentVariable(pullRequestRepoFullName)
         ));
+
+        // gerrit specific envs
+        if (dependency.propertyBag.normalizedRepo &&
+          dependency.propertyBag.normalizedRepo.repositoryProvider ===
+          'gerrit') {
+          bag.commonEnvs.push(util.format('%s_GERRIT_EVENT_TYPE=%s',
+            sanitizedDependencyName, shaData.eventType
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_BRANCH=%s',
+            sanitizedDependencyName, shaData.branchName
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_NUMBER=%s',
+            sanitizedDependencyName, shaData.pullRequestNumber
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_ID=%s',
+            sanitizedDependencyName, shaData.changeId
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_PATCHSET_NUMBER=%s',
+            sanitizedDependencyName, shaData.patchSetNumber
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_PATCHSET_REVISION=%s',
+            sanitizedDependencyName, shaData.commitSha
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_REFSPEC=%s',
+            sanitizedDependencyName, shaData.baseCommitRef
+          ));
+          var sourceName = dependency.version &&
+            dependency.version.propertyBag &&
+            dependency.version.propertyBag.sourceName;
+          bag.commonEnvs.push(util.format('%s_GERRIT_PROJECT=%s',
+            sanitizedDependencyName, sourceName
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_SUBJECT="%s"',
+            sanitizedDependencyName,
+            ___escapeEnvironmentVariable(shaData.changeSubject)
+          ));
+          bag.commonEnvs.push(util.format(
+            '%s_GERRIT_CHANGE_COMMIT_MESSAGE="%s"',
+            sanitizedDependencyName,
+            ___escapeEnvironmentVariable(shaData.commitMessage)
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_URL=%s',
+            sanitizedDependencyName, shaData.commitUrl
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_HOST=%s',
+            sanitizedDependencyName, shaData.providerDomain
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_PORT=%s',
+            sanitizedDependencyName, shaData.providerSshPort
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_REST_URL=%s',
+            sanitizedDependencyName, shaData.providerUrl
+          ));
+          var changeOwner = shaData.changeOwner || {};
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_OWNER_NAME="%s"',
+            sanitizedDependencyName, changeOwner.displayName
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_OWNER_EMAIL="%s"',
+            sanitizedDependencyName, changeOwner.email
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_OWNER="%s"',
+            sanitizedDependencyName, '\\\"' + changeOwner.displayName +
+            '\\\"' + ' <' + changeOwner.email + '>'
+          ));
+          bag.commonEnvs.push(util.format(
+            '%s_GERRIT_CHANGE_UPLOADER_NAME="%s"',
+            sanitizedDependencyName, shaData.triggeredBy.displayName
+          ));
+          bag.commonEnvs.push(util.format(
+            '%s_GERRIT_CHANGE_UPLOADER_EMAIL="%s"',
+            sanitizedDependencyName, shaData.triggeredBy.email
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_CHANGE_UPLOADER="%s"',
+            sanitizedDependencyName, '\\\"' + shaData.triggeredBy.displayName +
+            '\\\"' + ' <' + shaData.triggeredBy.email + '>'
+          ));
+          bag.commonEnvs.push(util.format(
+            '%s_GERRIT_PATCHSET_UPLOADER_NAME="%s"',
+            sanitizedDependencyName, shaData.lastAuthor.displayName
+          ));
+          bag.commonEnvs.push(util.format(
+            '%s_GERRIT_PATCHSET_UPLOADER_EMAIL="%s"',
+            sanitizedDependencyName, shaData.lastAuthor.email
+          ));
+          bag.commonEnvs.push(util.format('%s_GERRIT_PATCHSET_UPLOADER="%s"',
+            sanitizedDependencyName, '\\\"' + shaData.lastAuthor.displayName +
+            '\\\"' + ' <' + shaData.lastAuthor.email + '>'
+          ));
+        }
       }
       if (dependency.propertyBag.normalizedRepo) {
         var normalizedRepo = dependency.propertyBag.normalizedRepo;
