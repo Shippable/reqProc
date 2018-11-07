@@ -16,6 +16,7 @@ function persistPreviousState(externalBag, callback) {
 
   async.series([
       _checkInputParams.bind(null, bag),
+      _emptyStateOnFailure.bind(null, bag),
       _persistPreviousStateOnFailure.bind(null, bag)
     ],
     function (err) {
@@ -55,12 +56,33 @@ function _checkInputParams(bag, next) {
   return next(hasErrors);
 }
 
+function _emptyStateOnFailure(bag, next) {
+  var who = bag.who + '|' + _emptyStateOnFailure.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Clearing State');
+  bag.consoleAdapter.publishMsg('Removing current state');
+
+  fs.emptyDir(bag.buildStateDir,
+    function (err) {
+      if (err) {
+        bag.consoleAdapter.publishMsg('Failed to clear job state');
+        bag.consoleAdapter.closeCmd(false);
+      }
+
+      bag.consoleAdapter.publishMsg('Successfully cleared job state');
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
 function _persistPreviousStateOnFailure(bag, next) {
   var who = bag.who + '|' + _persistPreviousStateOnFailure.name;
   logger.verbose(who, 'Inside');
 
   bag.consoleAdapter.openCmd('Copy previous state to current state');
-  var srcDir = bag.buildPreviousStateDir ;
+  var srcDir = bag.buildPreviousStateDir;
   var destDir = bag.buildStateDir;
   fs.copy(srcDir, destDir,
     function (err) {
