@@ -104,6 +104,7 @@ function runCI(externalBag, callback) {
       _processOutSteps.bind(null, bag),
       _createTrace.bind(null, bag),
       _getLatestJobStatus.bind(null, bag),
+      _emptyStateOnFailure.bind(null, bag),
       _persistPreviousStateOnFailure.bind(null, bag),
       _saveStepState.bind(null, bag),
       _getOutputVersion.bind(null, bag),
@@ -2252,6 +2253,30 @@ function _getLatestJobStatus(bag, next) {
   );
 }
 
+function _emptyStateOnFailure(bag, next) {
+  if (!bag.jobStatusCode) return next();
+
+  var who = bag.who + '|' + _emptyStateOnFailure.name;
+  logger.verbose(who, 'Inside');
+
+  bag.consoleAdapter.openCmd('Clearing State');
+  bag.consoleAdapter.publishMsg('Removing current state');
+
+  fs.emptyDir(bag.stateDir,
+    function (err) {
+      if (err) {
+        bag.consoleAdapter.publishMsg('Failed to clear job state');
+        bag.consoleAdapter.closeCmd(false);
+        bag.isCleanupGrpSuccess = false;
+      }
+
+      bag.consoleAdapter.publishMsg('Successfully cleared job state');
+      bag.consoleAdapter.closeCmd(true);
+      return next();
+    }
+  );
+}
+
 function _persistPreviousStateOnFailure(bag, next) {
   if (!bag.jobStatusCode) return next();
 
@@ -2261,7 +2286,7 @@ function _persistPreviousStateOnFailure(bag, next) {
   bag.consoleAdapter.openCmd('Persisting Previous State');
   bag.consoleAdapter.publishMsg('Copy previous state to current state');
 
-  var srcDir = bag.previousStateDir ;
+  var srcDir = bag.previousStateDir;
   var destDir = bag.stateDir;
   fs.copy(srcDir, destDir,
     function (err) {
