@@ -7,7 +7,8 @@ accept and execute builds. `reqProc` always runs as a Docker container and is re
 
 - periodically pinging Shippable API with health checks
 - listening for and accepting new builds
-- orchestrating builds on the node
+- validating and unpacking build data and secrets
+- generating build steps
 - updating the build status
 
 It is one of the three components that are installed on the host when users [initialize](http://docs.shippable.com/platform/runtime/nodes/#byon-nodes) the host to act as a build node on Shippable. The other two components that are
@@ -39,4 +40,4 @@ Supported platforms:
 ## Releases
 
 `reqProc` images for each supported platform are updated with every Shippable
-release. The list of all releases can be found [here](https://github.com/Shippable/admiral/releases).
+release. The list of all Shippable releases can be found [here](https://github.com/Shippable/admiral/releases).
