@@ -21,9 +21,10 @@ the Dockerfiles are present in `image/` folder in the project root.
 
 Any merged change in the project triggers Shippable assembly lines to
 re-package all necessary requirements and dependencies and push the updated
-Docker images.
+Docker images with `master` tag.
+
 Once all the jobs are completed, the images can be tested by initializing nodes
-manually or running automated tests using [bvt](https://github.com/shippable/bvt).
+manually in the test environment or running automated tests using [bvt](https://github.com/shippable/bvt).
 
 Supported platforms:
 
@@ -34,3 +35,8 @@ Supported platforms:
 | aarch64        | Ubuntu_16.04        |
 | x86_64         | WindowsServer_2016  |
 
+
+## Releases
+
+`reqProc` images for each supported platform are updated with every Shippable
+release. The list of all releases can be found [here](https://github.com/Shippable/admiral/releases).
