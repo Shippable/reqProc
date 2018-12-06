@@ -25,3 +25,12 @@ Docker images.
 Once all the jobs are completed, the images can be tested by initializing nodes
 manually or running automated tests using [bvt](https://github.com/shippable/bvt).
 
+Supported platforms:
+
+| ARCHITECTURE   | OS                  |
+| ------------   | --                  |
+| x86_64         | Ubuntu_16.04        |
+| x86_64         | macOS_10.12         |
+| aarch64        | Ubuntu_16.04        |
+| x86_64         | WindowsServer_2016  |
+
