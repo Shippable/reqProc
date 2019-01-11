@@ -983,6 +983,13 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
             value: value,
             surroundWithSingleQuotes: true
           });
+          bag.commonEnvs.push({
+            key: util.format('%s_INTEGRATION_%s',
+              sanitizedDependencyName,
+              key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase()),
+            value: value,
+            surroundWithSingleQuotes: true
+          });
         }
       );
 
@@ -1499,6 +1506,13 @@ function __getDirectIntegrations(bag, seriesParams, next) {
           value  = ___replaceSingleQuotes(value);
           bag.commonEnvs.push({
             key: key,
+            value: value,
+            surroundWithSingleQuotes: true
+          });
+          bag.commonEnvs.push({
+            key: util.format('%s_INTEGRATION_%s',
+              sanitizedIntegrationName,
+              key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase()),
             value: value,
             surroundWithSingleQuotes: true
           });
