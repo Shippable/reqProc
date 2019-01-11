@@ -1525,6 +1525,11 @@ function __getDependencyIntegrations(bag, seriesParams, next) {
         function (value, key) {
           value  = ___replaceSingleQuotes(value);
           bag.commonEnvs.push(util.format('%s=\'%s\'', key, value));
+          bag.commonEnvs.push(util.format('%s_INTEGRATION_%s=\'%s\'',
+            sanitizedDependencyName,
+            key.replace(/[^A-Za-z0-9_]/g, '').toUpperCase(),
+            value
+          ));
         }
       );
 
