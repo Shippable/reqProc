@@ -3097,9 +3097,9 @@ function ___escapeEnvironmentVariable(value) {
   var specialCharacters = ['\\\\', '\\\"', '\\\`', '\\\$'];
 
   _.each(specialCharacters,
-    function (char) {
-      var regex = new RegExp(char, 'g');
-      value = value.replace(regex, char);
+    function (specialChar) {
+      var regex = new RegExp(specialChar, 'g');
+      value = value.replace(regex, specialChar);
     }
   );
 
