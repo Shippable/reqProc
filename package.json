@@ -15,7 +15,7 @@
     "diskusage": "0.2.2",
     "fs-extra": "0.30.0",
     "node-uuid": "1.4.7",
-    "request": "2.73.0",
+    "request": "2.88.0",
     "underscore": "1.8.3",
     "winston": "2.2.0"
   },
